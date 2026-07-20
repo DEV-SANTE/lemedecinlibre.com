@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Médecin Libre — Le média des médecins qui veulent soigner, pas gérer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#131A2A;
+  --ink-soft:#3D4657;
+  --ink-mute:#7A8194;
+  --paper:#FAF6EF;
+  --paper-deep:#F1EADC;
+  --card:#FFFFFF;
+  --green:#0B5B4C;
+  --green-soft:#E3EFEA;
+  --coral:#E2492F;
+  --coral-soft:#FCE9E4;
+  --gold:#C9A227;
+  --line:#E3DCCD;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(19,26,42,.05),0 8px 30px rgba(19,26,42,.07);
+  --shadow-lg:0 2px 4px rgba(19,26,42,.06),0 20px 60px rgba(19,26,42,.13);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.serif{font-family:'Fraunces',Georgia,serif}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+.kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+/* Contenu visible par défaut ; l'animation ne s'applique que si le JS est actif (.pre) */
+.reveal.pre{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.reveal.pre.in{opacity:1;transform:none}
+
+/* ---------- top bar ---------- */
+.topbar{background:var(--ink);color:#EDE9DF;font-size:12.5px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:38px}
+.topbar b{color:#fff}
+.topbar a{color:var(--gold);font-weight:600}
+.topbar .left span{opacity:.75}
+
+/* ---------- masthead ---------- */
+header.masthead{border-bottom:1px solid var(--line);background:var(--paper)}
+.masthead-inner{display:flex;flex-direction:column;align-items:center;padding:36px 0 22px;text-align:center}
+.brand{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(38px,6vw,64px);letter-spacing:-.02em;line-height:1}
+.brand .libre{color:var(--coral);font-style:italic}
+.tagline{margin-top:10px;color:var(--ink-mute);font-size:14px;letter-spacing:.04em}
+nav.mainnav{position:sticky;top:0;z-index:50;background:rgba(250,246,239,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav.mainnav ul{display:flex;justify-content:center;gap:6px;list-style:none;flex-wrap:wrap;padding:0 16px}
+nav.mainnav a{display:block;padding:15px 15px;font-size:13px;font-weight:600;letter-spacing:.03em;color:var(--ink-soft);border-bottom:2.5px solid transparent;transition:.2s}
+nav.mainnav a:hover{color:var(--green);border-color:var(--green)}
+nav.mainnav a.hot{color:var(--coral)}
+nav.mainnav a.hot:hover{border-color:var(--coral)}
+
+/* ---------- hero ---------- */
+.hero{padding:56px 0 64px;background:
+  radial-gradient(1200px 500px at 80% -10%, rgba(11,91,76,.07), transparent 60%),
+  radial-gradient(900px 400px at 10% 110%, rgba(226,73,47,.06), transparent 60%)}
+.hero-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:56px;align-items:start}
+.hero .kicker{color:var(--coral)}
+.hero h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(32px,4.4vw,52px);line-height:1.08;letter-spacing:-.015em;margin:16px 0 20px}
+.hero h1 em{font-style:italic;color:var(--green)}
+.hero .chapo{font-size:18px;color:var(--ink-soft);line-height:1.65;max-width:60ch}
+.hero .meta{display:flex;align-items:center;gap:14px;margin-top:26px;font-size:13px;color:var(--ink-mute)}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--green),#1E8E77);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.btn{display:inline-flex;align-items:center;gap:9px;padding:13px 24px;border-radius:100px;font-weight:700;font-size:14.5px;transition:.2s;cursor:pointer;border:none}
+.btn-ink{background:var(--ink);color:#fff}
+.btn-ink:hover{background:var(--green);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn-ghost:hover{background:var(--ink);color:#fff}
+.hero-actions{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
+
+/* stat cards column */
+.stat-stack{display:flex;flex-direction:column;gap:16px}
+.stat-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--green)}
+.stat-card.coral::before{background:var(--coral)}
+.stat-card.gold::before{background:var(--gold)}
+.stat-num{font-family:'Fraunces',serif;font-weight:900;font-size:38px;line-height:1;letter-spacing:-.02em}
+.stat-card.coral .stat-num{color:var(--coral)}
+.stat-card.gold .stat-num{color:var(--gold)}
+.stat-card .stat-num{color:var(--green)}
+.stat-lbl{font-size:13px;color:var(--ink-soft);margin-top:6px;line-height:1.45}
+.stat-src{font-size:11px;color:var(--ink-mute);margin-top:8px;text-transform:uppercase;letter-spacing:.08em}
+
+/* ---------- ticker ---------- */
+.ticker{background:var(--green);color:#EAF4F0;overflow:hidden;white-space:nowrap}
+.ticker-track{display:inline-block;padding:11px 0;animation:tick 38s linear infinite;font-size:13px;font-weight:500}
+.ticker-track span{margin:0 34px;opacity:.95}
+.ticker-track b{color:#FFD98A}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ---------- sections ---------- */
+section{padding:72px 0}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;margin-bottom:34px;border-bottom:2.5px solid var(--ink);padding-bottom:14px}
+.sec-head h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,3vw,34px);letter-spacing:-.01em}
+.sec-head .kicker{color:var(--green)}
+.sec-head a.more{font-size:13px;font-weight:700;color:var(--coral);white-space:nowrap}
+.sec-head a.more:hover{text-decoration:underline}
+.sec-sub{color:var(--ink-mute);font-size:14.5px;margin:-24px 0 34px;max-width:70ch}
+
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:26px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:.25s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+.card-visual{height:170px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;overflow:hidden}
+.card-visual img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+.card:hover .card-visual img{transform:scale(1.05)}
+.card-visual.v-green{background:linear-gradient(135deg,#0B5B4C,#17836E)}
+.card-visual.v-coral{background:linear-gradient(135deg,#C93A22,#EA6448)}
+.card-visual.v-ink{background:linear-gradient(135deg,#131A2A,#2C3A55)}
+.card-visual.v-gold{background:linear-gradient(135deg,#A98416,#D4B03C)}
+.card-body{padding:22px 24px 24px;display:flex;flex-direction:column;gap:10px;flex:1}
+.card-body .kicker{color:var(--green)}
+.card-body .kicker.coral{color:var(--coral)}
+.card h3{font-family:'Fraunces',serif;font-weight:600;font-size:19.5px;line-height:1.3}
+.card h3 a:hover{color:var(--green)}
+.card p{font-size:14px;color:var(--ink-soft)}
+.card .cmeta{margin-top:auto;padding-top:12px;font-size:12px;color:var(--ink-mute);display:flex;gap:10px;align-items:center}
+.tag{display:inline-block;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px}
+.tag.coral{background:var(--coral-soft);color:var(--coral)}
+
+/* comparatif table */
+.compare{background:var(--ink);border-radius:var(--radius);color:#EDE9DF;padding:38px;box-shadow:var(--shadow-lg)}
+.compare h3{font-family:'Fraunces',serif;font-size:26px;font-weight:600;margin-bottom:6px;color:#fff}
+.compare .sub{font-size:13.5px;color:#A9B0C0;margin-bottom:26px}
+.compare table{width:100%;border-collapse:collapse;font-size:14px}
+.compare th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#8F97AA;padding:10px 12px;border-bottom:1px solid #2B3550}
+.compare td{padding:12px;border-bottom:1px solid #232C44}
+.compare td:first-child{color:#B9C0D2}
+.compare .ok{color:#5CD6B4;font-weight:600}
+.compare .ko{color:#FF8A70;font-weight:600}
+.compare .mid{color:#FFD98A;font-weight:600}
+.compare .note{font-size:12px;color:#8F97AA;margin-top:18px}
+
+/* portrait */
+.portrait{background:var(--paper-deep);border-radius:var(--radius);padding:46px 50px;display:grid;grid-template-columns:auto 1fr;gap:40px;align-items:center;border:1px solid var(--line)}
+.portrait-photo{width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg,var(--coral),#F08A64);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:52px;color:#fff;font-weight:700;box-shadow:var(--shadow-lg);overflow:hidden}
+.portrait-photo img{width:100%;height:100%;object-fit:cover}
+.portrait blockquote{font-family:'Fraunces',serif;font-style:italic;font-size:clamp(20px,2.6vw,28px);line-height:1.4;font-weight:400}
+.portrait blockquote b{color:var(--coral);font-style:normal}
+.portrait .who{margin-top:16px;font-size:14px;color:var(--ink-soft)}
+.portrait .who b{color:var(--ink)}
+
+/* actus list */
+.actu-list{display:flex;flex-direction:column}
+.actu{display:grid;grid-template-columns:110px 1fr auto;gap:24px;padding:20px 6px;border-bottom:1px solid var(--line);align-items:baseline;transition:.15s}
+.actu:hover{background:#fff}
+.actu .date{font-size:12px;color:var(--ink-mute);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.actu h4{font-family:'Fraunces',serif;font-weight:600;font-size:17.5px}
+.actu h4:hover{color:var(--green)}
+.actu .cat{font-size:11px;font-weight:700;color:var(--coral);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+
+/* sondage */
+.fun{display:grid;grid-template-columns:1.2fr 1fr;gap:26px;align-items:stretch}
+.poll{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:30px 32px;box-shadow:var(--shadow)}
+.poll .kicker{color:var(--coral)}
+.poll h3{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:10px 0 20px;line-height:1.3}
+.poll-opt{margin-bottom:12px;cursor:pointer}
+.poll-bar{position:relative;background:var(--paper-deep);border-radius:9px;height:44px;overflow:hidden;border:1px solid var(--line);transition:.2s}
+.poll-opt:hover .poll-bar{border-color:var(--green)}
+.poll-fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--green-soft);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.poll-opt.top .poll-fill{background:#CFE7DE}
+.poll-txt{position:relative;display:flex;justify-content:space-between;align-items:center;height:100%;padding:0 16px;font-size:14px;font-weight:600}
+.poll-pct{font-family:'Fraunces',serif;font-weight:700;color:var(--green)}
+.poll-total{font-size:12px;color:var(--ink-mute);margin-top:14px}
+.poll .voted-msg{display:none;font-size:13px;color:var(--green);font-weight:600;margin-top:10px}
+
+/* simulateur */
+.simu{background:linear-gradient(135deg,#0B5B4C 0%,#12735F 55%,#17836E 100%);border-radius:calc(var(--radius) + 6px);padding:52px 54px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--shadow-lg)}
+.simu::after{content:"€";position:absolute;right:-30px;bottom:-70px;font-family:'Fraunces',serif;font-size:340px;font-weight:900;color:rgba(255,255,255,.06);line-height:1}
+.simu .kicker{color:#8FE0C8}
+.simu h2{font-family:'Fraunces',serif;font-size:clamp(26px,3.4vw,38px);font-weight:700;margin:14px 0 14px;max-width:22ch;line-height:1.15}
+.simu p{color:#CBE8DE;max-width:56ch;font-size:15.5px}
+.simu .btn{background:#fff;color:var(--green);margin-top:28px}
+.simu .btn:hover{background:var(--gold);color:var(--ink);transform:translateY(-2px)}
+.simu-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:40px;align-items:center;position:relative;z-index:1}
+.simu-demo{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);border-radius:var(--radius);padding:26px;backdrop-filter:blur(4px)}
+.simu-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:14px}
+.simu-row:last-child{border:none;font-weight:800;font-size:16px}
+.simu-row .val{font-family:'Fraunces',serif;font-weight:700}
+.simu-row .pos{color:#8FE0C8}
+
+/* annonces */
+.jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.job{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:10px;padding:22px;box-shadow:var(--shadow);transition:.2s}
+.job:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.job h4{font-size:15.5px;font-weight:700;margin-bottom:6px}
+.job .loc{font-size:13px;color:var(--ink-mute);margin-bottom:12px}
+.job .perks{display:flex;flex-wrap:wrap;gap:6px}
+.job .perks span{font-size:11px;background:var(--green-soft);color:var(--green);font-weight:600;padding:3px 9px;border-radius:100px}
+
+/* newsletter */
+.nl{background:var(--paper-deep);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.nl-inner{display:grid;grid-template-columns:1.2fr 1fr;gap:44px;align-items:center;padding:58px 0}
+.nl h2{font-family:'Fraunces',serif;font-size:clamp(24px,3vw,34px);font-weight:700;line-height:1.15}
+.nl h2 em{color:var(--coral);font-style:italic}
+.nl p{color:var(--ink-soft);margin-top:12px;font-size:15px}
+.nl form{display:flex;gap:10px}
+.nl input{flex:1;padding:15px 20px;border-radius:100px;border:1.5px solid var(--line);font-size:14.5px;font-family:inherit;background:#fff;outline:none;transition:.2s}
+.nl input:focus{border-color:var(--green)}
+.nl .ok-msg{display:none;color:var(--green);font-weight:700;margin-top:12px;font-size:14px}
+
+/* footer */
+footer{background:var(--ink);color:#B9C0D2;padding:64px 0 36px;font-size:13.5px}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:44px;margin-bottom:44px}
+footer .brand{font-size:30px;color:#fff}
+footer .brand .libre{color:var(--coral)}
+footer h5{color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px}
+footer ul{list-style:none}
+footer li{margin-bottom:9px}
+footer a:hover{color:#fff}
+.transparence{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:18px 22px;font-size:12.5px;line-height:1.6;color:#A9B0C0;margin-bottom:30px}
+.transparence b{color:#FFD98A}
+.foot-base{border-top:1px solid #2B3550;padding-top:24px;display:flex;justify-content:space-between;font-size:12px;color:#7A8194;flex-wrap:wrap;gap:10px}
+
+@media(max-width:960px){
+  .hero-grid,.grid3,.grid2,.fun,.simu-grid,.nl-inner,.jobs{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .portrait{grid-template-columns:1fr;text-align:center;justify-items:center}
+  .actu{grid-template-columns:1fr;gap:6px}
+  section{padding:52px 0}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="wrap">
+    <div class="left"><span>Lundi 20 juillet 2026</span> &nbsp;·&nbsp; <b>Le média des médecins qui veulent soigner, pas gérer</b></div>
+    <a href="#newsletter">Recevoir la newsletter hebdo →</a>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="wrap masthead-inner">
+    <div class="brand">Le Médecin <span class="libre">Libre</span></div>
+    <div class="tagline">Enquêtes, chiffres et parcours sur le temps médical — et tout ce qui le vole.</div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="mainnav">
+  <ul>
+    <li><a href="#enquetes">Enquêtes &amp; Chiffres</a></li>
+    <li><a href="#exercer">Exercer Autrement</a></li>
+    <li><a href="#portraits">Portraits &amp; Parcours</a></li>
+    <li><a href="#actu">Actu du métier</a></li>
+    <li><a href="#detente">Détente</a></li>
+    <li><a href="#simulateur" class="hot">Simulateur &amp; Annonces</a></li>
+  </ul>
+</nav>
+
+<!-- HERO : article fondateur -->
+<div class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="kicker">Enquêtes &amp; Chiffres · Article fondateur</span>
+      <h1>Le deuxième métier des généralistes : enquête sur les heures que <em>personne ne facture</em></h1>
+      <p class="chapo">On dit du médecin généraliste qu'il soigne. C'est vrai les trois quarts du temps. Le reste, il télétransmet, il pointe des rejets, il remplit des dossiers MDPH, il fait sa comptabilité et il répond à l'URSSAF. Nous avons compilé les études disponibles pour mesurer ce deuxième métier que personne n'a choisi.</p>
+      <div class="meta">
+        <div class="avatar">ML</div>
+        <div><b style="color:var(--ink)">La Rédaction</b> · 20 juillet 2026 · Lecture 8 min · Sources : DREES, CNOM, Le Quotidien du Médecin</div>
+      </div>
+      <div class="hero-actions">
+        <a class="btn btn-ink" href="#">Lire l'enquête complète →</a>
+        <a class="btn btn-ghost" href="#simulateur">Calculer mes heures perdues</a>
+      </div>
+    </div>
+    <div class="stat-stack">
+      <div class="stat-card coral reveal">
+        <div class="stat-num">7 à 13 h</div>
+        <div class="stat-lbl">de tâches non médicales chaque semaine, selon les études</div>
+        <div class="stat-src">DREES · Mutuelle du Médecin · Thèse Prunières</div>
+      </div>
+      <div class="stat-card reveal">
+        <div class="stat-num">5 ans</div>
+        <div class="stat-lbl">de carrière passés en gestion pure, à 8 h/semaine sur 35 ans</div>
+        <div class="stat-src">Calcul Le Médecin Libre</div>
+      </div>
+      <div class="stat-card gold reveal">
+        <div class="stat-num">≈ 25</div>
+        <div class="stat-lbl">consultations de 18 min qui n'ont pas lieu chaque semaine</div>
+        <div class="stat-src">Base DREES · durée moyenne consultation</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track" id="ticker">
+    <span>📊 <b>66 %</b> des généralistes libéraux travaillent plus de 50 h/semaine (DREES)</span>
+    <span>🕐 Durée moyenne d'une consultation : <b>18 minutes</b></span>
+    <span>📄 <b>8 médecins sur 10</b> estiment que l'administratif pèse « lourdement » sur leur activité</span>
+    <span>👥 <b>~10 000</b> postes d'assistants médicaux financés depuis 2019</span>
+    <span>💶 Une heure d'administratif en libéral = une heure <b>non facturée mais chargée</b></span>
+  </div>
+</div>
+
+<!-- ENQUÊTES -->
+<section id="enquetes">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="kicker">Rubrique signature</span><h2>Enquêtes &amp; Chiffres</h2></div>
+      <a class="more" href="#">Toutes les enquêtes →</a>
+    </div>
+    <p class="sec-sub reveal">Le temps administratif volé aux médecins, mesuré avec des données publiques. Chaque enquête cite ses sources.</p>
+    <div class="grid3">
+      <article class="card reveal">
+        <div class="card-visual v-green"><img src="https://images.unsplash.com/photo-1758691461990-03b49d969495?q=80&w=800&auto=format&fit=crop" alt="Médecin écrivant sur le dossier d'un patient" loading="lazy"></div>
+        <div class="card-body">
+          <span class="kicker">Enquête · À la une</span>
+          <h3><a href="#">Le deuxième métier des généralistes : les heures que personne ne facture</a></h3>
+          <p>Entre 7 et 13 heures par semaine loin des patients. Sur une carrière : cinq années pleines.</p>
+          <div class="cmeta"><span class="tag">Publié</span> 8 min de lecture</div>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="card-visual v-ink"><img src="https://images.unsplash.com/photo-1710503913397-df9bfea7e50b?q=80&w=800&auto=format&fit=crop" alt="Pile de papiers avec un stéthoscope" loading="lazy"></div>
+        <div class="card-body">
+          <span class="kicker">Enquête · À venir</span>
+          <h3><a href="#">Rejets, indus, NOEMIE : le trou noir de la facturation expliqué</a></h3>
+          <p>Ce qui se passe vraiment entre la carte Vitale et le virement CPAM — et pourquoi des milliers d'actes se perdent en route.</p>
+          <div class="cmeta"><span class="tag coral">Semaine prochaine</span></div>
+        </div>
+      </article>
+      <article class="card reveal">
+        <div class="card-visual v-gold"><img src="https://images.unsplash.com/photo-1760292267769-98eb4acbf72e?q=80&w=800&auto=format&fit=crop" alt="Village rural français, route tranquille" loading="lazy"></div>
+        <div class="card-body">
+          <span class="kicker">Data · À venir</span>
+          <h3><a href="#">Déserts médicaux : et si on libérait le temps déjà là ?</a></h3>
+          <p>Le « gisement » de temps médical enfermé dans la paperasse, chiffré département par département.</p>
+          <div class="cmeta"><span class="tag coral">En préparation</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- EXERCER AUTREMENT -->
+<section id="exercer" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="kicker">Comparatifs honnêtes</span><h2>Exercer Autrement</h2></div>
+      <a class="more" href="#">Tous les guides →</a>
+    </div>
+    <div class="grid2">
+      <div class="compare reveal">
+        <h3>Libéral vs salarié en centre de santé</h3>
+        <div class="sub">Le vrai match — extrait du comparatif complet (avec simulateur intégré)</div>
+        <table>
+          <tr><th></th><th>Libéral</th><th>Salarié centre</th></tr>
+          <tr><td>Temps 100 % médical</td><td class="ko">75–90 %</td><td class="ok">~100 %</td></tr>
+          <tr><td>Comptabilité, URSSAF, rejets</td><td class="ko">Pour vous</td><td class="ok">Pris en charge</td></tr>
+          <tr><td>Congés payés, prévoyance</td><td class="ko">À financer</td><td class="ok">Inclus</td></tr>
+          <tr><td>Liberté d'organisation</td><td class="ok">Totale</td><td class="mid">Négociée</td></tr>
+          <tr><td>Revenu net réel</td><td class="mid">Variable</td><td class="mid">À simuler ↓</td></tr>
+        </table>
+        <div class="note">Comparatif complet avec chiffres détaillés, retraite (CARMF vs régime général) et cas types — à paraître. Aucun mode d'exercice n'est « le bon » : tout dépend de vos chiffres.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:26px">
+        <article class="card reveal">
+          <div class="card-visual" style="height:120px"><img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=800&auto=format&fit=crop" alt="Homme écrivant sur des documents à un bureau" loading="lazy"></div>
+          <div class="card-body">
+            <span class="kicker">Guide pratique</span>
+            <h3><a href="#">Quitter le libéral sans naufrage : la check-list complète</a></h3>
+            <p>Patientèle, bail, CARMF, plaques et paperasse de sortie : les 14 étapes dans le bon ordre.</p>
+            <div class="cmeta"><span class="tag coral">À venir</span></div>
+          </div>
+        </article>
+        <article class="card reveal">
+          <div class="card-visual" style="height:120px"><img src="https://images.unsplash.com/photo-1562564055-71e051d33c19?q=80&w=800&auto=format&fit=crop" alt="Signature d'un contrat" loading="lazy"></div>
+          <div class="card-body">
+            <span class="kicker">Guide pratique</span>
+            <h3><a href="#">Négocier son contrat de médecin salarié : les 9 clauses qui comptent</a></h3>
+            <p>Rémunération, temps de travail, formation, clause de non-concurrence : ce qu'il faut lire avant de signer.</p>
+            <div class="cmeta"><span class="tag coral">À venir</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTRAITS -->
+<section id="portraits">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="kicker">Format récurrent</span><h2>Portraits &amp; Parcours</h2></div>
+      <a class="more" href="#">Tous les portraits →</a>
+    </div>
+    <div class="portrait reveal">
+      <div class="portrait-photo"><img src="https://images.unsplash.com/photo-1659353888906-adb3e0041693?q=80&w=400&auto=format&fit=crop" alt="Femme médecin en blouse blanche" loading="lazy"></div>
+      <div>
+        <span class="kicker" style="color:var(--coral)">« Le jour où j'ai arrêté de faire ma compta »</span>
+        <blockquote style="margin-top:12px">« J'ai mis dix ans à devenir médecin, et trois ans à comprendre que je passais mes soirées à faire un métier <b>pour lequel personne ne m'avait formée</b>. »</blockquote>
+        <div class="who"><b>Portrait n°1 — à paraître.</b> Chaque mois, un médecin raconte son changement de mode d'exercice : libéral, salariat, centre de santé, hôpital, mixte. Sans langue de bois, chiffres à l'appui.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACTU -->
+<section id="actu" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="kicker">Court, réactif, sourcé</span><h2>Actu du métier</h2></div>
+      <a class="more" href="#">Toute l'actu →</a>
+    </div>
+    <div class="actu-list reveal">
+      <a class="actu" href="#">
+        <span class="date">Lun. 20 juil.</span>
+        <h4>Convention médicale : ce qui change concrètement pour les généralistes à la rentrée</h4>
+        <span class="cat">Conventionnel</span>
+      </a>
+      <a class="actu" href="#">
+        <span class="date">À venir</span>
+        <h4>Assistants médicaux : où en est-on des 10 000 postes promis ?</h4>
+        <span class="cat">Organisation</span>
+      </a>
+      <a class="actu" href="#">
+        <span class="date">À venir</span>
+        <h4>Démographie médicale : les chiffres du CNOM décryptés en 5 graphiques</h4>
+        <span class="cat">Démographie</span>
+      </a>
+      <a class="actu" href="#">
+        <span class="date">À venir</span>
+        <h4>Téléconsultation : ce que dit vraiment le nouveau cadre de facturation</h4>
+        <span class="cat">Facturation</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- DÉTENTE + SONDAGE -->
+<section id="detente">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="kicker">L'esprit de la salle de garde</span><h2>Détente</h2></div>
+    </div>
+    <div class="fun">
+      <div class="poll reveal" id="poll">
+        <span class="kicker">Le sondage de la semaine</span>
+        <h3>Quelle tâche administrative vous fait perdre le plus de temps ?</h3>
+        <div class="poll-opt" data-votes="42"><div class="poll-bar"><div class="poll-fill"></div><div class="poll-txt"><span>Rejets &amp; retours NOEMIE</span><span class="poll-pct"></span></div></div></div>
+        <div class="poll-opt" data-votes="31"><div class="poll-bar"><div class="poll-fill"></div><div class="poll-txt"><span>Comptabilité &amp; URSSAF</span><span class="poll-pct"></span></div></div></div>
+        <div class="poll-opt" data-votes="19"><div class="poll-bar"><div class="poll-fill"></div><div class="poll-txt"><span>Dossiers MDPH / ALD / certificats</span><span class="poll-pct"></span></div></div></div>
+        <div class="poll-opt" data-votes="11"><div class="poll-bar"><div class="poll-fill"></div><div class="poll-txt"><span>La carte Vitale qui ne passe pas</span><span class="poll-pct"></span></div></div></div>
+        <div class="poll-total" id="pollTotal"></div>
+        <div class="voted-msg" id="votedMsg">✓ Merci pour votre vote !</div>
+      </div>
+      <article class="card reveal">
+        <div class="card-visual v-coral"><img src="https://images.unsplash.com/photo-1582298538104-fe2e74c27f59?q=80&w=800&auto=format&fit=crop" alt="Amis riant autour d'un café" loading="lazy"></div>
+        <div class="card-body">
+          <span class="kicker coral">Humour médical</span>
+          <h3><a href="#">Les 10 phrases que tout généraliste a entendues cette semaine</a></h3>
+          <p>« C'est pas pour moi docteur, c'est pour mon mari, il a pas voulu venir. » Numéro 7 va vous achever.</p>
+          <div class="cmeta"><span class="tag coral">Vendredi prochain</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- SIMULATEUR -->
+<section id="simulateur" style="padding-top:0">
+  <div class="wrap">
+    <div class="simu reveal">
+      <div class="simu-grid">
+        <div>
+          <span class="kicker">L'outil du média</span>
+          <h2>Combien vous coûtent vraiment vos heures d'administratif ?</h2>
+          <p>Notre simulateur compare, à partir de <b>vos</b> chiffres, l'exercice libéral classique et l'exercice 100 % médical en centre de santé : revenu net, charges, retraite, congés, temps patient. Pas une promesse — un calcul.</p>
+          <a class="btn" href="#">Lancer le simulateur →</a>
+        </div>
+        <div class="simu-demo">
+          <div class="simu-row"><span>Heures admin / semaine</span><span class="val">8 h</span></div>
+          <div class="simu-row"><span>Consultations « perdues » / semaine</span><span class="val">≈ 25</span></div>
+          <div class="simu-row"><span>Manque à gagner annuel estimé</span><span class="val">34 500 €</span></div>
+          <div class="simu-row"><span>Temps médical récupérable</span><span class="val pos">+ 16 %</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:56px"></div>
+
+    <div class="sec-head reveal">
+      <div><span class="kicker">Postes en centres de santé</span><h2>Annonces</h2></div>
+      <a class="more" href="#">Voir les 12 annonces →</a>
+    </div>
+    <div class="jobs">
+      <div class="job reveal">
+        <h4>Médecin généraliste — CDI temps plein</h4>
+        <div class="loc">📍 Centre de santé · Île-de-France</div>
+        <div class="perks"><span>Zéro facturation</span><span>Assistant médical</span><span>Congés payés</span></div>
+      </div>
+      <div class="job reveal">
+        <h4>Médecin généraliste — temps partiel 3 j/sem</h4>
+        <div class="loc">📍 Centre de santé · Île-de-France</div>
+        <div class="perks"><span>Planning souple</span><span>Secrétariat dédié</span><span>Prévoyance incluse</span></div>
+      </div>
+      <div class="job reveal">
+        <h4>Médecin coordinateur</h4>
+        <div class="loc">📍 Multi-sites · Île-de-France</div>
+        <div class="perks"><span>Encadrement</span><span>Projet médical</span><span>Temps clinique préservé</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<div class="nl" id="newsletter">
+  <div class="wrap nl-inner">
+    <div class="reveal">
+      <h2>Chaque semaine, <em>une enquête, un chiffre, un parcours.</em></h2>
+      <p>La newsletter du Médecin Libre : le condensé de la semaine, les nouvelles annonces, et le chiffre qui fait mal. Gratuit, sans spam, désinscription en un clic.</p>
+    </div>
+    <div class="reveal">
+      <form id="nlForm">
+        <input type="email" placeholder="votre@email.fr" required aria-label="Votre email">
+        <button class="btn btn-ink" type="submit">Je m'abonne</button>
+      </form>
+      <div class="ok-msg" id="nlOk">✓ Bienvenue ! Premier numéro lundi prochain.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="brand">Le Médecin <span class="libre">Libre</span></div>
+        <p style="margin-top:14px;max-width:34ch">Le média des médecins qui veulent soigner, pas gérer. Enquêtes sourcées, comparatifs honnêtes, parcours vrais.</p>
+      </div>
+      <div>
+        <h5>Rubriques</h5>
+        <ul>
+          <li><a href="#enquetes">Enquêtes &amp; Chiffres</a></li>
+          <li><a href="#exercer">Exercer Autrement</a></li>
+          <li><a href="#portraits">Portraits &amp; Parcours</a></li>
+          <li><a href="#actu">Actu du métier</a></li>
+          <li><a href="#detente">Détente</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Outils</h5>
+        <ul>
+          <li><a href="#simulateur">Simulateur de revenu</a></li>
+          <li><a href="#simulateur">Annonces</a></li>
+          <li><a href="#newsletter">Newsletter</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Le média</h5>
+        <ul>
+          <li><a href="#">Qui sommes-nous</a></li>
+          <li><a href="#">Charte éditoriale</a></li>
+          <li><a href="#">Nous contacter</a></li>
+          <li><a href="#">Mentions légales</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="transparence">
+      <b>Transparence</b> — Le Médecin Libre est édité par [nom du groupe], réseau de centres de santé. Nos enquêtes s'appuient exclusivement sur des sources publiques, citées en fin d'article. Les annonces publiées concernent nos centres et sont signalées comme telles.
+    </div>
+    <div class="foot-base">
+      <span>© 2026 Le Médecin Libre — Tous droits réservés · Photos : Unsplash (licence libre)</span>
+      <span>Maquette v1 — page d'accueil</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Reveal on scroll (progressif : si le JS échoue, tout reste visible)
+try{
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>{el.classList.add('pre');io.observe(el)});
+}catch(e){}
+
+// Ticker : duplicate content for seamless loop
+const t=document.getElementById('ticker');t.innerHTML+=t.innerHTML;
+
+// Sondage (in-memory)
+(function(){
+  const opts=[...document.querySelectorAll('.poll-opt')];let voted=false;
+  function render(){
+    const total=opts.reduce((s,o)=>s+ +o.dataset.votes,0);
+    let max=Math.max(...opts.map(o=>+o.dataset.votes));
+    opts.forEach(o=>{
+      const v=+o.dataset.votes,p=Math.round(v/total*100);
+      o.querySelector('.poll-fill').style.width=p+'%';
+      o.querySelector('.poll-pct').textContent=p+' %';
+      o.classList.toggle('top',v===max);
+    });
+    document.getElementById('pollTotal').textContent='Total des votes : '+total;
+  }
+  opts.forEach(o=>o.addEventListener('click',()=>{
+    if(voted)return;voted=true;
+    o.dataset.votes=+o.dataset.votes+1;render();
+    document.getElementById('votedMsg').style.display='block';
+  }));
+  render();
+})();
+
+// Newsletter (démo)
+document.getElementById('nlForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  document.getElementById('nlOk').style.display='block';
+  e.target.querySelector('input').value='';
+});
+</script>
+</body>
+</html>
