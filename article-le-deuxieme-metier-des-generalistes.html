@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le deuxième métier des généralistes : enquête sur les heures que personne ne facture — Le Médecin Libre</title>
+<meta name="description" content="Administratif, téléphone, attente, facturation : de 13 à 20 heures par semaine loin du soin. Enquête sourcée (DREES, URPS, CNOM) sur le vrai temps non médical des généralistes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#131A2A;--ink-soft:#3D4657;--ink-mute:#7A8194;
+  --paper:#FAF6EF;--paper-deep:#F1EADC;--card:#FFFFFF;
+  --green:#0B5B4C;--green-soft:#E3EFEA;--coral:#E2492F;--coral-soft:#FCE9E4;
+  --gold:#C9A227;--line:#E3DCCD;--radius:14px;
+  --shadow:0 1px 2px rgba(19,26,42,.05),0 8px 30px rgba(19,26,42,.07);
+  --shadow-lg:0 2px 4px rgba(19,26,42,.06),0 20px 60px rgba(19,26,42,.13);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:17px;line-height:1.75;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+.kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.topbar{background:var(--ink);color:#EDE9DF;font-size:12.5px}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:38px}
+.topbar a{color:var(--gold);font-weight:600}
+.masthead{border-bottom:1px solid var(--line)}
+.masthead .wrap{display:flex;align-items:center;justify-content:space-between;padding:18px 28px}
+.brand{font-family:'Fraunces',serif;font-weight:900;font-size:26px;letter-spacing:-.02em}
+.brand .libre{color:var(--coral);font-style:italic}
+nav ul{display:flex;gap:4px;list-style:none;flex-wrap:wrap}
+nav a{display:block;padding:8px 12px;font-size:13px;font-weight:600;color:var(--ink-soft);border-radius:100px;transition:.2s}
+nav a:hover{background:var(--green-soft);color:var(--green)}
+.art-head{padding:56px 0 40px;background:
+  radial-gradient(1000px 400px at 85% -10%, rgba(11,91,76,.07), transparent 60%)}
+.art-head .inner{max-width:820px;margin:0 auto;padding:0 28px}
+.art-head .kicker{color:var(--coral)}
+h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(30px,4.2vw,48px);line-height:1.1;letter-spacing:-.015em;margin:16px 0 22px}
+.chapo{font-size:19px;color:var(--ink-soft);line-height:1.7;font-weight:500}
+.meta{display:flex;align-items:center;gap:14px;margin-top:26px;font-size:13px;color:var(--ink-mute);flex-wrap:wrap}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--green),#1E8E77);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.hero-img{max-width:1000px;margin:0 auto;padding:0 28px}
+.hero-img img{width:100%;height:420px;object-fit:cover;border-radius:var(--radius);box-shadow:var(--shadow-lg)}
+.hero-img figcaption{font-size:12px;color:var(--ink-mute);margin-top:10px;text-align:right}
+article{max-width:760px;margin:0 auto;padding:48px 28px 20px}
+article h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(22px,2.8vw,30px);line-height:1.2;margin:52px 0 18px}
+article p{margin-bottom:22px}
+article p b{color:var(--ink)}
+article .lead:first-letter{font-family:'Fraunces',serif;font-size:64px;font-weight:900;float:left;line-height:.85;padding:6px 10px 0 0;color:var(--green)}
+.bignum{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:36px 0}
+.bn{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);border-left:4px solid var(--green)}
+.bn.coral{border-left-color:var(--coral)}
+.bn.gold{border-left-color:var(--gold)}
+.bn b{font-family:'Fraunces',serif;font-size:30px;font-weight:900;display:block;color:var(--green)}
+.bn.coral b{color:var(--coral)}
+.bn.gold b{color:var(--gold)}
+.bn span{font-size:12.5px;color:var(--ink-soft);line-height:1.45;display:block;margin-top:4px}
+.pull{border-left:4px solid var(--coral);background:var(--coral-soft);border-radius:0 var(--radius) var(--radius) 0;padding:26px 30px;margin:36px 0;font-family:'Fraunces',serif;font-style:italic;font-size:22px;line-height:1.45}
+.calc{background:var(--ink);color:#EDE9DF;border-radius:var(--radius);padding:32px 36px;margin:36px 0;box-shadow:var(--shadow-lg)}
+.calc .kicker{color:#8FE0C8}
+.calc .formule{font-family:'Fraunces',serif;font-size:clamp(20px,3vw,28px);font-weight:600;color:#fff;margin:14px 0}
+.calc .formule b{color:#FFD98A}
+.calc p{font-size:14.5px;color:#B9C0D2;margin:0}
+.retenir{background:var(--green-soft);border:1px solid #CBE2D8;border-radius:var(--radius);padding:30px 34px;margin:44px 0}
+.retenir h3{font-family:'Fraunces',serif;font-size:22px;margin-bottom:16px;color:var(--green)}
+.retenir ul{list-style:none}
+.retenir li{padding:9px 0 9px 30px;position:relative;font-size:15.5px;border-bottom:1px dashed #CBE2D8}
+.retenir li:last-child{border:none}
+.retenir li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:800}
+.sources{border-top:2.5px solid var(--ink);margin-top:52px;padding-top:24px}
+.sources h3{font-family:'Fraunces',serif;font-size:20px;margin-bottom:14px}
+.sources ol{padding-left:20px;font-size:14px;color:var(--ink-soft)}
+.sources li{margin-bottom:8px}
+.cta{max-width:1000px;margin:40px auto 0;padding:0 28px}
+.cta-inner{background:linear-gradient(135deg,#0B5B4C 0%,#12735F 55%,#17836E 100%);border-radius:calc(var(--radius) + 6px);padding:42px 46px;color:#fff;display:grid;grid-template-columns:1.5fr auto;gap:30px;align-items:center;box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
+.cta-inner::after{content:"€";position:absolute;right:-20px;bottom:-60px;font-family:'Fraunces',serif;font-size:260px;font-weight:900;color:rgba(255,255,255,.06);line-height:1}
+.cta-inner h2{font-family:'Fraunces',serif;font-size:clamp(22px,3vw,30px);font-weight:700;line-height:1.2;margin-bottom:10px}
+.cta-inner p{color:#CBE8DE;font-size:15px;max-width:52ch}
+.btn{display:inline-flex;align-items:center;gap:9px;padding:14px 26px;border-radius:100px;font-weight:700;font-size:14.5px;background:#fff;color:var(--green);transition:.2s;position:relative;z-index:1;white-space:nowrap}
+.btn:hover{background:var(--gold);color:var(--ink);transform:translateY(-2px)}
+.transp{max-width:760px;margin:36px auto 0;padding:0 28px}
+.transp div{background:var(--paper-deep);border:1px solid var(--line);border-radius:10px;padding:16px 20px;font-size:13px;color:var(--ink-soft);line-height:1.6}
+.transp b{color:var(--ink)}
+footer{background:var(--ink);color:#B9C0D2;padding:44px 0 30px;font-size:13.5px;margin-top:64px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+footer .brand{color:#fff;font-size:24px}
+footer a:hover{color:#fff}
+.back{display:inline-flex;align-items:center;gap:8px;margin-top:44px;font-weight:700;color:var(--green);font-size:14.5px}
+.back:hover{text-decoration:underline}
+@media(max-width:760px){
+  .bignum{grid-template-columns:1fr}
+  .cta-inner{grid-template-columns:1fr}
+  .hero-img img{height:240px}
+  .masthead .wrap{flex-direction:column;gap:10px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span>Enquêtes &amp; Chiffres · Article n°1</span>
+    <a href="index.html#newsletter">Recevoir la newsletter hebdo →</a>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="index.html">Le Médecin <span class="libre">Libre</span></a>
+    <nav><ul>
+      <li><a href="index.html#enquetes">Enquêtes &amp; Chiffres</a></li>
+      <li><a href="index.html#exercer">Exercer Autrement</a></li>
+      <li><a href="index.html#portraits">Portraits</a></li>
+      <li><a href="index.html#actu">Actu</a></li>
+      <li><a href="index.html#detente">Détente</a></li>
+      <li><a href="index.html#simulateur" style="color:var(--coral)">Simulateur</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<div class="art-head">
+  <div class="inner">
+    <span class="kicker">Enquêtes &amp; Chiffres · Article fondateur</span>
+    <h1>Le deuxième métier des généralistes : enquête sur les heures que personne ne facture</h1>
+    <p class="chapo">On dit du médecin généraliste qu'il soigne. Le reste du temps, il télétransmet, il pointe des rejets, il fait sa comptabilité, il répond à l'URSSAF. Les études officielles mesurent ce « deuxième métier » entre 7 et 13 heures par semaine. Mais elles oublient l'essentiel : le téléphone qui sonne, le patient qu'on attend, le déshabillage, l'encaissement de chaque acte. Nous avons tout compté. Verdict : <b>13 à 20 heures par semaine</b> loin du soin. Sur une carrière, près de dix années pleines — pour un métier auquel on accède après dix ans d'études.</p>
+    <div class="meta">
+      <div class="avatar">ML</div>
+      <div><b style="color:var(--ink)">La Rédaction</b> · 20 juillet 2026 · Lecture 10 min</div>
+    </div>
+  </div>
+</div>
+
+<figure class="hero-img">
+  <img src="https://images.unsplash.com/photo-1758691461990-03b49d969495?q=80&w=1600&auto=format&fit=crop" alt="Médecin écrivant sur le dossier d'un patient">
+  <figcaption>Photo : Unsplash</figcaption>
+</figure>
+
+<article>
+  <h2>54 heures par semaine. Mais pour faire quoi ?</h2>
+  <p class="lead">Commençons par le socle, le chiffre le plus solide dont on dispose : le Panel d'observation des pratiques en médecine générale de la DREES. Deux tiers des généralistes libéraux déclarent travailler au moins 50 heures par semaine. Dans le détail : 44 heures 30 auprès des patients, 5 heures 30 de tâches de gestion et de coordination, 2 heures de mise à jour des connaissances, et environ 2 heures d'activités annexes.</p>
+  <p>À première vue, 5 heures 30 de gestion, ce n'est « que » 10&nbsp;% de la semaine. Mais ce chiffre déclaratif ne capture qu'une partie du problème — et tous ceux qui exercent le savent.</p>
+
+  <h2>La paperasse cachée dans la consultation</h2>
+  <p>Car l'administratif ne vit pas seulement le soir, après la dernière consultation. Il s'infiltre dans la consultation elle-même : la carte Vitale qui ne passe pas, le téléservice qui rame, l'attestation à réimprimer, le courrier d'adressage, la cotation à vérifier.</p>
+  <p>Une enquête de la Mutuelle du Médecin auprès de 201 praticiens donne une mesure plus proche du ressenti : <b>7 heures hebdomadaires d'administratif</b>, sur des semaines de 50 heures. Et plus de 8 médecins sur 10 estiment que ce temps pèse « lourdement » sur leur activité. La répartition est éloquente : environ un quart pour les dossiers (Sécu, CMU, MDPH…), un quart pour la comptabilité et les finances, un cinquième pour la tenue des dossiers patients, le reste entre comptes rendus et prises de rendez-vous.</p>
+  <p>Une thèse de médecine générale (Dr Jean-Baptiste Prunières) va plus loin encore, en chronométrant l'ensemble des tâches « non médicales » : <b>13 heures et 6 minutes par semaine</b>.</p>
+
+  <div class="bignum">
+    <div class="bn"><b>5 h 30</b><span>déclarées — tâches de gestion et coordination (DREES)</span></div>
+    <div class="bn gold"><b>7 h</b><span>ressenties — enquête Mutuelle du Médecin, 201 praticiens</span></div>
+    <div class="bn coral"><b>13 h 06</b><span>chronométrées — thèse du Dr Prunières</span></div>
+  </div>
+
+  <p>Selon la fourchette retenue, on parle donc de <b>10 à 25&nbsp;% du temps de travail</b> d'un généraliste consacré à autre chose que la médecine.</p>
+
+  <h2>Faites le calcul sur une carrière</h2>
+  <p>Prenons l'hypothèse médiane : 8 heures par semaine, 46 semaines par an, 35 ans de carrière.</p>
+
+  <div class="calc">
+    <span class="kicker">Le calcul</span>
+    <div class="formule">8 h × 46 semaines × 35 ans = <b>12 880 heures</b></div>
+    <p>Rapportées à des semaines de 50 heures, cela représente environ 257 semaines de travail. Cinq années pleines.</p>
+  </div>
+
+  <p><b>Cinq ans d'une vie professionnelle</b> passés à faire de la gestion. Et pourtant, ce calcul est encore très en dessous de la réalité. Car les études d'emploi du temps ne comptent que « l'administratif » au sens strict. Elles oublient tout ce qui, dans une journée de cabinet, n'est ni du soin, ni officiellement de la paperasse.</p>
+
+  <h2>Et encore : ce que même les études ne comptent pas</h2>
+  <p><b>Le téléphone, d'abord.</b> L'URPS médecins libéraux d'Île-de-France a analysé 3 734 appels : un généraliste passe en moyenne <b>7 heures et 8 minutes par semaine au téléphone</b> — 15 appels reçus par jour (2 min 12 en moyenne), 9 appels passés (5 min en moyenne). 56 % des médecins interrogés se disent « harcelés » par le téléphone, qui interrompt leurs consultations. Une partie de ces appels relève du soin (conseil médical, coordination) ; le reste — rendez-vous, résultats à communiquer, relances — est du pur travail de secrétariat. Retenons prudemment 4 à 6 heures hebdomadaires de téléphone non médical.</p>
+  <p><b>Les temps morts entre deux patients, ensuite.</b> Aller chercher le patient en salle d'attente, l'installer, attendre qu'il se déshabille puis se rhabille, ranger le box, rouvrir le dossier suivant : personne ne chronomètre ces battements, et pourtant chacun le sait, ils mangent la journée. À raison de 2 à 3 minutes par consultation et d'environ 22 consultations par jour (Le Quotidien du Médecin), cela représente <b>3 à 5 heures par semaine</b>. Ce temps n'est ni payé, ni soignant — dans les organisations avec assistant médical, c'est précisément lui qui l'absorbe.</p>
+  <p><b>La facturation au fil de l'eau, enfin.</b> Carte Vitale, FSE, encaissement, tiers payant qui bloque, AMC qui ne répond pas : 1 à 2 minutes par acte, à chaque acte. Soit <b>1 à 2 heures par semaine</b>, sans compter le retraitement des rejets qui, lui, retombe dans l'administratif du soir.</p>
+
+  <div class="bignum">
+    <div class="bn"><b>5 h 30 – 13 h</b><span>administratif « officiel » : gestion, comptabilité, dossiers (DREES, Mutuelle du Médecin, thèse Prunières)</span></div>
+    <div class="bn gold"><b>+ 4 à 6 h</b><span>téléphone non médical (URPS ÎdF : 7 h 08 de téléphone au total par semaine)</span></div>
+    <div class="bn coral"><b>+ 4 à 7 h</b><span>battements entre patients, déshabillage, facturation à l'acte (notre estimation, hypothèses affichées)</span></div>
+  </div>
+
+  <div class="calc">
+    <span class="kicker">Le vrai budget — notre estimation</span>
+    <div class="formule">Total : <b>13 à 20 heures par semaine</b> de temps non médical</div>
+    <p>Hypothèse médiane de 15 h : 15 h × 46 semaines × 35 ans = 24 150 heures, soit environ 483 semaines de 50 heures. <b>Plus de neuf années pleines</b> d'une carrière de médecin passées à faire autre chose que de la médecine.</p>
+  </div>
+
+  <p>Neuf ans. Un médecin fait dix ans d'études pour apprendre à soigner — pas pour faire le travail d'une secrétaire, d'une standardiste et d'un comptable. C'est pourtant, mis bout à bout, ce que notre système lui demande d'être un jour sur trois.</p>
+
+  <h2>Ce que ces heures coûtent vraiment</h2>
+  <p>Ce temps a trois coûts, rarement mis bout à bout.</p>
+  <p><b>Un coût en soins.</b> À 18 minutes par consultation en moyenne (DREES), les 8 heures d'administratif « officiel » représentent déjà 25 à 26 consultations par semaine qui n'ont pas lieu. Avec le budget complet — 15 heures médianes de temps non médical —, on monte à <b>l'équivalent de 50 consultations par semaine</b>. À l'échelle de la France et de ses déserts médicaux, le « gisement » de temps médical enfermé hors du soin est considérable — c'est d'ailleurs l'un des arguments récurrents des rapports sur l'accès aux soins.</p>
+  <p><b>Un coût en revenu.</b> Pour un libéral, une heure au téléphone, en salle d'attente ou devant le lecteur de carte Vitale est une heure non facturée mais chargée : le loyer tourne, l'URSSAF et la CARMF courent. C'est la double peine du modèle : le temps non médical coûte à la fois le manque à gagner et les frais fixes.</p>
+  <p><b>Un coût en usure.</b> Ce n'est pas un hasard si les enquêtes sur l'épuisement professionnel des soignants pointent systématiquement la charge administrative parmi les premiers facteurs cités.</p>
+
+  <div class="pull">Personne ne s'épuise d'avoir soigné. On s'épuise de tout ce qui empêche de soigner.</div>
+
+  <h2>Peut-on faire autrement ? Ce que montrent les organisations qui délèguent</h2>
+  <p>La question n'est plus théorique. Assistants médicaux (près de 10 000 postes financés par l'Assurance maladie depuis 2019), secrétariats mutualisés, facturation déléguée, exercice coordonné : toutes les évolutions récentes du système vont dans le même sens — rendre du temps médical au médecin.</p>
+  <p>Les organisations les plus avancées combinent plusieurs leviers : un secrétariat qui absorbe les rendez-vous et les appels, des assistants médicaux qui préparent la consultation (constantes, mise à jour du dossier, pré-remplissage), et une équipe administrative qui gère la facturation, la télétransmission et le traitement des rejets de bout en bout.</p>
+  <p>Quand tout cela est en place, l'ordre de grandeur change réellement. Un médecin déchargé de 13 à 20 heures hebdomadaires de tâches non médicales — le téléphone absorbé par le secrétariat, le patient installé et préparé par l'assistant médical, la facturation et les rejets traités par une équipe dédiée —, et dont chaque consultation est préparée en amont, peut consacrer la quasi-totalité de son temps de présence à voir des patients — et en voir sensiblement plus, sans travailler plus d'heures. Certains centres organisés en double box avec assistants médicaux revendiquent des files actives quasi doublées à temps de travail égal. Le revenu suit l'activité : faites vos propres calculs, avec vos propres chiffres — c'est exactement à ça que sert un simulateur, pas une promesse.</p>
+  <p>La vraie question que pose cette enquête n'est donc pas « les médecins font-ils trop d'administratif ? » — la réponse est documentée depuis quinze ans. C'est : <b>pourquoi continue-t-on de former des médecins pendant dix ans pour leur confier un mi-temps de secrétaire, de standardiste et de comptable ?</b></p>
+
+  <div class="retenir">
+    <h3>Ce qu'il faut retenir</h3>
+    <ul>
+      <li>Les généralistes libéraux travaillent 50 à 55 heures par semaine en moyenne (DREES, CNOM).</li>
+      <li>L'administratif « officiel » est évalué entre 5 h 30 (déclaré), 7 h (ressenti) et 13 h (chronométré) par semaine selon les études.</li>
+      <li>S'y ajoutent le téléphone (7 h 08 par semaine mesurées par l'URPS ÎdF, dont 4 à 6 h non médicales), les battements entre patients (installation, déshabillage : 3 à 5 h) et la facturation à l'acte (1 à 2 h).</li>
+      <li>Budget complet : <b>13 à 20 heures par semaine de temps non médical</b> — l'équivalent de ~50 consultations de 18 minutes qui n'ont pas lieu.</li>
+      <li>Sur 35 ans de carrière, à 15 h par semaine : plus de neuf années pleines passées hors du soin.</li>
+      <li>La délégation (secrétariat, assistants médicaux, facturation externalisée) est aujourd'hui le principal levier documenté pour rendre ce temps aux patients.</li>
+    </ul>
+  </div>
+
+  <div class="sources">
+    <h3>Sources</h3>
+    <ol>
+      <li>DREES, Études &amp; Résultats n°1113 (Panel d'observation des pratiques en médecine générale) : temps de travail hebdomadaire, répartition patients/gestion/formation, durée moyenne de consultation.</li>
+      <li>DREES, Études &amp; Résultats n°797, Les emplois du temps des médecins généralistes.</li>
+      <li>Enquête Mutuelle du Médecin (201 praticiens), relayée par Le Quotidien du Médecin : 7 h hebdomadaires d'administratif, répartition par poste.</li>
+      <li>Thèse du Dr Jean-Baptiste Prunières : 13 h 06 de tâches non médicales hebdomadaires.</li>
+      <li>URPS médecins libéraux Île-de-France, étude sur 3 734 appels : 7 h 08 de téléphone hebdomadaire (15 appels reçus/jour de 2 min 12, 9 appels passés de 5 min) ; 56 % des généralistes se disent « harcelés » par le téléphone.</li>
+      <li>Le Quotidien du Médecin : 22 consultations par jour de 17 minutes en moyenne.</li>
+      <li>CNOM (2023) : ~55 h de travail hebdomadaire moyen.</li>
+      <li>Battements entre patients et facturation à l'acte : estimations Le Médecin Libre, hypothèses détaillées dans le corps de l'article (2-3 min/consultation ; 1-2 min/acte).</li>
+    </ol>
+  </div>
+
+  <a class="back" href="index.html">← Retour à l'accueil</a>
+</article>
+
+<div class="cta">
+  <div class="cta-inner">
+    <div>
+      <h2>Envie de mesurer ce que ces heures représentent pour vous ?</h2>
+      <p>Notre simulateur de revenu compare, à partir de vos chiffres, l'exercice libéral classique et l'exercice 100 % médical en centre de santé.</p>
+    </div>
+    <a class="btn" href="index.html#simulateur">Lancer le simulateur →</a>
+  </div>
+</div>
+
+<div class="transp">
+  <div><b>Transparence</b> — Ce média est édité par [nom du groupe], réseau de centres de santé. Nos enquêtes s'appuient sur des sources publiques citées en fin d'article.</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="index.html">Le Médecin <span class="libre">Libre</span></a>
+    <span>© 2026 Le Médecin Libre · Photos : Unsplash (licence libre)</span>
+  </div>
+</footer>
+
+</body>
+</html>
