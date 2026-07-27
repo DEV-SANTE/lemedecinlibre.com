@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plateforme de prévention — environnement de test</title>
+
+<!-- Environnement de test sous domaine provisoire : jamais indexé. -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bandeau">
+  <strong>Environnement de test — patients fictifs uniquement.</strong>
+  Aucune donnée de santé réelle ne doit être saisie ici. Hébergement statique non
+  certifié HDS. Les données restent dans ce navigateur et ne sont transmises à personne.
+</div>
+
+<header class="top">
+  <div class="top-in">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <rect width="40" height="40" rx="11" fill="#0f5f6b"/>
+      <path d="M9 20.5h4.4l2.6-6.5 3.4 12.5 2.6-8.2 1.9 4.4H31" stroke="#fff"
+            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <a class="brand" href="#/">Prévention Santé<small>Plateforme · v0.1</small></a>
+    <span class="env">Test</span>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="pied">
+  <div class="pied-in">
+    <p><strong>Contrainte de conception.</strong> Cette version ne calcule aucun score,
+    ne compare aucune réponse à un seuil, ne met en avant aucune réponse et ne propose
+    aucun acte. Elle recueille, affiche et conserve. L’appréciation, le calcul des
+    scores validés et la décision appartiennent au médecin.</p>
+    <p style="margin-top:12px"><strong>Instruments sous licence.</strong> Les échelles de
+    somnolence, de risque d’apnées et de gêne auditive sont reproduites ici dans une
+    formulation provisoire. Le libellé officiel doit être substitué après obtention des
+    licences correspondantes. PHQ-9, GAD-7 et AUDIT-C sont libres d’utilisation.</p>
+    <p style="margin-top:12px"><strong>Avant tout usage réel.</strong> Hébergement certifié
+    HDS, authentification forte, journalisation des accès, analyse d’impact, registre des
+    traitements, désignation d’un délégué à la protection des données, audit de sécurité
+    et test d’intrusion.</p>
+  </div>
+</footer>
+
+<script src="questionnaire.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
