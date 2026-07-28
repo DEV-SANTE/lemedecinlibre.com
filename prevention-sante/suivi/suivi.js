@@ -16,12 +16,19 @@
 
    LA COULEUR EST CATÉGORIELLE, JAMAIS ÉVALUATIVE
    Chaque famille biologique a sa teinte : Numération, Métabolique,
-   Rénal, Hormonal, Hépatique, Mesuré sur place. La palette est une
-   rampe continue du pétrole au violet. Elle ne contient ni rouge ni
-   vert, précisément pour qu'aucune teinte ne puisse se lire comme
-   « bon » ou « mauvais ». La couleur dit de quoi on parle, pas ce
-   qu'il faut en penser. Un test automatique vérifie qu'aucune teinte
-   de la palette n'a de dominante rouge ou verte.
+   Rénal, Hormonal, Hépatique, Mesuré sur place. La couleur dit de quoi
+   on parle, pas ce qu'il faut en penser.
+
+   Plusieurs apparences sont proposées, dont une nettement plus colorée.
+   La règle survit au changement de thème, et elle est contrôlée :
+   aucune palette de familles ne reprend le vert, l'orange ni le rouge,
+   qui restent réservés aux marques du médecin. Ces marques portent en
+   plus une initiale, un nom et une date — elles ne dépendent donc pas
+   de la couleur pour être reconnues.
+
+   La LISTE des familles est définie dans biologie.js, qui fait autorité.
+   Les TEINTES sont définies dans commun/themes.js, parce qu'une couleur
+   d'affichage relève de la présentation. Aucune n'est écrite ici.
 
    TROIS CHOIX GRAPHIQUES ASSUMÉS
 
@@ -47,7 +54,21 @@
 const DATES = BIO_DATES;
 const FAMILLES = BIO_FAMILLES;
 const PARAMETRES = BIO_PARAMETRES;
-const famille = nom => Biologie.famille(nom);
+/* THÈME COURANT.
+   La LISTE des familles vient de biologie.js, qui fait autorité. La
+   TEINTE de chaque famille vient de commun/themes.js, parce qu'une
+   couleur d'affichage est de la présentation, pas de la médecine. Les
+   seize endroits qui affichent une couleur passent tous par ici : il n'y
+   a donc qu'un seul point à surveiller.
+
+   teinte() ne reçoit qu'un nom de famille. Aucune valeur mesurée
+   n'entre dans le calcul d'une couleur, ce qui est la raison d'être de
+   cette indirection autant que le confort de lecture. */
+let theme = THEMES.defaut;
+const famille = nom => {
+  const base = Biologie.famille(nom);
+  return { nom: base.nom, c: THEMES.teinte(theme, base.nom) || base.c };
+};
 
 /* =====================================================================
    MARQUES DU MÉDECIN — LUES DANS LE DOSSIER, PAS ÉCRITES EN DUR
@@ -332,7 +353,7 @@ function grandGraphique(series) {
         '<line x1="' + x(i).toFixed(1) + '" y1="' + mg.h + '" x2="' + x(i).toFixed(1) + '" y2="' + (H - mg.b) + '" class="gv"/>' +
         (dernier ? '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="11" fill="' + co + '" opacity=".14"/>' : '') +
         '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="' + (dernier ? 7 : 6) +
-          '" class="gdot" stroke="' + co + '" fill="' + (plein ? co : '#fff') + '"/>' +
+          '" class="gdot" stroke="' + co + '" fill="' + (plein ? co : 'var(--card)') + '"/>' +
         '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="22" class="ghit"/>' +
         '</g>';
     });
@@ -542,7 +563,8 @@ function rendre() {
                       style="--fc:${famille(x.groupe).c}">
                 <span class="m-nom">${esc(x.nom)}
                   ${marqueDu(x.id) ? `<i class="mqm-tag m-${esc(marqueDu(x.id).couleur)}"
-                     title="Marque posée par ${esc(marqueDu(x.id).medecin)}"></i>` : ''}</span>
+                     title="Marque ${esc(LIB_COULEUR[marqueDu(x.id).couleur])} posée par ${esc(marqueDu(x.id).medecin)}"
+                     >${esc(LIB_COULEUR[marqueDu(x.id).couleur].charAt(0))}</i>` : ''}</span>
                 ${mini(x)}
                 <span class="m-val"><b>${fmtVal(x.valeurs[x.valeurs.length - 1])}</b> ${esc(x.unite)}</span>
                 <span class="m-per">${esc(courteDate(DATES[0]))} → ${esc(courteDate(DATES[DATES.length - 1]))}</span>
@@ -717,7 +739,42 @@ function brancherInfobulle(series) {
   });
 }
 
+/* =====================================================================
+   BARRE DE THÈMES
+
+   Provisoire : elle sert à arbitrer une direction graphique en la
+   voyant. À retirer une fois le choix fait — et le retrait consiste à
+   supprimer cette fonction et la section correspondante du balisage,
+   rien d'autre : aucun thème ne conditionne le contenu.
+
+   Le choix n'est pas mémorisé. Une préférence d'apparence stockée dans
+   le navigateur serait la première donnée persistée par cette page en
+   dehors du dossier, et il n'y a aucune raison d'ouvrir cette porte
+   pour une maquette.
+   ===================================================================== */
+function barreThemes() {
+  const zone = $('#th-b'), desc = $('#th-d');
+  if (!zone || !desc) return;
+
+  zone.innerHTML = THEMES.liste.map(t =>
+    '<button class="th-x' + (t.id === theme ? ' on' : '') + '" data-t="' + esc(t.id) + '">' +
+    esc(t.nom) + '<em>' + esc(t.resume) + '</em></button>').join('');
+
+  desc.textContent = THEMES.trouver(theme).desc;
+
+  zone.querySelectorAll('[data-t]').forEach(b => {
+    b.onclick = () => {
+      theme = b.dataset.t;
+      document.documentElement.setAttribute('data-theme', theme);
+      barreThemes();
+      rendre();   /* les teintes sont injectées dans le balisage */
+    };
+  });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   DOSSIER = dossierCourant();
+  document.documentElement.setAttribute('data-theme', theme);
+  barreThemes();
   rendre();
 });
