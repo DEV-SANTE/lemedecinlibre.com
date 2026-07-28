@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrôle interne — Prévention Santé</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+/* =====================================================================
+   M10 — TABLEAU DE BORD DE CONTRÔLE INTERNE
+
+   Les seules couleurs de statut de tout le projet se trouvent ici, et
+   elles portent sur des TAUX DE POPULATION, jamais sur la réponse ou le
+   résultat d'une personne. Aucune classe de ce fichier n'est utilisée
+   dans l'espace patient ni dans la vue médecin.
+   ===================================================================== */
+:root{
+  --ink:#08181f; --ink-2:#284653; --ink-3:#587784; --ink-4:#89a2ad;
+  --pri:#0f5f6b; --pri-d:#0a464f; --pri-l:#e4f1f3; --pri-l2:#f1f8f9;
+  --line:#dce8eb; --line-2:#e9f1f3; --surf:#f3f8f9;
+  --ok:#0f766e; --ok-bg:#eefaf7; --ok-line:#c3e8e0;
+  --al:#9a3412; --al-bg:#fdf3ee; --al-line:#f2d5c4;
+  --r:12px; --r-l:20px;
+  --sh-s:0 1px 2px rgba(8,24,31,.045);
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--f);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2{margin:0;letter-spacing:-.025em;line-height:1.18}
+h1{font-size:29px;font-weight:720}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+table{border-collapse:collapse;width:100%}
+
+.bandeau{background:#fdf6ec;border-bottom:1px solid #f0d9b5;color:#7c4a10;
+  font-size:13.3px;padding:11px 26px;text-align:center;line-height:1.5}
+.bandeau strong{color:#5f3708}
+
+.top{border-bottom:1px solid var(--line-2);background:#fff;position:sticky;top:0;z-index:40}
+.top-in{max-width:1180px;margin:0 auto;padding:0 26px;height:66px;display:flex;align-items:center;gap:13px}
+.mark{width:32px;height:32px;flex:0 0 32px}
+.brand{font-weight:730;letter-spacing:-.032em;font-size:16.5px;line-height:1.05;color:var(--ink);text-decoration:none}
+.brand small{display:block;font-size:9.5px;font-weight:640;letter-spacing:.17em;
+  text-transform:uppercase;color:var(--ink-4);margin-top:3px}
+.top .env{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:#b45309;border:1px solid #f0d9b5;background:#fdf6ec;
+  padding:5px 11px;border-radius:999px}
+
+main{max-width:1180px;margin:0 auto;padding:32px 26px 90px}
+.head{display:flex;align-items:flex-start;gap:26px;flex-wrap:wrap;margin-bottom:24px}
+.sub{color:var(--ink-3);font-size:15px;margin-top:7px;max-width:78ch}
+.bilan{margin-left:auto;border-radius:var(--r-l);padding:16px 22px;text-align:center;min-width:180px}
+.bilan b{display:block;font-size:32px;font-weight:760;letter-spacing:-.04em;line-height:1}
+.bilan span{display:block;font-size:12.8px;margin-top:5px;line-height:1.4}
+.bilan.ok{background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ok)}
+.bilan.ko{background:var(--al-bg);border:1px solid var(--al-line);color:var(--al)}
+
+.avis{background:var(--pri-l2);border:1px solid var(--line);border-radius:var(--r);
+  padding:18px 21px;font-size:14.8px;color:var(--ink-2);margin-bottom:30px;max-width:96ch}
+.avis b{color:var(--ink)}
+
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.ind{border:1px solid var(--line);border-radius:var(--r-l);padding:24px;box-shadow:var(--sh-s);background:#fff}
+.ind.alerte{border-color:var(--al-line);background:#fffcfa}
+.ind-h{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+.ind-h h2{font-size:16px;font-weight:640;flex:1}
+.tag{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:4px 10px;border-radius:999px;white-space:nowrap}
+.tag-ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-line)}
+.tag-alerte{background:var(--al-bg);color:var(--al);border:1px solid var(--al-line)}
+.tag-neutre{background:var(--surf);color:var(--ink-3);border:1px solid var(--line)}
+.ind-v{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.ind-v>b{font-size:33px;font-weight:760;letter-spacing:-.035em;line-height:1}
+.seuil{font-size:12.8px;color:var(--ink-4);padding-bottom:4px}
+.sparkwrap{margin-left:auto;display:flex;align-items:flex-end;gap:8px;color:var(--pri)}
+.spark{width:130px;height:30px;display:block}
+.sparkwrap em{font-style:normal;font-size:11px;color:var(--ink-4);padding-bottom:3px}
+.base{font-size:12.8px;color:var(--ink-4);font-family:var(--mono);margin-bottom:10px}
+.revele{font-size:14.4px;color:var(--ink-2)}
+.note{font-size:13.2px;color:var(--ink-3);margin-top:11px;padding-top:11px;
+  border-top:1px solid var(--line-2)}
+
+.h-sec{font-size:22px;font-weight:700;margin:44px 0 8px}
+.tbl{border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden}
+.tbl thead th{background:var(--surf);text-align:left;font-size:11.5px;font-weight:680;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:13px 18px;
+  border-bottom:1px solid var(--line)}
+.tbl td{padding:14px 18px;border-bottom:1px solid var(--line-2);font-size:15px}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl .r{text-align:right}
+
+.pied{border-top:1px solid var(--line);background:var(--surf);padding:30px 26px;
+  font-size:13px;color:var(--ink-3);line-height:1.62}
+.pied-in{max-width:1180px;margin:0 auto}
+.pied strong{color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<div class="bandeau">
+  <strong>Cohorte fictive de démonstration.</strong> Les chiffres sont générés pour montrer
+  que la chaîne de mesure fonctionne. Aucun patient réel, aucune donnée nominative.
+</div>
+
+<header class="top">
+  <div class="top-in">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <rect width="40" height="40" rx="11.5" fill="#0f5f6b"/>
+      <path d="M8.5 20.5h4.6l2.7-7 3.5 13.5 2.7-8.6 2 5.1h5.5" stroke="#fff"
+            stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <a class="brand" href="./">Prévention Santé<small>Contrôle interne · M10</small></a>
+    <span class="env">Test</span>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="pied">
+  <div class="pied-in">
+    <p><strong>Pourquoi ce tableau de bord calcule alors que le reste de la plateforme ne
+    calcule pas.</strong> La contrainte de la version 1 interdit de produire une information
+    propre à un patient donné à des fins de décision médicale. Elle n’interdit pas les
+    statistiques agrégées et anonymisées. Ce tableau de bord regarde la population pour
+    vérifier que l’indication tient. Il ne regarde jamais un individu pour l’orienter, et
+    aucun de ses résultats n’est renvoyé vers un dossier ni vers l’écran du médecin pendant
+    la consultation.</p>
+    <p style="margin-top:13px"><strong>Le premier indicateur est calculé
+    rétrospectivement.</strong> Mesurer la part des actes réalisés parmi ceux que les critères
+    publiés désignaient suppose que quelque chose ait été désigné. En version 1, rien ne l’est
+    pendant la consultation. Les critères sont donc appliqués après coup à la cohorte, hors
+    de tout acte de soin.</p>
+  </div>
+</footer>
+
+<script src="pilotage.js"></script>
+</body>
+</html>
