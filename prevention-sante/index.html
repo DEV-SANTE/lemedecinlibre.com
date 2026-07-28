@@ -20,10 +20,14 @@
    Wordmark descriptif, sans risque d'antériorité.
    À remplacer après recherche INPI.
 
-   AUCUNE RESSOURCE EXTERNE : pas de police distante, pas d'image
-   distante, pas de script tiers. Toutes les illustrations sont des
-   SVG écrits dans ce fichier. Conséquence directe : aucun cookie,
-   aucune requête vers un tiers, donc aucun bandeau de consentement.
+   RESSOURCES EXTERNES : aucune police distante, aucun script tiers,
+   aucun outil de mesure d'audience. Tous les schémas sont des SVG
+   écrits dans ce fichier. Seule exception, assumée et documentée :
+   cinq photographies servies par un hôte d'images (voir le bloc
+   « photographies » plus bas). Aucun cookie n'est déposé, mais l'hôte
+   des images voit l'adresse IP du visiteur. C'est la raison pour
+   laquelle aucune photographie n'est chargée sur les pages qui
+   affichent des données de santé.
    ============================================================ */
 :root{
   --ink:#08181f;
@@ -95,6 +99,59 @@ section{padding:104px 0}
 .head{margin-bottom:58px}
 .cols{display:grid;grid-template-columns:1.02fr .98fr;gap:68px;align-items:start}
 @media(max-width:960px){.cols{grid-template-columns:1fr;gap:46px}section{padding:78px 0}}
+
+/* ---------- photographies ----------
+   Ce sont les seules ressources externes du projet, et elles ne sont
+   chargées que sur cette page publique. Aucune photographie n'est
+   appelée depuis l'espace patient, la vue médecin, le suivi, le portail
+   entreprise ni le contrôle interne : charger une image distante sur ces
+   pages révélerait à un tiers qu'une personne est en train de consulter
+   un dossier médical. Le vérificateur refuse toute image distante
+   ailleurs que sur cette page.
+
+   referrerpolicy="no-referrer" : l'hôte reçoit la requête de l'image
+   mais ignore depuis quelle page elle est demandée.
+   width et height déclarés : la place est réservée avant l'arrivée du
+   fichier, la mise en page ne saute pas au chargement.
+   loading="lazy" partout sauf le premier visuel, visible d'emblée.
+
+   Sujets : aucun visage de médecin ni de patient. Un praticien souriant
+   présenté comme faisant partie de l'offre serait une représentation du
+   service, donc soumise à l'article R.4127-19-1 du code de la santé
+   publique. Des lieux, du matériel et des chemins ne représentent rien
+   d'autre qu'eux-mêmes.
+
+   Bascule vers un hébergement propre : la licence de l'hôte autorise le
+   téléchargement et la rediffusion. Procédure dans le README.
+   ------------------------------------------------------------------- */
+figure{margin:0}
+.ph{position:relative;overflow:hidden;border-radius:var(--r-xl);
+  background:var(--surf);border:1px solid var(--line);line-height:0}
+.ph>img{display:block;width:100%;height:100%;object-fit:cover}
+.ph-cap{position:absolute;left:0;right:0;bottom:0;padding:64px 32px 27px;color:#fff;
+  font-size:15.5px;line-height:1.55;
+  background:linear-gradient(to top,rgba(4,20,26,.86) 0%,rgba(4,20,26,.5) 48%,transparent 100%)}
+.ph-cap b{display:block;font-size:20px;font-weight:720;letter-spacing:-.024em;margin-bottom:7px}
+
+.bande{padding:0 0 34px}
+.bande .ph{aspect-ratio:21/8;box-shadow:var(--sh)}
+.bande .ph>img{object-position:center 42%}
+@media(max-width:720px){
+  .bande .ph{aspect-ratio:4/3}
+  .ph-cap{padding:50px 21px 21px;font-size:14.5px}
+  .ph-cap b{font-size:17.5px}
+}
+
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:30px}
+@media(max-width:820px){.tri{grid-template-columns:1fr;gap:26px}}
+.tri figure{line-height:1.62}
+.tri .ph{aspect-ratio:3/2;border-radius:var(--r-l)}
+.tri figcaption{font-size:13.6px;color:var(--ink-3);margin-top:13px;line-height:1.5}
+.tri figcaption b{display:block;color:var(--ink);font-size:14.6px;font-weight:660;margin-bottom:2px}
+
+.ph-side{aspect-ratio:16/10;margin-top:20px;border-radius:var(--r-xl)}
+.credits{font-size:12.5px;color:var(--ink-4);margin-top:19px;line-height:1.6}
+.credits a{color:var(--ink-3);text-decoration:underline}
 
 /* ---------- hero ---------- */
 .hero{position:relative;overflow:hidden;padding:96px 0 92px;
@@ -417,6 +474,29 @@ footer a{color:#c3dae1}
   </div>
 </section>
 
+<!-- ==================== BANDE PHOTOGRAPHIQUE ====================
+     Le seul visuel chargé avant défilement. Une personne de dos sur un
+     chemin : le sujet est le temps qui passe, pas un patient. ------- -->
+<section class="bande" aria-label="Illustration">
+  <div class="w">
+    <figure class="ph">
+      <img src="https://images.unsplash.com/photo-1487956382158-bb926046304a?fm=jpg&amp;fit=crop&amp;q=72&amp;w=1600"
+           srcset="https://images.unsplash.com/photo-1487956382158-bb926046304a?fm=jpg&amp;fit=crop&amp;q=70&amp;w=800 800w,
+                   https://images.unsplash.com/photo-1487956382158-bb926046304a?fm=jpg&amp;fit=crop&amp;q=72&amp;w=1200 1200w,
+                   https://images.unsplash.com/photo-1487956382158-bb926046304a?fm=jpg&amp;fit=crop&amp;q=72&amp;w=1600 1600w,
+                   https://images.unsplash.com/photo-1487956382158-bb926046304a?fm=jpg&amp;fit=crop&amp;q=68&amp;w=2200 2200w"
+           sizes="(max-width:1160px) calc(100vw - 52px), 1108px"
+           width="1600" height="610" decoding="async" referrerpolicy="no-referrer"
+           alt="Un chemin traversant une prairie, parcouru par une personne vue de dos.">
+      <figcaption class="ph-cap">
+        <b>Le parcours commence avant la consultation, et ne s'arrête pas au résultat.</b>
+        Un recueil d'informations, un médecin qui examine et décide, les examens indiqués
+        réalisés sur place, puis un suivi dans le temps.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
 <!-- ==================== CONSTAT ==================== -->
 <section>
   <div class="w cols">
@@ -489,6 +569,50 @@ footer a{color:#c3dae1}
         nécessaire, et historique conservé dans le temps.</p>
         <span class="who">Le médecin</span>
       </div>
+    </div>
+
+    <!-- Trois lieux, pas trois promesses : ce que les photographies
+         montrent est vérifiable sur place. -->
+    <div class="tri">
+      <figure>
+        <div class="ph">
+          <img src="https://images.unsplash.com/photo-1710074213379-2a9c2653046a?fm=jpg&amp;fit=crop&amp;q=72&amp;w=800"
+               srcset="https://images.unsplash.com/photo-1710074213379-2a9c2653046a?fm=jpg&amp;fit=crop&amp;q=70&amp;w=560 560w,
+                       https://images.unsplash.com/photo-1710074213379-2a9c2653046a?fm=jpg&amp;fit=crop&amp;q=72&amp;w=800 800w,
+                       https://images.unsplash.com/photo-1710074213379-2a9c2653046a?fm=jpg&amp;fit=crop&amp;q=72&amp;w=1120 1120w"
+               sizes="(max-width:820px) calc(100vw - 52px), 355px"
+               width="800" height="533" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+               alt="Une salle de consultation équipée d'un bureau et d'une table d'examen.">
+        </div>
+        <figcaption><b>La consultation</b>En présentiel, avec un médecin qui examine et
+        interroge. Aucune étape du parcours ne se joue à distance.</figcaption>
+      </figure>
+      <figure>
+        <div class="ph">
+          <img src="https://images.unsplash.com/photo-1579154341184-22069e4614d2?fm=jpg&amp;fit=crop&amp;q=72&amp;w=800"
+               srcset="https://images.unsplash.com/photo-1579154341184-22069e4614d2?fm=jpg&amp;fit=crop&amp;q=70&amp;w=560 560w,
+                       https://images.unsplash.com/photo-1579154341184-22069e4614d2?fm=jpg&amp;fit=crop&amp;q=72&amp;w=800 800w,
+                       https://images.unsplash.com/photo-1579154341184-22069e4614d2?fm=jpg&amp;fit=crop&amp;q=72&amp;w=1120 1120w"
+               sizes="(max-width:820px) calc(100vw - 52px), 355px"
+               width="800" height="533" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+               alt="Des tubes de prélèvement en verre alignés sur un support.">
+        </div>
+        <figcaption><b>Le prélèvement</b>Réalisé sur place lorsque le médecin l'a retenu.
+        Le plateau disponible varie selon le centre.</figcaption>
+      </figure>
+      <figure>
+        <div class="ph">
+          <img src="https://images.unsplash.com/photo-1518152006812-edab29b069ac?fm=jpg&amp;fit=crop&amp;q=72&amp;w=800"
+               srcset="https://images.unsplash.com/photo-1518152006812-edab29b069ac?fm=jpg&amp;fit=crop&amp;q=70&amp;w=560 560w,
+                       https://images.unsplash.com/photo-1518152006812-edab29b069ac?fm=jpg&amp;fit=crop&amp;q=72&amp;w=800 800w,
+                       https://images.unsplash.com/photo-1518152006812-edab29b069ac?fm=jpg&amp;fit=crop&amp;q=72&amp;w=1120 1120w"
+               sizes="(max-width:820px) calc(100vw - 52px), 355px"
+               width="800" height="533" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+               alt="Un microscope posé sur un plan de travail de laboratoire.">
+        </div>
+        <figcaption><b>L'analyse</b>Confiée à un laboratoire accrédité pour les examens
+        concernés. Le choix du laboratoire appartient à la personne.</figcaption>
+      </figure>
     </div>
   </div>
 </section>
@@ -651,6 +775,16 @@ footer a{color:#c3dae1}
         </svg>
         <p class="cap">Schéma indicatif. Le réseau est en construction et le référencement
         est ouvert : la liste des centres partenaires est communiquée lors de la mise en place.</p>
+      </div>
+
+      <div class="ph ph-side">
+        <img src="https://images.unsplash.com/photo-1740933084056-078fac872bff?fm=jpg&amp;fit=crop&amp;q=72&amp;w=900"
+             srcset="https://images.unsplash.com/photo-1740933084056-078fac872bff?fm=jpg&amp;fit=crop&amp;q=70&amp;w=600 600w,
+                     https://images.unsplash.com/photo-1740933084056-078fac872bff?fm=jpg&amp;fit=crop&amp;q=72&amp;w=900 900w,
+                     https://images.unsplash.com/photo-1740933084056-078fac872bff?fm=jpg&amp;fit=crop&amp;q=72&amp;w=1200 1200w"
+             sizes="(max-width:960px) calc(100vw - 52px), 520px"
+             width="900" height="563" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+             alt="Une salle de réunion vide, table longue et grandes fenêtres.">
       </div>
 
       <div class="panel" style="margin-top:20px">
@@ -938,9 +1072,22 @@ footer a{color:#c3dae1}
       <p><span class="todo">[Contact du délégué à la protection des données]</span></p>
       <p style="margin-top:17px">
         Ce site est un site d'information. Il ne recueille aucune donnée de santé, ne
-        délivre aucun avis médical et ne se substitue pas à une consultation. Aucune
-        ressource externe n'est chargée, aucun cookie de mesure d'audience ni de publicité
-        n'est déposé.
+        délivre aucun avis médical et ne se substitue pas à une consultation. Aucun cookie
+        n'est déposé, aucun outil de mesure d'audience ni de publicité n'est chargé, et
+        aucune police ni aucun script n'est appelé depuis un tiers.
+      </p>
+      <p class="credits">
+        <strong style="color:var(--ink-3)">Photographies.</strong> Les cinq photographies de
+        cette page sont les seules ressources chargées depuis un autre domaine. Elles sont
+        servies par Unsplash, sous licence Unsplash, sans cookie ; l'hôte reçoit en revanche
+        l'adresse IP du visiteur, et le renvoi de page est désactivé pour qu'il ignore
+        laquelle est consultée. Aucune photographie n'est chargée sur les pages de
+        l'espace patient, du suivi ou de la vue médecin. Auteurs, dans l'ordre d'apparition :
+        <a href="https://unsplash.com/@areksan" rel="noopener nofollow">Arek Adeoye</a>,
+        <a href="https://unsplash.com/@zoshuacolah" rel="noopener nofollow">Zoshua Colah</a>,
+        <a href="https://unsplash.com/@nci" rel="noopener nofollow">National Cancer Institute</a>,
+        <a href="https://unsplash.com/@cheaousa" rel="noopener nofollow">Ousa Chea</a>,
+        <a href="https://unsplash.com/@ctw71" rel="noopener nofollow">Colin White</a>.
       </p>
       <p style="margin-top:17px">© <span id="y">2026</span> — Tous droits réservés.</p>
     </div>
