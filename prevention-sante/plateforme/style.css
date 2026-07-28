@@ -239,6 +239,31 @@ tr.marque-medecin th{box-shadow:inset 3px 0 0 var(--mq)}
 .mq-n{font-size:12.7px;color:var(--ink-4);margin-top:12px;line-height:1.55;max-width:76ch}
 
 /* =====================================================================
+   ONGLET BIOLOGIE — grille des relevés et marquage par valeur datée
+   ===================================================================== */
+.bloc.bio h2{border-left:3.5px solid var(--fc);padding-left:17px}
+.bio-t{width:100%}
+.bio-t thead th{background:var(--surf);font-size:11px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-4);padding:10px 8px;text-align:center;
+  border-bottom:1px solid var(--line)}
+.bio-t thead th.bio-p{text-align:left;padding-left:20px}
+.bio-t tbody th.bio-p{text-align:left;font-weight:600;font-size:14.6px;color:var(--ink);
+  padding:0 12px 0 20px;width:34%}
+.bio-t tbody th.bio-p span{display:block;font-family:var(--mono);font-size:11px;
+  color:var(--ink-4);font-weight:400;margin-top:2px}
+.bio-t tbody tr{border-bottom:1px solid var(--line-2)}
+.bio-t tbody tr:last-child{border-bottom:none}
+.bio-c{text-align:center;padding:0}
+.bio-v{font:inherit;font-size:15.2px;font-weight:620;color:var(--ink);background:none;
+  border:none;cursor:pointer;padding:13px 10px;width:100%;position:relative;border-radius:6px}
+.bio-v:hover{background:var(--pri-l);color:var(--pri-d)}
+.bio-c.marque-medecin{background:var(--mqbg)}
+.bio-c.marque-medecin .bio-v{color:var(--mq)}
+.bio-pt{display:block;width:6px;height:6px;border-radius:2px;background:var(--mq);
+  margin:4px auto 0}
+.bloc.bio .mq-form{margin:0 20px 20px}
+
+/* =====================================================================
    ONGLET SCORES — état du composant certifié et saisie de repli
    ===================================================================== */
 .avis-attente{background:var(--amber-bg);border-color:var(--amber-line);color:#7c4a10}

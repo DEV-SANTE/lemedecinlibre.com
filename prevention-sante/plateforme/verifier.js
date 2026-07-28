@@ -198,13 +198,90 @@ section('1 bis. Couleur évaluative — origine humaine obligatoire');
         : 'Un « checked » inconditionnel a été trouvé.');
   })();
 
-  /* 4. Côté patient, une marque sans auteur ne doit pas être rendue. */
+  /* 4. Côté patient, une marque sans auteur ne doit pas être rendue.
+     Le contrôle de complétude est centralisé dans Biologie.lire() : on
+     vérifie donc qu'il existe là, et que suivi.js passe bien par lui au
+     lieu de lire le stockage en direct. */
   (function () {
     const src = lire('suivi/suivi.js');
-    verifier('suivi.js — marque sans auteur ni date non affichée',
-      /if\s*\(!m\.medecin\s*\|\|\s*!m\.date\)\s*return null/.test(src));
+    const bio = lire('plateforme/biologie.js');
+    verifier('biologie.js — marque sans couleur, auteur ou date non restituée',
+      /if\s*\(!m\.couleur\s*\|\|\s*!m\.medecin\s*\|\|\s*!m\.date\)\s*return null/.test(bio));
+    verifier('suivi.js — passe par Biologie.lire et ne lit pas les marques en direct',
+      /Biologie\.(derniere|duParametre|lire)\(/.test(src) && !/marquesBio\s*\[/.test(src),
+      'Le suivi doit passer par le module pour bénéficier du contrôle de complétude.');
     verifier('suivi.js — attribution au médecin affichée avec la marque',
       /Note de votre m[éé]decin/.test(src) && /m\.medecin/.test(src));
+  })();
+})();
+
+/* ==================================================================
+   1 quater. BIOLOGIE — marquage par valeur datée, sans intervalle
+================================================================== */
+section('1 quater. Biologie — annoter sans comparer');
+
+(function () {
+  const f = 'plateforme/biologie.js';
+  if (!existe(f)) { verifier(f + ' — fichier présent', false, 'Fichier introuvable.'); return; }
+  const src = lire(f);
+  const code = codeSeul(src);
+
+  /* Aucun intervalle de référence stocké : c'est le point central.
+     Un intervalle stocké permettrait au logiciel de comparer, même si
+     c'est un médecin qui l'a saisi. */
+  const bornes = /\b(refMin|refMax|borneMin|borneMax|normeMin|normeMax|intervalle|normale?s?\s*[:=])\b/i
+    .test(code);
+  verifier(f + ' — aucun intervalle de référence stocké', !bornes,
+    bornes ? 'Un intervalle permettrait une comparaison automatique et continue.' : null);
+
+  /* Aucune arithmétique ni comparaison sur les valeurs. */
+  const calc = [/valeurs?\s*(\[[^\]]*\]|\.[\w$]+)\s*[><=+\-*/]{1,3}/, /\breduce\s*\(/]
+    .filter(r => r.test(code));
+  verifier(f + ' — aucune arithmétique ni comparaison sur les valeurs', calc.length === 0);
+
+  /* Aucun identifiant de calcul. */
+  const trouves = INTERDITS.filter(j =>
+    new RegExp('\\b' + j.replace('(', '\\(') + '\\b', 'i').test(code));
+  verifier(f + ' — aucun identifiant de calcul', trouves.length === 0,
+    trouves.length ? 'Trouvés : ' + trouves.join(', ') : null);
+
+  /* Garanties de la pose de marque. */
+  verifier(f + ' — couleur obligatoire, sans repli',
+    /if\s*\(!couleur\)\s*throw/.test(src));
+  verifier(f + ' — couleur restreinte à la liste admise',
+    /BIO_COULEURS\.some\([^)]*\)\)\s*throw/.test(src));
+  verifier(f + ' — auteur obligatoire',
+    /if\s*\(!medecin\)\s*throw/.test(src));
+  verifier(f + ' — marque incomplète non restituée',
+    /if\s*\(!m\.couleur\s*\|\|\s*!m\.medecin\s*\|\|\s*!m\.date\)\s*return null/.test(src));
+  verifier(f + ' — la marque porte le paramètre et la date de la valeur',
+    /parametre:\s*paramId/.test(src) && /dateValeur:\s*dateIso/.test(src));
+  verifier(f + ' — aucun tri par couleur ni par gravité',
+    !/sort\([^)]*couleur/.test(code));
+
+  /* La palette des familles reste à dominante bleue. */
+  const bloc = src.match(/const BIO_FAMILLES = \[[\s\S]*?\n\];/);
+  if (bloc) {
+    const hex = (bloc[0].match(/#([0-9a-f]{6})\b/gi) || []).map(h => h.slice(1));
+    const fautives = hex.filter(h => {
+      const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+      return !(b > r && b >= g);
+    });
+    verifier(f + ' — palette des familles à dominante bleue (' + hex.length + ')',
+      hex.length >= 4 && fautives.length === 0,
+      fautives.length ? 'Teintes évaluatives : #' + fautives.join(', #') : null);
+  }
+
+  /* Le suivi patient doit LIRE les marques, pas les écrire en dur. */
+  (function () {
+    const s = lire('suivi/suivi.js');
+    verifier('suivi.js — marques lues dans le dossier, non écrites en dur',
+      /Biologie\.(derniere|duParametre)\(/.test(s) && !/MARQUES_MEDECIN\s*=/.test(s),
+      'Les marques affichées au patient doivent venir du stockage partagé.');
+    verifier('suivi.js — paramètres et dates issus de la source partagée',
+      /const DATES\s*=\s*BIO_DATES/.test(s) && /const PARAMETRES\s*=\s*BIO_PARAMETRES/.test(s));
+    verifier('suivi/index.html — module biologie chargé',
+      /biologie\.js/.test(lire('suivi/index.html')));
   })();
 })();
 
@@ -469,27 +546,16 @@ section('5 quater. Suivi patient — historiser sans interpréter');
     /segments droits/i.test(src));
 
   /* LA COULEUR NE DOIT PAS POUVOIR SE LIRE COMME UNE ÉVALUATION.
-     La palette des familles est une rampe pétrole → violet. On vérifie
-     que le bleu domine dans CHAQUE teinte : une rampe à dominante bleue
-     ne porte aucune convention culturelle « bon / mauvais », alors qu'un
-     rouge ou un vert en porterait immédiatement une. */
-  const bloc = src.match(/const FAMILLES = \[[\s\S]*?\n\];/);
-  if (!bloc) {
-    verifier(f + ' — palette des familles identifiable', false, 'Bloc FAMILLES introuvable.');
-  } else {
-    const hex = (bloc[0].match(/#([0-9a-f]{6})\b/gi) || []).map(h => h.slice(1));
-    const fautives = hex.filter(h => {
-      const r = parseInt(h.slice(0, 2), 16),
-            g = parseInt(h.slice(2, 4), 16),
-            b = parseInt(h.slice(4, 6), 16);
-      return !(b > r && b >= g);   /* le bleu doit dominer */
-    });
-    verifier(f + ' — palette des familles à dominante bleue (' + hex.length + ' teintes)',
-      hex.length >= 4 && fautives.length === 0,
-      fautives.length ? 'Teintes à dominante rouge ou verte : #' + fautives.join(', #') +
-        '. Une teinte évaluative ferait de la couleur un signalement.' :
-        (hex.length < 4 ? 'Palette trop courte pour être catégorielle.' : null));
-  }
+     La palette des familles est désormais définie une seule fois, dans
+     plateforme/biologie.js, et contrôlée en §1 quater. On vérifie ici
+     que suivi.js ne la redéfinit pas localement — une seconde palette
+     pourrait dériver et introduire une teinte évaluative sans que le
+     contrôle central s'en aperçoive. */
+  const redefinit = /const\s+FAMILLES\s*=\s*\[/.test(src);
+  verifier(f + ' — ne redéfinit pas la palette, utilise la source partagée',
+    !redefinit && /const\s+FAMILLES\s*=\s*BIO_FAMILLES/.test(src),
+    redefinit ? 'Une palette locale a été trouvée : elle échapperait au contrôle central.'
+      : 'La palette doit être reprise de BIO_FAMILLES.');
 
   /* La superposition ne doit être possible qu'à unité identique.
      Deux garanties attendues : le filtre qui construit la liste des

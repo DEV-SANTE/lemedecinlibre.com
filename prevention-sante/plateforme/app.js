@@ -112,6 +112,24 @@ function patientsFictifs() {
       id: nouvelId(), cree: horodatage(), modifie: horodatage(),
       statut: 'transmis', fictif: true,
       validation: null,
+      /* Marques de démonstration, posées comme le ferait un médecin :
+         dans le stockage, sur une valeur datée, signées et horodatées.
+         Elles ne sont pas écrites en dur dans l'affichage — le suivi
+         patient les lit ici, ce qui rend la chaîne réelle. */
+      marquesBio: {
+        'ferr|2026-07-20': { parametre: 'ferr', dateValeur: '2026-07-20', couleur: 'orange',
+          commentaire: 'Baisse régulière depuis 2022. Bilan martial complémentaire prescrit, nous en reparlons.',
+          medecin: 'Dr DÉMO (fictif)', date: '2026-07-20T11:40:00.000Z' },
+        'gly|2026-07-20': { parametre: 'gly', dateValeur: '2026-07-20', couleur: 'orange',
+          commentaire: 'À surveiller. Nous avons parlé d’activité physique et d’alimentation.',
+          medecin: 'Dr DÉMO (fictif)', date: '2026-07-20T11:42:00.000Z' },
+        'hb|2026-07-20': { parametre: 'hb', dateValeur: '2026-07-20', couleur: 'vert',
+          commentaire: 'Stable, sans particularité.',
+          medecin: 'Dr DÉMO (fictif)', date: '2026-07-20T11:43:00.000Z' },
+        'creat|2026-07-20': { parametre: 'creat', dateValeur: '2026-07-20', couleur: 'vert',
+          commentaire: 'Fonction rénale stable.',
+          medecin: 'Dr DÉMO (fictif)', date: '2026-07-20T11:44:00.000Z' }
+      },
       reponses: {
         nom: 'DÉMO', prenom: 'Profil-Un', annee_naissance: 1970, sexe: 'M',
         profession: 'Conducteur routier (fictif)',
@@ -534,6 +552,7 @@ function vueMedecin(id) {
 
       <div class="onglets">
         <button data-o="reponses" class="${ongletMedecin === 'reponses' ? 'on' : ''}">Réponses du patient</button>
+        <button data-o="biologie" class="${ongletMedecin === 'biologie' ? 'on' : ''}">Biologie${Biologie.compte(dossier) ? ' · ' + Biologie.compte(dossier) : ''}</button>
         <button data-o="scores" class="${ongletMedecin === 'scores' ? 'on' : ''}">Scores</button>
         <button data-o="referentiel" class="${ongletMedecin === 'referentiel' ? 'on' : ''}">Référentiel documentaire</button>
         <button data-o="decision" class="${ongletMedecin === 'decision' ? 'on' : ''}">Décision médicale</button>
@@ -541,6 +560,7 @@ function vueMedecin(id) {
 
       <div id="onglet-contenu">${
         ongletMedecin === 'reponses' ? blocReponses(dossier)
+        : ongletMedecin === 'biologie' ? blocBiologie(dossier)
         : ongletMedecin === 'scores' ? blocScores(dossier)
         : ongletMedecin === 'referentiel' ? blocReferentiel()
         : blocDecision(dossier)
@@ -548,11 +568,16 @@ function vueMedecin(id) {
     </div>`;
 
   document.querySelectorAll('.onglets button').forEach(b => {
-    b.onclick = () => { ongletMedecin = b.dataset.o; marqueOuverte = null; vueMedecin(id); };
+    b.onclick = () => {
+      ongletMedecin = b.dataset.o;
+      marqueOuverte = null; bioOuverte = null;
+      vueMedecin(id);
+    };
   });
 
   if (ongletMedecin === 'decision') brancherDecision(dossier);
   if (ongletMedecin === 'reponses') brancherMarquage(dossier);
+  if (ongletMedecin === 'biologie') brancherBiologie(dossier);
   if (ongletMedecin === 'scores') brancherScores(dossier);
 }
 
@@ -747,6 +772,179 @@ function brancherMarquage(dossier) {
   if (suppr) suppr.onclick = () => {
     retirerMarque(dossier, suppr.dataset.q);
     marqueOuverte = null;
+    vueMedecin(dossier.id);
+  };
+}
+
+/* =====================================================================
+   ONGLET BIOLOGIE
+   Grille des relevés : un paramètre par ligne, une date par colonne.
+   Le médecin clique une valeur précise et pose sa marque. Elle remonte
+   immédiatement dans le suivi du patient.
+
+   Aucun intervalle de référence n'est affiché ni stocké, et aucune
+   valeur n'est comparée à quoi que ce soit par le logiciel.
+   ===================================================================== */
+let bioOuverte = null;   /* clé paramètre|date en cours d'annotation */
+
+function blocBiologie(dossier) {
+  const dates = Biologie.dates();
+  const familles = Biologie.familles();
+  const n = Biologie.compte(dossier);
+
+  const entete = `
+    <div class="avis">
+      Relevés transmis par le laboratoire, tels quels. <b>Le logiciel ne compare aucune valeur
+      à un intervalle de référence</b> — ces intervalles figurent sur le compte rendu du
+      laboratoire, dans l’onglet documents du patient.
+    </div>
+    <div class="avis">
+      Cliquez une valeur pour l’annoter : vous choisissez la couleur et vous écrivez votre
+      commentaire. <b>Votre marque porte sur cette valeur, à cette date.</b> Elle apparaît
+      immédiatement dans le suivi du patient, avec votre nom et l’horodatage.
+      ${n ? `<br><br>${n} marque${n > 1 ? 's' : ''} posée${n > 1 ? 's' : ''} sur ce dossier.` : ''}
+    </div>
+    <div class="signataire">
+      <label for="med-bio">Vous êtes</label>
+      <input type="text" id="med-bio" placeholder="Nom du médecin"
+             value="${esc(medecinCourant || (dossier.validation && dossier.validation.medecin) || '')}">
+      <span class="sig-note">Toute marque est signée à votre nom.</span>
+    </div>`;
+
+  const grilles = familles.map(f => `
+    <section class="bloc bio">
+      <h2 style="--fc:${f.couleur}">${esc(f.nom)}</h2>
+      <table class="bio-t">
+        <thead>
+          <tr><th class="bio-p">Paramètre</th>
+          ${dates.map(d => `<th>${esc(courteDateBio(d))}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${f.items.map(p => `<tr>
+            <th class="bio-p">${esc(p.nom)}<span>${esc(p.unite)}</span></th>
+            ${dates.map(d => {
+              const v = Biologie.valeur(p.id, d);
+              const m = Biologie.lire(dossier, p.id, d);
+              const k = Biologie.cle(p.id, d);
+              return `<td class="bio-c${m ? ' marque-medecin m-' + esc(m.couleur) : ''}">
+                <button class="bio-v" data-k="${esc(k)}" title="Annoter cette valeur">
+                  ${v == null ? '—' : esc(String(v).replace('.', ','))}
+                  ${m ? '<i class="bio-pt"></i>' : ''}
+                </button>
+              </td>`;
+            }).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      ${f.items.map(p => dates.map(d => {
+        const k = Biologie.cle(p.id, d);
+        if (bioOuverte !== k) return '';
+        return bloc_bio_form(dossier, p, d, k);
+      }).join('')).join('')}
+    </section>`).join('');
+
+  const journal = (function () {
+    const toutes = [];
+    Biologie.parametres().forEach(p => {
+      Biologie.duParametre(dossier, p.id).forEach(m => toutes.push({ p: p, m: m }));
+    });
+    if (!toutes.length) return '';
+    toutes.sort((a, b) => (b.m.date || '').localeCompare(a.m.date || ''));
+    return `<section class="bloc">
+      <h2>Mes annotations sur ce dossier</h2>
+      <table class="kv">
+        ${toutes.map(x => `<tr class="marque-medecin m-${esc(x.m.couleur)}">
+          <th>${esc(x.p.nom)} · relevé du ${esc(formaterDate(x.m.dateValeur))}<br>
+            <span class="mono">valeur ${esc(String(Biologie.valeur(x.p.id, x.m.dateValeur)).replace('.', ','))} ${esc(x.p.unite)}</span></th>
+          <td>
+            <div class="mq-vue" style="margin-top:0;padding-top:0;border-top:none">
+              <span class="mq-pt m-${esc(x.m.couleur)}"></span>
+              <span class="mq-txt">${x.m.commentaire ? esc(x.m.commentaire) : 'Marqué sans commentaire'}</span>
+              <span class="mq-sig">${esc(x.m.medecin)} · ${esc(formaterDate(x.m.date))}</span>
+            </div>
+          </td></tr>`).join('')}
+      </table>
+    </section>`;
+  })();
+
+  return entete + grilles + journal;
+}
+
+function courteDateBio(iso) {
+  const M = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  const d = new Date(iso);
+  return M[d.getMonth()].replace('.', '') + ' ' + String(d.getFullYear()).slice(2);
+}
+
+function bloc_bio_form(dossier, p, dateIso, k) {
+  const m = Biologie.lire(dossier, p.id, dateIso);
+  const v = Biologie.valeur(p.id, dateIso);
+  return `<div class="mq-form" data-bform="${esc(k)}">
+    <p class="mq-k">${esc(p.nom)} — relevé du ${esc(formaterDate(dateIso))} — valeur
+      ${esc(String(v).replace('.', ','))} ${esc(p.unite)}</p>
+    <div class="mq-choix">
+      ${Biologie.couleurs().map(c => `
+        <label class="mq-opt m-${esc(c.v)}">
+          <input type="radio" name="bio-${esc(k)}" value="${esc(c.v)}" ${m && m.couleur === c.v ? 'checked' : ''}>
+          <span>${esc(c.l)}</span>
+        </label>`).join('')}
+    </div>
+    <textarea class="mq-com" rows="2" placeholder="Votre commentaire, facultatif">${m ? esc(m.commentaire) : ''}</textarea>
+    <p class="mq-err" style="display:none"></p>
+    <div class="mq-act">
+      <button class="btn btn-p b-bio-save" data-k="${esc(k)}">Enregistrer</button>
+      ${m ? `<button class="btn btn-d b-bio-del" data-k="${esc(k)}">Retirer la marque</button>` : ''}
+      <button class="btn btn-g b-bio-cancel">Annuler</button>
+    </div>
+    <p class="mq-n">Aucune couleur n’est présélectionnée. Le logiciel ne compare pas cette
+    valeur à un intervalle de référence et n’en propose aucune lecture : la marque est la
+    vôtre, et elle sera visible du patient avec votre nom.</p>
+  </div>`;
+}
+
+function brancherBiologie(dossier) {
+  const champ = $('#med-bio');
+  if (champ) champ.addEventListener('input', () => { medecinCourant = champ.value.trim(); });
+
+  document.querySelectorAll('.bio-v').forEach(b => {
+    b.onclick = () => {
+      bioOuverte = (bioOuverte === b.dataset.k) ? null : b.dataset.k;
+      vueMedecin(dossier.id);
+    };
+  });
+
+  const annuler = document.querySelector('.b-bio-cancel');
+  if (annuler) annuler.onclick = () => { bioOuverte = null; vueMedecin(dossier.id); };
+
+  const enreg = document.querySelector('.b-bio-save');
+  if (enreg) enreg.onclick = () => {
+    const k = enreg.dataset.k;
+    const parts = k.split('|');
+    const f = document.querySelector('[data-bform="' + k + '"]');
+    const err = f.querySelector('.mq-err');
+    const choisi = f.querySelector('input[name="bio-' + k + '"]:checked');
+    const med = ($('#med-bio').value || '').trim();
+    medecinCourant = med;
+    try {
+      Biologie.poser(dossier, parts[0], parts[1],
+        choisi ? choisi.value : '', f.querySelector('.mq-com').value, med);
+      dossier.modifie = horodatage();
+      sauver();
+      bioOuverte = null;
+      vueMedecin(dossier.id);
+    } catch (e) {
+      err.textContent = e.message;
+      err.style.display = 'block';
+    }
+  };
+
+  const suppr = document.querySelector('.b-bio-del');
+  if (suppr) suppr.onclick = () => {
+    const parts = suppr.dataset.k.split('|');
+    Biologie.retirer(dossier, parts[0], parts[1]);
+    dossier.modifie = horodatage();
+    sauver();
+    bioOuverte = null;
     vueMedecin(dossier.id);
   };
 }
