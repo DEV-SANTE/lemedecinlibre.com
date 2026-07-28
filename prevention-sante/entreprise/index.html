@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portail entreprise — Prévention Santé</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+/* =====================================================================
+   M9 — PORTAIL ENTREPRISE
+   Aucune ressource externe. Aucun cookie.
+   Aucune classe de ce fichier ne code un état de santé : les seules
+   nuances portent sur la publication ou la suppression d'un chiffre.
+   ===================================================================== */
+:root{
+  --ink:#08181f; --ink-2:#284653; --ink-3:#587784; --ink-4:#89a2ad;
+  --pri:#0f5f6b; --pri-d:#0a464f; --pri-l:#e4f1f3; --pri-l2:#f1f8f9;
+  --line:#dce8eb; --line-2:#e9f1f3; --surf:#f3f8f9;
+  --amber:#b45309; --amber-bg:#fdf6ec; --amber-line:#f0d9b5;
+  --r:12px; --r-l:20px;
+  --sh-s:0 1px 2px rgba(8,24,31,.045);
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--f);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2{margin:0;letter-spacing:-.025em;line-height:1.18}
+h1{font-size:29px;font-weight:720}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+
+.bandeau{background:var(--amber-bg);border-bottom:1px solid var(--amber-line);color:#7c4a10;
+  font-size:13.3px;padding:11px 26px;text-align:center;line-height:1.5}
+.bandeau strong{color:#5f3708}
+
+.top{border-bottom:1px solid var(--line-2);background:#fff;position:sticky;top:0;z-index:40}
+.top-in{max-width:1080px;margin:0 auto;padding:0 26px;height:66px;display:flex;align-items:center;gap:13px}
+.mark{width:32px;height:32px;flex:0 0 32px}
+.brand{font-weight:730;letter-spacing:-.032em;font-size:16.5px;line-height:1.05;
+  color:var(--ink);text-decoration:none}
+.brand small{display:block;font-size:9.5px;font-weight:640;letter-spacing:.17em;
+  text-transform:uppercase;color:var(--ink-4);margin-top:3px}
+.top .env{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--amber);border:1px solid var(--amber-line);
+  background:var(--amber-bg);padding:5px 11px;border-radius:999px}
+
+main{max-width:1080px;margin:0 auto;padding:32px 26px 90px}
+.head{display:flex;align-items:flex-start;gap:26px;flex-wrap:wrap;margin-bottom:24px}
+.sub{color:var(--ink-3);font-size:15px;margin-top:7px}
+.sub2{color:var(--ink-3);font-size:14.5px;margin:8px 0 16px;max-width:82ch}
+.switch{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.switch button{font:inherit;font-size:13.6px;font-weight:580;padding:9px 15px;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink-2);
+  border-radius:999px;cursor:pointer}
+.switch button:hover{border-color:var(--pri)}
+.switch button.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:640}
+
+.avis{background:var(--pri-l2);border:1px solid var(--line);border-radius:var(--r);
+  padding:18px 21px;font-size:14.9px;color:var(--ink-2);margin-bottom:30px;max-width:96ch}
+.avis b{color:var(--ink)}
+.avis.bloque{background:var(--amber-bg);border-color:var(--amber-line);color:#7c4a10}
+.avis.bloque b{color:#5f3708}
+
+.cartes{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:14px}
+@media(max-width:940px){.cartes{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.cartes{grid-template-columns:1fr}}
+.carte{border:1px solid var(--line);border-radius:var(--r-l);padding:20px;box-shadow:var(--sh-s)}
+.carte .k{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4)}
+.carte .v{margin:12px 0 10px;min-height:40px}
+.carte .v b{font-size:31px;font-weight:760;letter-spacing:-.035em;line-height:1}
+.carte .d{font-size:13.3px;color:var(--ink-3);line-height:1.5}
+
+.masque{display:inline-block;font-size:13px;color:var(--amber);background:var(--amber-bg);
+  border:1px solid var(--amber-line);border-radius:8px;padding:7px 11px;line-height:1.45;font-weight:560}
+
+.h-sec{font-size:21px;font-weight:700;margin:40px 0 0}
+.bloc{border:1px solid var(--line);border-radius:var(--r-l);padding:8px 22px}
+.ligne{display:grid;grid-template-columns:1fr 150px auto;gap:18px;align-items:center;
+  padding:15px 0;border-bottom:1px solid var(--line-2)}
+.ligne:last-child{border-bottom:none}
+.ligne .lib{font-size:15.2px;color:var(--ink-2)}
+.ligne .jauge{height:7px;background:var(--line-2);border-radius:999px;overflow:hidden}
+.ligne .jauge i{display:block;height:100%;background:var(--pri);border-radius:999px}
+.ligne .val{text-align:right;min-width:70px}
+.ligne .val b{font-size:17px;font-weight:700}
+@media(max-width:700px){.ligne{grid-template-columns:1fr auto}.ligne .jauge{display:none}}
+
+.jamais{border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;margin-top:16px}
+.jamais li{padding:14px 22px;border-bottom:1px solid var(--line-2);font-size:15.2px;
+  color:var(--ink-2);display:flex;gap:13px;align-items:flex-start}
+.jamais li:last-child{border-bottom:none}
+.jamais li::before{content:"";flex:0 0 16px;width:16px;height:16px;margin-top:4px;
+  border-radius:5px;background:var(--surf);border:1.5px solid var(--line-2);
+  background-image:linear-gradient(45deg,transparent 44%,var(--ink-4) 44%,var(--ink-4) 56%,transparent 56%),
+                   linear-gradient(-45deg,transparent 44%,var(--ink-4) 44%,var(--ink-4) 56%,transparent 56%)}
+
+.pied{border-top:1px solid var(--line);background:var(--surf);padding:30px 26px;
+  font-size:13px;color:var(--ink-3);line-height:1.62}
+.pied-in{max-width:1080px;margin:0 auto}
+.pied strong{color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<div class="bandeau">
+  <strong>Données fictives de démonstration.</strong> Deux entreprises d’exemple, de tailles
+  volontairement très différentes, pour montrer le seuil anti-réidentification à l’œuvre.
+</div>
+
+<header class="top">
+  <div class="top-in">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <rect width="40" height="40" rx="11.5" fill="#0f5f6b"/>
+      <path d="M8.5 20.5h4.6l2.7-7 3.5 13.5 2.7-8.6 2 5.1h5.5" stroke="#fff"
+            stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <a class="brand" href="./">Prévention Santé<small>Portail entreprise · M9</small></a>
+    <span class="env">Test</span>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer class="pied">
+  <div class="pied-in">
+    <p><strong>Pourquoi certains chiffres sont masqués.</strong> L’anonymat ne se décrète pas.
+    Sur un effectif réduit, un pourcentage suffit à remonter à une personne : « 33 % des
+    participants » sur trois participants désigne quelqu’un. Tout indicateur calculé sur moins
+    de onze personnes est donc supprimé avant même d’être transmis, et les découpages ne sont
+    jamais combinables entre eux — croiser un thème de santé avec un service ou une tranche
+    d’âge réduirait les effectifs jusqu’à la réidentification.</p>
+    <p style="margin-top:13px"><strong>Ces limites sont techniques.</strong> La plateforme ne
+    dispose d’aucune fonction permettant de les lever, quelle que soit la demande et son
+    motif. Le seuil de onze reste à confirmer avec le délégué à la protection des données
+    avant la mise en service.</p>
+  </div>
+</footer>
+
+<script src="entreprise.js"></script>
+</body>
+</html>
