@@ -630,19 +630,136 @@ verifier('plateforme/index.html — mention de l’absence de certification HDS'
 })();
 
 /* ==================================================================
-   7. AUCUNE RESSOURCE EXTERNE
-================================================================== */
-section('7. Aucune ressource externe');
+   7. RESSOURCES EXTERNES
 
+   La règle a changé le jour où des photographies ont été ajoutées, et
+   elle a été resserrée plutôt qu'assouplie.
+
+   Avant : aucune ressource externe nulle part.
+   Maintenant : aucun script, aucune feuille de style, aucune police et
+   aucun cadre distant NULLE PART — y compris sur la page publique, car
+   ce sont ces ressources-là qui déposent des cookies et exécutent du
+   code tiers. Et aucune image distante nulle part SAUF sur la page
+   publique, où cinq photographies déclarées sont admises.
+
+   La distinction n'est pas cosmétique. Une image distante ne dépose pas
+   de cookie et n'exécute rien, mais elle révèle une adresse IP à un
+   tiers. Sur une page qui affiche un dossier médical, cette seule
+   requête indique qu'une personne consulte des données de santé. C'est
+   pour cela que le périmètre est verrouillé ici et non laissé à la
+   vigilance de celui qui écrira la page suivante.
+================================================================== */
+section('7. Ressources externes');
+
+const VISUELS = require('../commun/visuels.js');
+
+/* --- 7.1 Aucun script, style, police ou cadre distant, aucune page --- */
 ['index.html', 'plateforme/index.html', 'plateforme/style.css',
- 'espace/index.html', 'pilotage/index.html',
- 'entreprise/index.html', 'contenus/index.html', 'suivi/index.html'].forEach(f => {
+ 'espace/index.html', 'pilotage/index.html', 'entreprise/index.html',
+ 'contenus/index.html', 'suivi/index.html',
+ 'commun/navigation.js', 'commun/visuels.js'].forEach(f => {
+  const src = lire(f);
+  const fautes = [];
+  if (/<script[^>]+src\s*=\s*["'](?:https?:)?\/\//i.test(src)) fautes.push('script distant');
+  if (/<link[^>]+href\s*=\s*["'](?:https?:)?\/\//i.test(src)) fautes.push('feuille de style ou préchargement distant');
+  if (/@import/i.test(src)) fautes.push('@import');
+  if (/@font-face/i.test(src)) fautes.push('@font-face');
+  if (/<iframe|<embed|<object/i.test(src)) fautes.push('cadre incorporé');
+  verifier(f + ' — aucun script, style, police ni cadre distant', fautes.length === 0,
+    fautes.length ? fautes.join(', ') : null);
+});
+
+/* --- 7.2 Aucune image distante hors de la page publique --- */
+['plateforme/index.html', 'plateforme/style.css', 'espace/index.html',
+ 'pilotage/index.html', 'entreprise/index.html', 'contenus/index.html',
+ 'suivi/index.html', 'commun/navigation.js'].forEach(f => {
   const src = lire(f);
   const ext = (src.match(/(https?:)?\/\/[a-z0-9.-]+\.[a-z]{2,}/gi) || [])
     .filter(u => !/w3\.org/.test(u));
-  verifier(f + ' — aucune ressource externe', ext.length === 0,
-    ext.length ? 'Domaines : ' + [...new Set(ext)].join(', ') : null);
+  verifier(f + ' — aucune ressource distante, image comprise', ext.length === 0,
+    ext.length ? 'Domaines : ' + [...new Set(ext)].join(', ')
+      + ' — une page qui affiche des données de santé ne doit rien demander à un tiers.' : null);
 });
+
+/* --- 7.3 Les images de la page publique sont conformes au catalogue --- */
+(function () {
+  const src = lire(VISUELS.pagePublique);
+  const balises = src.match(/<img\b[^>]*>/gi) || [];
+
+  verifier('index.html — autant d’images que de photographies déclarées (' +
+    balises.length + '/' + VISUELS.photos.length + ')',
+    balises.length === VISUELS.photos.length,
+    balises.length !== VISUELS.photos.length
+      ? 'Toute image affichée doit être déclarée dans commun/visuels.js, et inversement.' : null);
+
+  const vus = [];
+  balises.forEach((b, i) => {
+    const rang = 'index.html — image ' + (i + 1);
+
+    /* Toutes les origines de la balise, src et srcset confondus. */
+    const urls = b.match(/https?:\/\/[^\s"',]+/g) || [];
+    const hotes = [...new Set(urls.map(u => u.split('/')[2]))];
+    const horsListe = hotes.filter(h => VISUELS.hotes.indexOf(h) === -1);
+    verifier(rang + ' — origine en liste blanche', urls.length > 0 && horsListe.length === 0,
+      horsListe.length ? 'Hôte non autorisé : ' + horsListe.join(', ') : null);
+
+    /* Un seul identifiant par balise : src et srcset doivent viser la
+       même photographie, sinon l'image affichée dépend de la largeur. */
+    const ids = [...new Set((b.match(/photo-[0-9a-z]+-[0-9a-z]+/gi) || []))];
+    verifier(rang + ' — src et srcset visent la même photographie', ids.length === 1,
+      ids.length !== 1 ? 'Identifiants trouvés : ' + ids.join(', ') : null);
+
+    const decl = ids.length === 1
+      ? VISUELS.photos.filter(p => p.id === ids[0])[0] : null;
+    verifier(rang + ' — déclarée dans commun/visuels.js', !!decl,
+      !decl ? 'Identifiant absent du catalogue : ' + ids.join(', ') : null);
+    if (decl) vus.push(decl.id);
+
+    verifier(rang + ' — page de renvoi masquée (referrerpolicy)',
+      /referrerpolicy\s*=\s*["']no-referrer["']/i.test(b),
+      null);
+
+    verifier(rang + ' — dimensions déclarées, pas de saut de mise en page',
+      /\bwidth\s*=\s*["']?\d+/i.test(b) && /\bheight\s*=\s*["']?\d+/i.test(b));
+
+    const alt = (b.match(/\balt\s*=\s*["']([^"']*)["']/i) || [])[1];
+    verifier(rang + ' — texte alternatif renseigné', !!alt && alt.trim().length > 12,
+      !alt ? 'Attribut alt absent ou vide.' : null);
+
+    if (decl) {
+      const differe = /loading\s*=\s*["']lazy["']/i.test(b);
+      verifier(rang + ' — chargement différé conforme au catalogue (' +
+        (decl.differe ? 'différé attendu' : 'immédiat attendu') + ')',
+        differe === decl.differe,
+        differe !== decl.differe
+          ? 'Le premier visuel doit être immédiat, les autres différés.' : null);
+    }
+  });
+
+  /* Toute déclaration doit servir : un catalogue qui gonfle sans être
+     affiché finirait par ne plus décrire la page. */
+  const orphelines = VISUELS.photos.filter(p => vus.indexOf(p.id) === -1);
+  verifier('commun/visuels.js — aucune déclaration inutilisée', orphelines.length === 0,
+    orphelines.length ? 'Déclarées sans être affichées : '
+      + orphelines.map(p => p.id).join(', ') : null);
+
+  /* Un auteur non cité est une attribution perdue : la licence n'exige
+     pas le crédit, mais le projet se l'impose. */
+  VISUELS.photos.forEach(p => {
+    verifier('index.html — auteur cité : ' + p.auteur,
+      src.indexOf(p.auteur) !== -1 && src.indexOf(p.compte) !== -1,
+      null);
+  });
+
+  /* Le pied de page doit dire ce qui est chargé et ce que ça implique.
+     Une page qui promet « aucune ressource externe » alors qu'elle en
+     charge cinq est plus dommageable que la fuite d'IP elle-même. */
+  verifier('index.html — le pied de page ne promet plus l’absence de ressource externe',
+    !/[Aa]ucune\s+ressource\s+externe\s+n['’]est\s+charg/i.test(src),
+    null);
+  verifier('index.html — la fuite d’adresse IP est écrite noir sur blanc',
+    /adresse\s+IP/i.test(src));
+})();
 
 /* ================================================================== */
 console.log('');
