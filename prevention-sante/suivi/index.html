@@ -263,6 +263,31 @@ main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
 .avis .ico{color:var(--pri-d);flex:0 0 20px;margin-top:2px}
 .avis b{color:var(--ink)}
 
+/* =====================================================================
+   MARQUES DU MÉDECIN — les seules couleurs évaluatives de cette page
+
+   Elles ne sont jamais appliquées en fonction d'une valeur. Elles
+   n'apparaissent que si un médecin a choisi la couleur, et toujours
+   avec son nom et la date. Le préfixe « mqm » et les classes « m- »
+   les rendent repérables dans le test de non-régression.
+   ===================================================================== */
+.m-vert{--mq:#0f766e;--mqbg:#eefaf7;--mqln:#bfe6de}
+.m-orange{--mq:#b45309;--mqbg:#fdf6ec;--mqln:#f0d9b5}
+.m-rouge{--mq:#a52222;--mqbg:#fdf1f1;--mqln:#efc9c9}
+
+.mqm{display:flex;gap:15px;align-items:flex-start;margin-top:20px;
+  background:var(--mqbg);border:1px solid var(--mqln);
+  border-left:3.5px solid var(--mq);border-radius:0 var(--r) var(--r) 0;
+  padding:17px 20px;max-width:88ch}
+.mqm-pt{width:11px;height:11px;border-radius:3px;background:var(--mq);flex:0 0 11px;margin-top:5px}
+.mqm-k{font-size:10.8px;font-weight:720;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--mq);margin-bottom:7px}
+.mqm-c{font-size:15.4px;color:var(--ink);line-height:1.6}
+.mqm-s{font-family:var(--mono);font-size:11.8px;color:var(--ink-4);margin-top:8px}
+
+.mqm-tag{display:inline-block;width:8px;height:8px;border-radius:2.5px;
+  background:var(--mq);margin-left:7px;vertical-align:1px}
+
 /* ---------- limites ---------- */
 .limites{background:var(--sand);border:1px solid #eee5d8;border-radius:var(--r-xl);padding:32px}
 .limites h2{margin-bottom:20px}

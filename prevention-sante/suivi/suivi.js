@@ -69,6 +69,38 @@ const PARAMETRES = [
   { id: 'poids', nom: 'Poids',              unite: 'kg',     groupe: 'Mesuré sur place', valeurs: [71.5, 73.2, 75.8, 77.1, 76.4] }
 ];
 
+/* =====================================================================
+   MARQUES DU MÉDECIN
+   ---------------------------------------------------------------------
+   Les seules couleurs évaluatives de cette page. Elles ne sont JAMAIS
+   dérivées d'une valeur par le logiciel : elles proviennent d'un
+   enregistrement fait par un médecin, qui a choisi la couleur lui-même.
+
+   Trois conditions d'affichage, sans exception :
+     - la marque existe parce qu'un médecin l'a posée ;
+     - elle est toujours accompagnée de son nom et de la date ;
+     - elle porte le mot « médecin » en clair, pour qu'aucun patient ne
+       puisse la prendre pour un signalement automatique.
+
+   Une marque sans auteur n'est pas affichée. C'est vérifié à l'exécution.
+   ===================================================================== */
+const MARQUES_MEDECIN = {
+  ferr:  { couleur: 'orange', commentaire: 'Baisse régulière depuis 2022. Nous en reparlons à la prochaine visite, j’ai prescrit un bilan complémentaire.', medecin: 'Dr DÉMO (fictif)', date: '2026-07-20' },
+  gly:   { couleur: 'orange', commentaire: 'À surveiller. Nous avons parlé d’activité physique et d’alimentation.', medecin: 'Dr DÉMO (fictif)', date: '2026-07-20' },
+  hb:    { couleur: 'vert',   commentaire: 'Stable et sans particularité.', medecin: 'Dr DÉMO (fictif)', date: '2026-07-20' },
+  creat: { couleur: 'vert',   commentaire: 'Fonction rénale stable.', medecin: 'Dr DÉMO (fictif)', date: '2026-07-20' }
+};
+
+/* Accès contrôlé : une marque sans auteur ou sans date n'est pas rendue. */
+function marqueDu(id) {
+  const m = MARQUES_MEDECIN[id];
+  if (!m) return null;
+  if (!m.medecin || !m.date) return null;
+  return m;
+}
+
+const LIB_COULEUR = { vert: 'Vert', orange: 'Orange', rouge: 'Rouge' };
+
 /* Ruban de parcours : ce qui a été fait à chaque visite. */
 const VISITES = [
   { date: '2022-04-12', titre: 'Première visite', lieu: 'Centre A (fictif)',
@@ -345,6 +377,19 @@ function rendre() {
           </div>
           <div class="g-wrap" id="gwrap">${grandGraphique(series)}</div>
 
+          ${(function () {
+            const m = marqueDu(p.id);
+            if (!m) return '';
+            return `<div class="mqm m-${esc(m.couleur)}">
+              <span class="mqm-pt"></span>
+              <div>
+                <p class="mqm-k">Note de votre médecin — marque ${esc(LIB_COULEUR[m.couleur])}</p>
+                <p class="mqm-c">${esc(m.commentaire)}</p>
+                <p class="mqm-s">${esc(m.medecin)} · ${esc(jolieDate(m.date))}</p>
+              </div>
+            </div>`;
+          })()}
+
           ${memeUnite(p).length ? `
           <div class="cmp">
             <span class="cmp-k">Superposer un paramètre en ${esc(p.unite)}</span>
@@ -378,11 +423,13 @@ function rendre() {
 
       <div class="avis">
         ${ic('i-info')}
-        <span><b>Aucune valeur n’est commentée ici.</b> Les intervalles de référence figurent
-        sur le compte rendu de votre laboratoire, que vous pouvez ouvrir plus bas. Leur lecture
-        appartient au médecin qui vous reçoit : une valeur ne se lit pas seule, mais avec votre
-        âge, vos antécédents et le reste de votre bilan. Les couleurs de cette page désignent
-        des familles d’analyses, jamais un état de santé.</span>
+        <span><b>Deux sortes de couleurs sur cette page, et il faut les distinguer.</b>
+        Les teintes des courbes et des vignettes désignent des <b>familles d’analyses</b> —
+        Numération, Métabolique, Rénal — jamais un état de santé. Les marques vert, orange
+        ou rouge sont, elles, des <b>annotations posées par votre médecin</b> : elles portent
+        toujours son nom et la date. Le logiciel n’en pose aucune de lui-même et ne compare
+        aucune valeur à un seuil. Les intervalles de référence figurent sur le compte rendu
+        de votre laboratoire, plus bas.</span>
       </div>
     </section>
 
@@ -399,7 +446,9 @@ function rendre() {
             ${g.items.map(x => `
               <button class="minicard ${x.id === choisi ? 'on' : ''}" data-p="${esc(x.id)}"
                       style="--fc:${famille(x.groupe).c}">
-                <span class="m-nom">${esc(x.nom)}</span>
+                <span class="m-nom">${esc(x.nom)}
+                  ${marqueDu(x.id) ? `<i class="mqm-tag m-${esc(marqueDu(x.id).couleur)}"
+                     title="Marque posée par ${esc(marqueDu(x.id).medecin)}"></i>` : ''}</span>
                 ${mini(x)}
                 <span class="m-val"><b>${fmtVal(x.valeurs[x.valeurs.length - 1])}</b> ${esc(x.unite)}</span>
                 <span class="m-per">${esc(courteDate(DATES[0]))} → ${esc(courteDate(DATES[DATES.length - 1]))}</span>
@@ -469,8 +518,8 @@ function rendre() {
     <section class="limites">
       <h2>Ce que ce tableau de bord ne fait pas</h2>
       <ul>
-        <li>${ic('i-x')}<span>Il ne dit pas si une valeur est normale ou anormale.</span></li>
-        <li>${ic('i-x')}<span>Il ne colore, ne surligne et ne signale aucun résultat selon sa valeur. Les couleurs désignent des familles d’analyses.</span></li>
+        <li>${ic('i-x')}<span>Il ne dit pas de lui-même si une valeur est normale ou anormale. Quand une couleur apparaît, c’est votre médecin qui l’a posée, et son nom l’accompagne.</span></li>
+        <li>${ic('i-x')}<span>Il ne colore, ne surligne et ne signale aucun résultat selon sa valeur. Les teintes des courbes désignent des familles d’analyses.</span></li>
         <li>${ic('i-x')}<span>Il ne calcule aucun score de santé, aucun âge biologique, aucun indice de synthèse.</span></li>
         <li>${ic('i-x')}<span>Il ne propose aucun examen et ne recommande aucune conduite.</span></li>
         <li>${ic('i-x')}<span>Il ne transmet rien à votre employeur, ni à un assureur, ni à un tiers commercial.</span></li>
