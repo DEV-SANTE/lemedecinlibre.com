@@ -209,6 +209,70 @@ section('1 bis. Couleur évaluative — origine humaine obligatoire');
 })();
 
 /* ==================================================================
+   1 ter. COMPOSANT CERTIFIÉ — le bouchon doit échouer, pas simuler
+================================================================== */
+section('1 ter. Composant certifié — délégation du calcul');
+
+(function () {
+  const f = 'plateforme/calculateur.js';
+  if (!existe(f)) { verifier(f + ' — fichier présent', false, 'Fichier introuvable.'); return; }
+  const src = lire(f);
+  const code = codeSeul(src);
+
+  /* Aucun identifiant de calcul. */
+  const trouves = INTERDITS.filter(j =>
+    new RegExp('\\b' + j.replace('(', '\\(') + '\\b', 'i').test(code));
+  verifier(f + ' — aucun identifiant de calcul', trouves.length === 0,
+    trouves.length ? 'Trouvés : ' + trouves.join(', ') : null);
+
+  /* AUCUNE ARITHMÉTIQUE sur les réponses. C'est le contrôle central de
+     ce fichier : un bouchon qui calcule finirait en production. */
+  const arith = [
+    /reponses\s*(\[[^\]]*\]|\.[\w$]+)\s*[+\-*/]/,
+    /\breduce\s*\(/,
+    /somme|total\s*\+=|\+\=\s*Number/i
+  ].filter(r => r.test(code));
+  verifier(f + ' — aucune arithmétique sur les réponses du patient', arith.length === 0,
+    arith.length ? 'Le bouchon doit échouer, jamais simuler un calcul.' : null);
+
+  /* Aucun barème ni seuil embarqué : ils appartiennent au composant. */
+  const bareme = /(bareme|ponderation|coefficients?\s*[:=]\s*\[|tranches?\s*[:=]\s*\[)/i.test(code);
+  verifier(f + ' — aucun barème ni pondération embarqués', !bareme,
+    bareme ? 'Les barèmes appartiennent au composant certifié, pas à la plateforme.' : null);
+
+  /* Le bouchon doit renvoyer une indisponibilité explicite. */
+  verifier(f + ' — le bouchon renvoie une indisponibilité',
+    /function appelerComposant[\s\S]{0,400}disponible:\s*false/.test(src),
+    'appelerComposant() doit se résoudre en indisponibilité tant qu’aucun composant n’est branché.');
+
+  /* Le composant est inactif par défaut. */
+  verifier(f + ' — composant inactif par défaut',
+    /actif:\s*false/.test(src),
+    'COMPOSANT.actif doit valoir false jusqu’au branchement effectif.');
+
+  /* Provenance obligatoire à la saisie manuelle. */
+  verifier(f + ' — outil obligatoire à la saisie manuelle',
+    /if\s*\(!outil\)\s*throw/.test(src));
+  verifier(f + ' — auteur obligatoire à la saisie manuelle',
+    /if\s*\(!auteur\)\s*throw/.test(src));
+  verifier(f + ' — score sans provenance complète non restitué',
+    /if\s*\(!s\.outil\s*\|\|\s*!s\.auteur\s*\|\|\s*!s\.date\)\s*return null/.test(src));
+
+  /* Point d'intégration unique : app.js ne doit pas court-circuiter.
+     On analyse ici la source sans commentaires mais AVEC les chaînes :
+     app.js est truffé de gabarits imbriqués que le dépouillement des
+     littéraux abîme, et l'on cherche des appels de méthode, pas des
+     identifiants susceptibles de se cacher dans une chaîne. */
+  const app = sansCommentaires(lire('plateforme/app.js'));
+  const passeParModule = /Calculateur\.(saisir|lire|instruments|entreesDisponibles|disponible|configure|retirer)/.test(app);
+  const calculeSeul = /function\s+calcul[a-zA-Z]*\s*\(/i.test(app);
+  verifier('app.js — passe par Calculateur et ne calcule aucun score',
+    passeParModule && !calculeSeul,
+    !passeParModule ? 'Aucun appel au module Calculateur détecté.'
+      : 'Une fonction de calcul a été trouvée dans app.js.');
+})();
+
+/* ==================================================================
    2. LIBRE CHOIX — aucun partenaire présélectionné
 ================================================================== */
 section('2. Libre choix du centre et du laboratoire');

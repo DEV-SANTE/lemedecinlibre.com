@@ -534,12 +534,14 @@ function vueMedecin(id) {
 
       <div class="onglets">
         <button data-o="reponses" class="${ongletMedecin === 'reponses' ? 'on' : ''}">Réponses du patient</button>
+        <button data-o="scores" class="${ongletMedecin === 'scores' ? 'on' : ''}">Scores</button>
         <button data-o="referentiel" class="${ongletMedecin === 'referentiel' ? 'on' : ''}">Référentiel documentaire</button>
         <button data-o="decision" class="${ongletMedecin === 'decision' ? 'on' : ''}">Décision médicale</button>
       </div>
 
       <div id="onglet-contenu">${
         ongletMedecin === 'reponses' ? blocReponses(dossier)
+        : ongletMedecin === 'scores' ? blocScores(dossier)
         : ongletMedecin === 'referentiel' ? blocReferentiel()
         : blocDecision(dossier)
       }</div>
@@ -551,6 +553,7 @@ function vueMedecin(id) {
 
   if (ongletMedecin === 'decision') brancherDecision(dossier);
   if (ongletMedecin === 'reponses') brancherMarquage(dossier);
+  if (ongletMedecin === 'scores') brancherScores(dossier);
 }
 
 /* =====================================================================
@@ -746,6 +749,117 @@ function brancherMarquage(dossier) {
     marqueOuverte = null;
     vueMedecin(dossier.id);
   };
+}
+
+/* =====================================================================
+   ONGLET SCORES
+   Les scores viennent d'un composant marqué CE, extérieur. Cet onglet
+   montre l'état du branchement, ce qu'il faudrait transmettre, et
+   permet la saisie manuelle de repli avec sa provenance.
+   Aucun score n'est calculé ici.
+   ===================================================================== */
+function blocScores(dossier) {
+  const conf = Calculateur.configure();
+  const branche = Calculateur.disponible();
+
+  const entete = branche
+    ? `<div class="avis">${'Composant certifié branché : <b>' + esc(conf.nom) + '</b> version ' +
+        esc(conf.version) + ', classe ' + esc(conf.classe) + ', organisme notifié ' +
+        esc(conf.organismeNotifie) + '. Les scores sont calculés par ce dispositif.'}</div>`
+    : `<div class="avis avis-attente">
+        <b>Aucun composant certifié n’est branché.</b> La plateforme ne calcule aucun score et
+        n’en simule aucun — c’est volontaire. En attendant le branchement, obtenez le score au
+        moyen d’un outil marqué CE, puis saisissez-le ci-dessous avec sa provenance.
+        <br><br>Rappel : sans interface programmable, la ressaisie des items dans l’outil externe
+        coûte plus de temps que le calcul humain qu’elle remplace. La question à poser aux
+        éditeurs est « avez-vous une API », pas seulement « avez-vous un marquage CE ».
+      </div>`;
+
+  const cartes = Calculateur.instruments().map(inst => {
+    const dispo = Calculateur.entreesDisponibles(dossier, inst.id);
+    const s = Calculateur.lire(dossier, inst.id);
+    const total = inst.entrees.length;
+
+    return `<section class="bloc sc">
+      <h2>${esc(inst.nom)}</h2>
+      <div class="sc-c">
+        <div class="sc-meta">
+          <span class="sc-k">Source des données</span>
+          <span class="sc-v">${esc(inst.source)}</span>
+          <span class="sc-k">Éléments à transmettre</span>
+          <span class="sc-v">${dispo.pretes.length} sur ${total} présents dans le dossier</span>
+          ${dispo.manquantes.length ? `<span class="sc-k">Manquants</span>
+            <span class="sc-v mono">${esc(dispo.manquantes.join(', '))}</span>` : ''}
+          ${inst.note ? `<span class="sc-k">À savoir</span><span class="sc-v">${esc(inst.note)}</span>` : ''}
+        </div>
+
+        ${s ? `<div class="sc-res">
+          <span class="sc-k">Score enregistré</span>
+          <b class="sc-val">${esc(s.valeur)}</b>
+          <span class="sc-prov">
+            ${esc(s.outil)}${s.version ? ' · version ' + esc(s.version) : ''}<br>
+            ${esc(s.origine)} · saisi par ${esc(s.auteur)}<br>
+            ${esc(formaterDate(s.date))}
+          </span>
+          <button class="btn btn-d b-sc-del" data-i="${esc(inst.id)}">Retirer</button>
+        </div>` : `<div class="sc-form" data-form="${esc(inst.id)}">
+          <span class="sc-k">Saisir un score obtenu ailleurs</span>
+          <div class="sc-champs">
+            <input type="text" class="sc-val-in" placeholder="Valeur">
+            <input type="text" class="sc-outil" placeholder="Outil utilisé">
+            <input type="text" class="sc-ver" placeholder="Version">
+          </div>
+          <p class="sc-err" style="display:none"></p>
+          <button class="btn btn-p b-sc-save" data-i="${esc(inst.id)}">Enregistrer</button>
+        </div>`}
+      </div>
+    </section>`;
+  }).join('');
+
+  return entete + `
+    <div class="signataire">
+      <label for="med-scores">Vous êtes</label>
+      <input type="text" id="med-scores" placeholder="Nom du médecin"
+             value="${esc(medecinCourant || (dossier.validation && dossier.validation.medecin) || '')}">
+      <span class="sig-note">Tout score enregistré est signé à votre nom.</span>
+    </div>` + cartes;
+}
+
+function brancherScores(dossier) {
+  const champMed = $('#med-scores');
+  if (champMed) champMed.addEventListener('input', () => { medecinCourant = champMed.value.trim(); });
+
+  document.querySelectorAll('.b-sc-save').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.i;
+      const f = document.querySelector('[data-form="' + id + '"]');
+      const err = f.querySelector('.sc-err');
+      const med = ($('#med-scores').value || '').trim();
+      medecinCourant = med;
+      try {
+        Calculateur.saisir(dossier, id,
+          f.querySelector('.sc-val-in').value,
+          f.querySelector('.sc-outil').value,
+          f.querySelector('.sc-ver').value,
+          med);
+        dossier.modifie = horodatage();
+        sauver();
+        vueMedecin(dossier.id);
+      } catch (e) {
+        err.textContent = e.message;
+        err.style.display = 'block';
+      }
+    };
+  });
+
+  document.querySelectorAll('.b-sc-del').forEach(b => {
+    b.onclick = () => {
+      Calculateur.retirer(dossier, b.dataset.i);
+      dossier.modifie = horodatage();
+      sauver();
+      vueMedecin(dossier.id);
+    };
+  });
 }
 
 function blocReferentiel() {
