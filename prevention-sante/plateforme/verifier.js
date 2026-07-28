@@ -251,13 +251,121 @@ AGREGE.forEach(f => {
 });
 
 /* ==================================================================
+   5 bis. PORTAIL ENTREPRISE — seuil anti-réidentification
+================================================================== */
+section('5 bis. Portail entreprise — anonymat et seuil');
+
+(function () {
+  const f = 'entreprise/entreprise.js';
+  if (!existe(f)) { verifier(f + ' — fichier présent', false, 'Fichier introuvable.'); return; }
+  const src = lire(f);
+  const code = codeSeul(src);
+
+  /* Le seuil doit exister, être une constante, et valoir au moins 11. */
+  const m = src.match(/const\s+SEUIL_PUBLICATION\s*=\s*(\d+)/);
+  verifier(f + ' — seuil de publication déclaré' + (m ? ' (' + m[1] + ')' : ''),
+    !!m && parseInt(m[1], 10) >= 11,
+    !m ? 'Aucune constante SEUIL_PUBLICATION.' :
+      (parseInt(m[1], 10) < 11 ? 'Seuil trop bas : onze est le minimum retenu.' : null));
+
+  /* La garde doit s'appliquer avant tout calcul de pourcentage. */
+  verifier(f + ' — la fonction publier() bloque avant de calculer',
+    /function publier[\s\S]{0,400}?<\s*SEUIL_PUBLICATION[\s\S]{0,120}?publie:\s*false/.test(src),
+    'La comparaison au seuil doit précéder le calcul et renvoyer publie:false.');
+
+  /* Aucun champ nominatif. */
+  const nominatif = /\b(nom|prenom|email|nir|nss|salarieId|matricule)\b/i
+    .test(code.replace(/\bnom:/g, 'libelleEntreprise:'));
+  verifier(f + ' — aucun champ nominatif de personne', !nominatif,
+    nominatif ? 'Un identifiant de personne est référencé.' : null);
+
+  /* Aucune lecture de dossier patient ni de stockage. */
+  const fuite = /localStorage|sessionStorage|reponses|dossier/.test(code);
+  verifier(f + ' — aucun accès aux dossiers ni au stockage patient', !fuite,
+    fuite ? 'Le portail ne doit recevoir que des compteurs déjà agrégés.' : null);
+
+  /* Démonstration du seuil : une entreprise sous le seuil doit exister. */
+  const petits = (src.match(/participants:\s*(\d+)/g) || [])
+    .map(s => parseInt(s.replace(/\D/g, ''), 10)).filter(n => n < 11);
+  verifier(f + ' — un cas sous le seuil est présent pour démonstration',
+    petits.length >= 1,
+    petits.length ? null : 'Ajouter un exemple d’effectif faible pour prouver la suppression.');
+})();
+
+/* ==================================================================
+   5 quater. TABLEAU DE BORD DE SUIVI — historisation sans interprétation
+================================================================== */
+section('5 quater. Suivi patient — historiser sans interpréter');
+
+(function () {
+  const f = 'suivi/suivi.js';
+  if (!existe(f)) { verifier(f + ' — fichier présent', false, 'Fichier introuvable.'); return; }
+  const src = lire(f);
+  const code = codeSeul(src);
+
+  /* Interdit : le moindre identifiant de comparaison ou de qualification. */
+  const trouves = INTERDITS.filter(j =>
+    new RegExp('\\b' + j.replace('(', '\\(') + '\\b', 'i').test(code));
+  verifier(f + ' — aucun identifiant de calcul clinique', trouves.length === 0,
+    trouves.length ? 'Trouvés : ' + trouves.join(', ') : null);
+
+  /* Interdit : une bande ou un intervalle de référence dessiné. */
+  const bande = /\b(refMin|refMax|borneMin|borneMax|intervalleRef|normeMin|normeMax|zoneNormale)\b/i.test(code);
+  verifier(f + ' — aucun intervalle de référence dans les données', !bande,
+    bande ? 'Les intervalles de référence appartiennent au compte rendu du laboratoire.' : null);
+
+  /* Interdit : qualifier une évolution. */
+  const tendance = /\b(amelioration|degradation|tendance|enHausse|enBaisse|variation\s*>)\b/i.test(code);
+  verifier(f + ' — aucune qualification de l’évolution', !tendance,
+    tendance ? 'Dire qu’une valeur s’améliore ou se dégrade est une interprétation.' : null);
+
+  /* Le CSS ne doit contenir aucune palette d'état de santé. */
+  const css = lire('suivi/index.html').replace(/\/\*[\s\S]*?\*\//g, ' ');
+  const pal = ['.normal', '.anormal', '.eleve', '.bas', '.alerte', '.danger', '.bon', '.mauvais']
+    .filter(k => css.indexOf(k) !== -1);
+  verifier('suivi/index.html — aucune classe codant un état de santé', pal.length === 0,
+    pal.length ? 'Classes : ' + pal.join(', ') : null);
+
+  /* Exigé : la mention qui explique le choix, et le renvoi au laboratoire. */
+  verifier(f + ' — renvoi explicite au compte rendu du laboratoire',
+    /intervalles de r[éé]f[éé]rence[\s\S]{0,120}laboratoire/i.test(src));
+  verifier(f + ' — segments droits assumés et documentés',
+    /segments droits/i.test(src));
+})();
+
+/* ==================================================================
+   5 ter. CONTENU ÉDUCATIF — aucune individualisation
+================================================================== */
+section('5 ter. Contenu éducatif — non individualisé');
+
+(function () {
+  const f = 'contenus/contenus.js';
+  if (!existe(f)) { verifier(f + ' — fichier présent', false, 'Fichier introuvable.'); return; }
+  const code = codeSeul(lire(f));
+
+  const lit = /\b(reponses|dossier|dossiers|compte|localStorage|sessionStorage)\b/.test(code);
+  verifier(f + ' — ne lit aucune donnée patient', !lit,
+    lit ? 'Une bibliothèque individualisée produirait une information propre à un patient.' : null);
+
+  const filtre = /\.(filter|find|sort)\s*\([^)]*\b(reponses|profil|score|age|sexe)\b/.test(code);
+  verifier(f + ' — aucun filtrage ni tri selon un profil', !filtre,
+    filtre ? 'Les contenus doivent rester identiques et dans le même ordre pour tous.' : null);
+
+  verifier(f + ' — mention explicite de la non-individualisation',
+    /identiques pour tous|jamais s[ée]lectionn/i.test(lire(f)));
+})();
+
+/* ==================================================================
    6. GARDE-FOUS DE L'ENVIRONNEMENT DE TEST
 ================================================================== */
 section('6. Garde-fous de l’environnement de test');
 
 [['plateforme/index.html', 'patients fictifs uniquement'],
  ['espace/index.html', 'Environnement de test'],
- ['pilotage/index.html', 'Cohorte fictive']].forEach(([f, motif]) => {
+ ['pilotage/index.html', 'Cohorte fictive'],
+ ['entreprise/index.html', 'Données fictives'],
+ ['contenus/index.html', 'Contenus provisoires'],
+ ['suivi/index.html', 'données fictives']].forEach(([f, motif]) => {
   const src = lire(f);
   verifier(f + ' — bandeau de test présent', new RegExp(motif, 'i').test(src));
   verifier(f + ' — noindex actif', /name="robots"\s+content="noindex/i.test(src));
@@ -293,7 +401,8 @@ verifier('plateforme/index.html — mention de l’absence de certification HDS'
 section('7. Aucune ressource externe');
 
 ['index.html', 'plateforme/index.html', 'plateforme/style.css',
- 'espace/index.html', 'pilotage/index.html'].forEach(f => {
+ 'espace/index.html', 'pilotage/index.html',
+ 'entreprise/index.html', 'contenus/index.html', 'suivi/index.html'].forEach(f => {
   const src = lire(f);
   const ext = (src.match(/(https?:)?\/\/[a-z0-9.-]+\.[a-z]{2,}/gi) || [])
     .filter(u => !/w3\.org/.test(u));
