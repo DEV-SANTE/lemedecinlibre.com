@@ -11,8 +11,8 @@
    Un praticien souriant présenté comme faisant partie de l'offre est une
    représentation du service : elle tombe sous l'article R.4127-19-1 du
    code de la santé publique, qui interdit à la communication d'être
-   trompeuse. Des lieux, du matériel et un chemin ne représentent rien
-   d'autre qu'eux-mêmes, et rien de ce qu'ils montrent n'est promis.
+   trompeuse. Des lieux vides et du matériel ne représentent rien d'autre
+   qu'eux-mêmes, et rien de ce qu'ils montrent n'est promis.
 
    POURQUOI UN HÔTE EXTERNE, ET CE QUE ÇA COÛTE. Ces cinq fichiers sont
    les seules ressources du projet chargées depuis un autre domaine.
@@ -42,11 +42,11 @@ var VISUELS = {
 
   photos: [
     {
-      id: 'photo-1487956382158-bb926046304a',
-      auteur: 'Arek Adeoye',
-      compte: 'areksan',
-      reference: 'ljoCgjs63SM',
-      sujet: 'Un chemin traversant une prairie, parcouru par une personne vue de dos.',
+      id: 'photo-1746173097964-b8580922a7df',
+      auteur: 'ZEIN ZAIN',
+      compte: 'inal_03',
+      reference: 'illOl9R0AEY',
+      sujet: 'Une salle d’attente lumineuse, sièges alignés le long d’une baie vitrée.',
       emploi: 'Bande photographique sous le hero.',
       rang: 1,
       /* Seule image visible sans défiler : chargement immédiat, pas
@@ -54,11 +54,11 @@ var VISUELS = {
       differe: false
     },
     {
-      id: 'photo-1710074213379-2a9c2653046a',
-      auteur: 'Zoshua Colah',
-      compte: 'zoshuacolah',
-      reference: '_fdWqec7VRo',
-      sujet: 'Une salle de consultation équipée d’un bureau et d’une table d’examen.',
+      id: 'photo-1766299892549-b56b257d1ddd',
+      auteur: 'Brian Wangenheim',
+      compte: 'brianwangenheim',
+      reference: 'K7Qh7RFtUuo',
+      sujet: 'Des instruments de diagnostic fixés au mur d’une salle de consultation.',
       emploi: 'Triptyque « Déroulement », premier volet : la consultation.',
       rang: 2,
       differe: true
@@ -74,11 +74,11 @@ var VISUELS = {
       differe: true
     },
     {
-      id: 'photo-1518152006812-edab29b069ac',
-      auteur: 'Ousa Chea',
-      compte: 'cheaousa',
-      reference: 'gKUC4TMhOiY',
-      sujet: 'Un microscope posé sur un plan de travail de laboratoire.',
+      id: 'photo-1707651020138-b2ac647cb885',
+      auteur: 'Vadim Bogulov',
+      compte: 'franku84',
+      reference: 'PRaSe_XWX38',
+      sujet: 'Un automate d’analyse de laboratoire, façade blanche et écran de contrôle.',
       emploi: 'Triptyque « Déroulement », troisième volet : l’analyse.',
       rang: 4,
       differe: true
