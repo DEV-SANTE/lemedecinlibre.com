@@ -546,19 +546,91 @@ function vueMedecin(id) {
     </div>`;
 
   document.querySelectorAll('.onglets button').forEach(b => {
-    b.onclick = () => { ongletMedecin = b.dataset.o; vueMedecin(id); };
+    b.onclick = () => { ongletMedecin = b.dataset.o; marqueOuverte = null; vueMedecin(id); };
   });
 
   if (ongletMedecin === 'decision') brancherDecision(dossier);
+  if (ongletMedecin === 'reponses') brancherMarquage(dossier);
+}
+
+/* =====================================================================
+   MARQUAGE PAR LE MÉDECIN
+   ---------------------------------------------------------------------
+   LA DISTINCTION QUI FONDE TOUT CE BLOC
+
+   Le logiciel ne peut pas colorer une réponse selon sa valeur : ce
+   serait comparer à un seuil et signaler le franchissement, donc une
+   fonction de dispositif médical.
+
+   Le médecin, lui, peut colorer ce qu'il veut. La couleur est alors
+   l'expression de SA conclusion, comme un soulignement ou une note
+   écrite. Ce n'est pas le logiciel qui conclut, c'est un praticien qui
+   s'exprime et le logiciel qui conserve.
+
+   DEUX RÈGLES CODÉES EN DUR, ET ELLES SONT LA FRONTIÈRE
+     1. Aucune couleur par défaut. Le médecin part de rien.
+     2. Aucune suggestion. L'interface ne propose jamais une couleur en
+        fonction de la valeur observée. Il n'existe dans ce fichier
+        aucune fonction qui prenne une valeur et renvoie une couleur.
+
+   Toute marque est enregistrée avec son auteur et son horodatage, et
+   restituée au patient avec cette attribution : une couleur sans nom
+   de médecin serait indistinguable d'un signalement automatique.
+   ===================================================================== */
+
+const COULEURS_MARQUE = [
+  { v: 'vert',   l: 'Vert' },
+  { v: 'orange', l: 'Orange' },
+  { v: 'rouge',  l: 'Rouge' }
+];
+
+let medecinCourant = '';
+let marqueOuverte = null;   /* id de la question en cours d'annotation */
+
+function marqueDe(dossier, qid) {
+  return (dossier.marques || {})[qid] || null;
+}
+
+/* Enregistrement. La couleur est un paramètre obligatoire : aucune
+   valeur de repli, donc aucune couleur par défaut possible. */
+function poserMarque(dossier, qid, couleur, commentaire, medecin) {
+  if (!couleur) throw new Error('Aucune couleur choisie : le médecin doit choisir explicitement.');
+  if (!medecin) throw new Error('Aucun auteur : une marque non signée serait indistinguable d’un signalement automatique.');
+  if (!dossier.marques) dossier.marques = {};
+  dossier.marques[qid] = {
+    couleur: couleur,
+    commentaire: commentaire || '',
+    medecin: medecin,
+    date: horodatage()
+  };
+  dossier.modifie = horodatage();
+  sauver();
+}
+
+function retirerMarque(dossier, qid) {
+  if (dossier.marques) delete dossier.marques[qid];
+  dossier.modifie = horodatage();
+  sauver();
 }
 
 function blocReponses(dossier) {
   const avis = `
     <div class="avis">
-      Réponses transmises telles qu’elles ont été saisies. Aucun score n’est calculé,
-      aucune valeur n’est comparée à un seuil, aucune réponse n’est mise en avant.
-      Les grilles d’interprétation publiées sont consultables dans l’onglet
-      « Référentiel documentaire ».
+      Réponses transmises telles qu’elles ont été saisies. <b>Le logiciel ne calcule rien,
+      ne compare rien à un seuil et ne met en avant aucune réponse.</b> Les grilles
+      d’interprétation publiées sont consultables dans l’onglet « Référentiel documentaire ».
+    </div>
+    <div class="avis">
+      Vous pouvez annoter n’importe quelle ligne : choisissez une couleur et écrivez votre
+      commentaire. Cette couleur est <b>la vôtre</b>, elle est enregistrée à votre nom et
+      horodatée, et le patient la verra accompagnée de votre nom. Aucune couleur n’est
+      proposée ni préremplie par le logiciel.
+    </div>
+    <div class="signataire">
+      <label for="med-courant">Vous êtes</label>
+      <input type="text" id="med-courant" placeholder="Nom du médecin"
+             value="${esc(medecinCourant || (dossier.validation && dossier.validation.medecin) || '')}">
+      <span class="sig-note">Nécessaire pour signer vos annotations.</span>
     </div>`;
 
   const blocs = QUESTIONNAIRE.modules.map(m => {
@@ -567,8 +639,27 @@ function blocReponses(dossier) {
       .map(q => {
         const l = libelleReponse(q, dossier.reponses[q.id]);
         if (l === null) return null;
-        return `<tr><th>${esc(q.label)}${q.instrument ? ' <span class="inst">' + esc(q.instrument) + '</span>' : ''}</th>
-                    <td>${esc(l)}</td></tr>`;
+        const mq = marqueDe(dossier, q.id);
+        const ouvert = marqueOuverte === q.id;
+
+        /* La classe de couleur vient EXCLUSIVEMENT de la marque enregistrée
+           par le médecin. Elle n'est jamais dérivée de la réponse. */
+        const cls = mq ? ' marque-medecin m-' + esc(mq.couleur) : '';
+
+        return `<tr class="lig${cls}">
+          <th>${esc(q.label)}${q.instrument ? ' <span class="inst">' + esc(q.instrument) + '</span>' : ''}</th>
+          <td>
+            <div class="val-l">
+              <span>${esc(l)}</span>
+              <button class="b-annot" data-q="${esc(q.id)}">${mq ? 'Modifier' : 'Annoter'}</button>
+            </div>
+            ${mq ? `<div class="mq-vue">
+              <span class="mq-pt m-${esc(mq.couleur)}"></span>
+              <span class="mq-txt">${mq.commentaire ? esc(mq.commentaire) : 'Marqué sans commentaire'}</span>
+              <span class="mq-sig">${esc(mq.medecin)} · ${esc(formaterDate(mq.date))}</span>
+            </div>` : ''}
+            ${ouvert ? bloc_annotation(q, mq) : ''}
+          </td></tr>`;
       })
       .filter(Boolean);
 
@@ -587,6 +678,74 @@ function blocReponses(dossier) {
   return avis + blocs + `<p class="mono" style="margin-top:22px">
     ${nonRepondu} question${nonRepondu > 1 ? 's' : ''} sans réponse.
     Le décompte porte sur la complétude du formulaire, pas sur son contenu clinique.</p>`;
+}
+
+/* Formulaire d'annotation. Les trois couleurs sont présentées dans le
+   même ordre pour toutes les lignes, aucune n'est cochée au départ, et
+   aucune n'est mise en avant. */
+function bloc_annotation(q, mq) {
+  return `<div class="mq-form" data-form="${esc(q.id)}">
+    <p class="mq-k">Votre appréciation sur cette ligne</p>
+    <div class="mq-choix">
+      ${COULEURS_MARQUE.map(c => `
+        <label class="mq-opt m-${esc(c.v)}">
+          <input type="radio" name="mq-${esc(q.id)}" value="${esc(c.v)}" ${mq && mq.couleur === c.v ? 'checked' : ''}>
+          <span>${esc(c.l)}</span>
+        </label>`).join('')}
+    </div>
+    <textarea class="mq-com" rows="2" placeholder="Votre commentaire, facultatif">${mq ? esc(mq.commentaire) : ''}</textarea>
+    <p class="mq-err" style="display:none"></p>
+    <div class="mq-act">
+      <button class="btn btn-p b-mq-save" data-q="${esc(q.id)}">Enregistrer</button>
+      ${mq ? `<button class="btn btn-d b-mq-del" data-q="${esc(q.id)}">Retirer la marque</button>` : ''}
+      <button class="btn btn-g b-mq-cancel">Annuler</button>
+    </div>
+    <p class="mq-n">Aucune couleur n’est présélectionnée et aucune n’est suggérée par le
+    logiciel. Votre choix sera enregistré à votre nom et visible du patient avec cette
+    attribution.</p>
+  </div>`;
+}
+
+/* Câblage des annotations. Aucun de ces gestionnaires ne lit la réponse
+   du patient : la couleur vient uniquement du clic du médecin. */
+function brancherMarquage(dossier) {
+  const champMed = $('#med-courant');
+  if (champMed) champMed.addEventListener('input', () => { medecinCourant = champMed.value.trim(); });
+
+  document.querySelectorAll('.b-annot').forEach(b => {
+    b.onclick = () => {
+      marqueOuverte = (marqueOuverte === b.dataset.q) ? null : b.dataset.q;
+      vueMedecin(dossier.id);
+    };
+  });
+
+  const annuler = document.querySelector('.b-mq-cancel');
+  if (annuler) annuler.onclick = () => { marqueOuverte = null; vueMedecin(dossier.id); };
+
+  const enreg = document.querySelector('.b-mq-save');
+  if (enreg) enreg.onclick = () => {
+    const qid = enreg.dataset.q;
+    const form = document.querySelector('[data-form="' + qid + '"]');
+    const err = form.querySelector('.mq-err');
+    const choisi = form.querySelector('input[name="mq-' + qid + '"]:checked');
+    const med = ($('#med-courant').value || '').trim();
+
+    const dire = m => { err.textContent = m; err.style.display = 'block'; };
+    if (!med) return dire('Indiquez votre nom : une marque non signée ne peut pas être enregistrée.');
+    if (!choisi) return dire('Choisissez une couleur. Le logiciel n’en propose aucune.');
+
+    medecinCourant = med;
+    poserMarque(dossier, qid, choisi.value, form.querySelector('.mq-com').value, med);
+    marqueOuverte = null;
+    vueMedecin(dossier.id);
+  };
+
+  const suppr = document.querySelector('.b-mq-del');
+  if (suppr) suppr.onclick = () => {
+    retirerMarque(dossier, suppr.dataset.q);
+    marqueOuverte = null;
+    vueMedecin(dossier.id);
+  };
 }
 
 function blocReferentiel() {

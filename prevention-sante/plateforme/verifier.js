@@ -129,12 +129,83 @@ CLINIQUE.forEach(f => {
     bad.length === 0, bad.length ? 'Champs : ' + bad.join(', ') : null);
 })();
 
+/* ------------------------------------------------------------------
+   COULEUR ÉVALUATIVE : PERMISE SI HUMAINE, INTERDITE SI AUTOMATIQUE
+
+   La règle a changé, et c'est un assouplissement fondé. Le logiciel ne
+   peut pas colorer une réponse selon sa valeur. Un médecin, lui, peut
+   colorer ce qu'il veut : la couleur est alors l'expression de sa
+   conclusion, pas celle d'un calcul.
+
+   On ne vérifie donc plus l'absence de couleur évaluative, mais son
+   ORIGINE. Trois contrôles remplacent l'ancien.
+------------------------------------------------------------------- */
+section('1 bis. Couleur évaluative — origine humaine obligatoire');
+
 (function () {
-  const css = lire('plateforme/style.css').replace(/\/\*[\s\S]*?\*\//g, ' ');
-  const bad = ['.anormal', '.alerte', '.severe', '.eleve', '.critique', '.rouge', '.danger', '.risque']
-    .filter(k => css.indexOf(k) !== -1);
-  verifier('plateforme/style.css — aucune classe codant une gravité clinique',
-    bad.length === 0, bad.length ? 'Classes : ' + bad.join(', ') : null);
+  /* 1. Aucune fonction ne doit dériver une couleur d'une valeur. */
+  ['plateforme/app.js', 'suivi/suivi.js', 'espace/modules.js'].forEach(f => {
+    if (!existe(f)) return;
+    const code = codeSeul(lire(f));
+    const motifs = [
+      /function\s+couleur[A-Za-z]*\s*\([^)]*valeur/i,
+      /couleurPour|couleurDe[Ll]aValeur|teintePour|classePourValeur/i,
+      /(reponses|valeurs?)\s*(\[[^\]]*\]|\.[\w$]+)\s*[><=]{1,3}[^;]{0,60}\?[^;]{0,40}(rouge|orange|vert)/i,
+      /\?\s*['"](rouge|orange|vert)['"]\s*:/i
+    ];
+    const trouves = motifs.filter(r => r.test(code));
+    verifier(f + ' — aucune couleur dérivée d’une valeur', trouves.length === 0,
+      trouves.length ? 'Un motif de coloration automatique a été détecté.' : null);
+  });
+
+  /* 2. Toute couleur évaluative doit vivre dans un contexte de marque. */
+  [['plateforme/style.css', 'marque-medecin'], ['suivi/index.html', 'mqm']].forEach(([f, ctx]) => {
+    const src = lire(f);
+    const css = src.replace(/\/\*[\s\S]*?\*\//g, ' ');
+    /* Les trois seules classes de teinte admises sont m-vert, m-orange, m-rouge. */
+    const teintes = (css.match(/\.m-(vert|orange|rouge)\b/g) || []).length;
+    const sauvages = ['.anormal', '.alerte', '.severe', '.eleve', '.critique', '.danger', '.risque']
+      .filter(k => css.indexOf(k) !== -1);
+    verifier(f + ' — teintes évaluatives limitées à m-vert, m-orange, m-rouge (' + teintes + ')',
+      teintes >= 3 && sauvages.length === 0,
+      sauvages.length ? 'Classes non encadrées : ' + sauvages.join(', ')
+        : (teintes < 3 ? 'Les trois teintes de marque sont attendues.' : null));
+    verifier(f + ' — contexte de marque « ' + ctx + ' » présent',
+      css.indexOf(ctx) !== -1,
+      'Les teintes doivent être portées par un conteneur de marque identifiable.');
+  });
+
+  /* 3. Toute marque doit être signée et horodatée, sans valeur de repli. */
+  (function () {
+    const src = lire('plateforme/app.js');
+    verifier('app.js — la couleur est un paramètre obligatoire, sans repli',
+      /function poserMarque\([^)]*couleur[^)]*\)/.test(src) &&
+      /if\s*\(!couleur\)\s*throw/.test(src),
+      'poserMarque doit refuser une couleur absente, ce qui interdit toute couleur par défaut.');
+    verifier('app.js — la marque refuse d’être enregistrée sans auteur',
+      /if\s*\(!medecin\)\s*throw/.test(src));
+    verifier('app.js — la marque porte un horodatage',
+      /marques\[qid\]\s*=\s*\{[\s\S]{0,220}date:\s*horodatage\(\)/.test(src));
+    /* Le seul « checked » du formulaire de marquage doit être commandé
+       par une marque déjà enregistrée. On exige la condition explicite,
+       et on refuse tout « checked » inconditionnel. */
+    const radio = (src.match(/name="mq-\$\{[^}]*\}"[^>]*>/) || [''])[0];
+    const conditionnel = /mq\s*&&\s*mq\.couleur\s*===\s*c\.v\s*\?\s*'checked'/.test(radio);
+    const enDur = /\schecked(?![^>]*\?)/.test(radio.replace(/\$\{[^}]*\}/g, '${}'));
+    verifier('app.js — aucune couleur préremplie dans le formulaire',
+      conditionnel && !enDur,
+      !conditionnel ? 'Le « checked » doit être conditionné à une marque existante.'
+        : 'Un « checked » inconditionnel a été trouvé.');
+  })();
+
+  /* 4. Côté patient, une marque sans auteur ne doit pas être rendue. */
+  (function () {
+    const src = lire('suivi/suivi.js');
+    verifier('suivi.js — marque sans auteur ni date non affichée',
+      /if\s*\(!m\.medecin\s*\|\|\s*!m\.date\)\s*return null/.test(src));
+    verifier('suivi.js — attribution au médecin affichée avec la marque',
+      /Note de votre m[éé]decin/.test(src) && /m\.medecin/.test(src));
+  })();
 })();
 
 /* ==================================================================
@@ -319,11 +390,12 @@ section('5 quater. Suivi patient — historiser sans interpréter');
   verifier(f + ' — aucune qualification de l’évolution', !tendance,
     tendance ? 'Dire qu’une valeur s’améliore ou se dégrade est une interprétation.' : null);
 
-  /* Le CSS ne doit contenir aucune palette d'état de santé. */
+  /* Le CSS ne doit contenir aucune palette d'état de santé appliquée
+     automatiquement. Les marques du médecin sont contrôlées en §1 bis. */
   const css = lire('suivi/index.html').replace(/\/\*[\s\S]*?\*\//g, ' ');
   const pal = ['.normal', '.anormal', '.eleve', '.bas', '.alerte', '.danger', '.bon', '.mauvais']
     .filter(k => css.indexOf(k) !== -1);
-  verifier('suivi/index.html — aucune classe codant un état de santé', pal.length === 0,
+  verifier('suivi/index.html — aucune classe codant un état de santé automatique', pal.length === 0,
     pal.length ? 'Classes : ' + pal.join(', ') : null);
 
   /* Exigé : la mention qui explique le choix, et le renvoi au laboratoire. */
@@ -331,6 +403,38 @@ section('5 quater. Suivi patient — historiser sans interpréter');
     /intervalles de r[éé]f[éé]rence[\s\S]{0,120}laboratoire/i.test(src));
   verifier(f + ' — segments droits assumés et documentés',
     /segments droits/i.test(src));
+
+  /* LA COULEUR NE DOIT PAS POUVOIR SE LIRE COMME UNE ÉVALUATION.
+     La palette des familles est une rampe pétrole → violet. On vérifie
+     que le bleu domine dans CHAQUE teinte : une rampe à dominante bleue
+     ne porte aucune convention culturelle « bon / mauvais », alors qu'un
+     rouge ou un vert en porterait immédiatement une. */
+  const bloc = src.match(/const FAMILLES = \[[\s\S]*?\n\];/);
+  if (!bloc) {
+    verifier(f + ' — palette des familles identifiable', false, 'Bloc FAMILLES introuvable.');
+  } else {
+    const hex = (bloc[0].match(/#([0-9a-f]{6})\b/gi) || []).map(h => h.slice(1));
+    const fautives = hex.filter(h => {
+      const r = parseInt(h.slice(0, 2), 16),
+            g = parseInt(h.slice(2, 4), 16),
+            b = parseInt(h.slice(4, 6), 16);
+      return !(b > r && b >= g);   /* le bleu doit dominer */
+    });
+    verifier(f + ' — palette des familles à dominante bleue (' + hex.length + ' teintes)',
+      hex.length >= 4 && fautives.length === 0,
+      fautives.length ? 'Teintes à dominante rouge ou verte : #' + fautives.join(', #') +
+        '. Une teinte évaluative ferait de la couleur un signalement.' :
+        (hex.length < 4 ? 'Palette trop courte pour être catégorielle.' : null));
+  }
+
+  /* La superposition ne doit être possible qu'à unité identique.
+     Deux garanties attendues : le filtre qui construit la liste des
+     paramètres proposés, et le contrôle au moment du tracé. */
+  const filtre = /memeUnite\s*=[\s\S]{0,160}?x\.unite\s*===\s*p\.unite/.test(src);
+  const garde = /alt\.unite\s*===\s*p\.unite/.test(src);
+  verifier(f + ' — superposition restreinte à une unité identique', filtre && garde,
+    !filtre ? 'Le filtre memeUnite() ne compare pas les unités.'
+      : (!garde ? 'Aucun contrôle d’unité au moment du tracé.' : null));
 })();
 
 /* ==================================================================

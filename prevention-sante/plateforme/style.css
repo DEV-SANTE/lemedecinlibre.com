@@ -184,6 +184,60 @@ input:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0
 .bloc .champ:first-of-type{padding-top:20px}
 .bloc .q-actions{margin:24px 20px 22px}
 
+/* =====================================================================
+   MARQUAGE PAR LE MÉDECIN — les seules couleurs évaluatives du projet
+
+   Elles ne sont jamais appliquées par le logiciel en fonction d'une
+   valeur. Elles ne s'appliquent QUE si un médecin a explicitement
+   choisi une couleur, et elles sont toujours accompagnées de son nom
+   et de la date. Toutes les classes concernées portent le préfixe
+   « marque-medecin » ou « m- », ce qui les rend repérables dans le
+   test de non-régression.
+   ===================================================================== */
+.signataire{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:#fff;border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 18px;margin-bottom:26px}
+.signataire label{font-size:13.5px;font-weight:650;margin:0}
+.signataire input{max-width:260px;padding:9px 13px;font-size:15px}
+.sig-note{font-size:13px;color:var(--ink-4)}
+
+.val-l{display:flex;align-items:flex-start;gap:14px;justify-content:space-between}
+.b-annot{font:inherit;font-size:12.5px;font-weight:600;color:var(--pri-d);
+  background:#fff;border:1.5px solid var(--line);border-radius:999px;
+  padding:4px 12px;cursor:pointer;white-space:nowrap}
+.b-annot:hover{border-color:var(--pri);background:var(--pri-l2)}
+
+/* Couleurs de marque. Trois teintes, utilisées uniquement ici. */
+.m-vert{--mq:#0f766e;--mqbg:#eefaf7;--mqln:#bfe6de}
+.m-orange{--mq:#b45309;--mqbg:#fdf6ec;--mqln:#f0d9b5}
+.m-rouge{--mq:#a52222;--mqbg:#fdf1f1;--mqln:#efc9c9}
+
+tr.marque-medecin{background:var(--mqbg)}
+tr.marque-medecin th{box-shadow:inset 3px 0 0 var(--mq)}
+.mq-vue{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-top:9px;
+  padding-top:9px;border-top:1px dashed var(--mqln)}
+.mq-pt{width:9px;height:9px;border-radius:3px;background:var(--mq);flex:0 0 9px;
+  position:relative;top:-1px}
+.mq-txt{font-size:14.3px;color:var(--ink-2);font-weight:520}
+.mq-sig{font-family:var(--mono);font-size:11.5px;color:var(--ink-4)}
+
+.mq-form{margin-top:14px;padding:16px 18px;background:var(--surf);
+  border:1px solid var(--line);border-radius:var(--r)}
+.mq-k{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-4);margin-bottom:11px}
+.mq-choix{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px}
+.mq-opt{display:inline-flex;align-items:center;gap:8px;padding:8px 15px;
+  border:1.5px solid var(--line);border-radius:999px;background:#fff;cursor:pointer;
+  font-size:14px;font-weight:560}
+.mq-opt:hover{border-color:var(--mq)}
+.mq-opt input{accent-color:var(--mq);margin:0}
+.mq-opt input:checked ~ span{color:var(--mq);font-weight:680}
+.mq-com{max-width:100%;width:100%;font-size:14.5px}
+.mq-err{font-size:13.5px;color:#9a3412;font-weight:560;margin-top:9px}
+.mq-act{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}
+.mq-act .btn{padding:9px 17px;font-size:14px}
+.mq-n{font-size:12.7px;color:var(--ink-4);margin-top:12px;line-height:1.55;max-width:76ch}
+
 /* ---------- pied ---------- */
 .pied{
   border-top:1px solid var(--line);background:var(--surf);
