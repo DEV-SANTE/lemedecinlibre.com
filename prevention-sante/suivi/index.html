@@ -219,6 +219,58 @@ main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
 .m-val b{font-size:18px;font-weight:750;color:var(--ink);letter-spacing:-.025em}
 .m-per{display:block;font-size:11.5px;color:var(--ink-5);font-family:var(--mono);margin-top:4px}
 
+/* ---------- explications ----------
+   Tout ce qui suit affiche du texte venu de commun/lexique.js. Ces
+   textes sont attachés à une mesure ou à un acte, jamais à une valeur :
+   deux personnes aux résultats opposés lisent exactement la même chose.
+   Aucune classe de ce bloc n'est choisie en fonction d'un chiffre.
+   ------------------------------------------------------------------ */
+.lire-page{background:var(--pri-l2);border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:28px 30px;margin-bottom:22px}
+.lire-page h2{font-size:19px;margin-bottom:14px}
+.lire-page p{font-size:15.4px;color:var(--ink-2);line-height:1.66;max-width:88ch}
+.lire-page p+p{margin-top:13px}
+
+.expli{margin-top:26px;border-top:1px solid var(--line-2);padding-top:24px}
+.ex-h{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;margin-bottom:5px}
+.ex-h b{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.ex-h span{font-size:12.6px;color:var(--ink-4)}
+.ex-lede{font-size:14.6px;color:var(--ink-3);margin-bottom:20px;max-width:80ch}
+.ex-g{display:grid;grid-template-columns:1fr 1fr;gap:18px 30px}
+@media(max-width:900px){.ex-g{grid-template-columns:1fr}}
+.ex-r{border-left:2.5px solid var(--line);padding-left:16px}
+.ex-r.sombre{border-left-color:var(--ink-4)}
+.ex-k{display:block;font-size:10.5px;font-weight:720;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-4);margin-bottom:6px}
+.ex-r.sombre .ex-k{color:var(--ink-2)}
+.ex-t{font-size:14.9px;color:var(--ink-2);line-height:1.62}
+.ex-u{grid-column:1/-1;background:var(--surf);border:1px solid var(--line-2);
+  border-radius:var(--r);padding:14px 17px;border-left:none}
+.ex-u .ex-t{font-size:14.3px;color:var(--ink-3)}
+
+details.lire{margin-top:10px}
+details.lire>summary{display:inline-flex;align-items:center;gap:7px;list-style:none;cursor:pointer;
+  font-size:12.8px;font-weight:620;color:var(--pri-d);padding:5px 12px 5px 11px;
+  border:1px solid var(--line);border-radius:999px;background:#fff}
+details.lire>summary::-webkit-details-marker{display:none}
+details.lire>summary::after{content:"";width:6px;height:6px;border-right:1.8px solid currentColor;
+  border-bottom:1.8px solid currentColor;transform:rotate(45deg) translateY(-1px);transition:transform .16s}
+details.lire[open]>summary::after{transform:rotate(-135deg) translateY(-1px)}
+details.lire>summary:hover{border-color:var(--pri);background:var(--pri-l2)}
+.lire-c{margin-top:13px;padding:17px 19px;background:var(--surf);
+  border:1px solid var(--line-2);border-radius:var(--r);max-width:82ch}
+.lire-c .ex-r{border-left-width:2px;padding-left:14px}
+.lire-c .ex-r+.ex-r{margin-top:14px}
+
+.glo{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px;
+  border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;background:var(--line-2)}
+.glo-i{background:#fff;padding:19px 21px}
+.glo-t{display:block;font-size:15.3px;font-weight:700;letter-spacing:-.015em;margin-bottom:6px}
+.glo-d{font-size:14.2px;color:var(--ink-2);line-height:1.6}
+
+.m-res{display:block;font-size:12.4px;color:var(--ink-4);line-height:1.45;margin-top:7px;
+  border-top:1px solid var(--line-2);padding-top:7px}
+
 /* ---------- frise ---------- */
 .frise{position:relative;padding-left:26px}
 .frise::before{content:"";position:absolute;left:5px;top:8px;bottom:8px;width:1.5px;
@@ -354,6 +406,7 @@ main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
 </footer>
 
 <script src="../plateforme/biologie.js"></script>
+<script src="../commun/lexique.js"></script>
 <script src="suivi.js"></script>
 <script src="../commun/navigation.js"></script>
 </body>

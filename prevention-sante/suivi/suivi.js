@@ -168,6 +168,94 @@ const fmtVal = v => (Math.round(v * 100) / 100).toString().replace('.', ',');
 const memeUnite = p => PARAMETRES.filter(x => x.unite === p.unite && x.id !== p.id);
 
 /* =====================================================================
+   EXPLICATIONS
+
+   Toutes les fonctions de ce bloc prennent en entrée un IDENTIFIANT —
+   celui d'un paramètre, d'un acte, d'un dépistage — et jamais une
+   valeur. C'est la garantie structurelle que le texte affiché ne peut
+   pas dépendre du résultat de la personne : la valeur n'est pas
+   disponible ici, il n'y a donc rien à comparer, même par accident.
+
+   Si un jour quelqu'un veut afficher « attention, cette valeur est
+   inhabituelle », il devra passer un chiffre à ces fonctions, et le
+   vérificateur le refusera.
+   ===================================================================== */
+const LEX = LEXIQUE;
+
+/* Ordre de lecture des actes : celui du parcours réel, du premier
+   contact au document final. Il couvre les huit actes du lexique, y
+   compris ceux qui ne figurent pas dans le parcours de cette personne :
+   savoir en quoi consiste une spirométrie avant qu'elle ne soit
+   proposée fait partie du consentement. */
+const ORDRE_ACTES = ['questionnaire', 'visite', 'consultation', 'prelevement',
+                     'respiratoire', 'vaccin', 'examen', 'document'];
+
+function rubrique(titre, texte, sombre) {
+  if (!texte) return '';
+  return '<div class="ex-r' + (sombre ? ' sombre' : '') + '">' +
+         '<span class="ex-k">' + esc(titre) + '</span>' +
+         '<p class="ex-t">' + esc(texte) + '</p></div>';
+}
+
+/* Bloc long, sous le graphique. Reçoit le paramètre, pas ses valeurs. */
+function blocExplication(paramId) {
+  const p = PARAMETRES.find(x => x.id === paramId);
+  const e = LEX.parametres[paramId];
+  if (!p || !e) return '';
+  return `
+    <div class="expli">
+      <div class="ex-h"><b>Comprendre cette mesure</b>
+        <span>${esc(p.nom)} · explication identique pour tout le monde</span></div>
+      <p class="ex-lede">Ce texte décrit la mesure elle-même. Il ne commente pas vos
+      résultats et ne change pas selon vos chiffres.</p>
+      <div class="ex-g">
+        ${rubrique('De quoi il s’agit', e.quoi)}
+        ${rubrique('Pourquoi c’est mesuré', e.pourquoi)}
+        ${rubrique('Comment c’est obtenu', e.comment)}
+        ${rubrique('Ce qui la fait varier sans que rien n’aille mal', e.varie)}
+        ${rubrique('Ce que cette mesure ne dit pas', e.limites, true)}
+        <div class="ex-r ex-u">
+          <span class="ex-k">L’unité, en clair</span>
+          <p class="ex-t">${esc(e.unite)}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* Volet dépliable, sur chaque acte de la frise. */
+function blocActe(type) {
+  const a = LEX.actes[type];
+  if (!a) return '';
+  return `
+    <details class="lire">
+      <summary>Comprendre cet acte</summary>
+      <div class="lire-c">
+        ${rubrique('De quoi il s’agit', a.quoi)}
+        ${rubrique('Comment ça se passe', a.deroulement)}
+        ${a.duree && a.duree !== '—' ? rubrique('Combien de temps', a.duree) : ''}
+        ${rubrique('Après', a.apres)}
+        ${rubrique('Ce que ce n’est pas', a.pasCeQue, true)}
+      </div>
+    </details>`;
+}
+
+/* Volet dépliable, sur chaque ligne de vaccinations et dépistages. */
+function blocDepistage(libelle) {
+  const d = LEX.depistages[libelle];
+  if (!d) return '';
+  return `
+    <details class="lire">
+      <summary>Comprendre</summary>
+      <div class="lire-c">
+        ${rubrique('De quoi il s’agit', d.quoi)}
+        ${rubrique('Pourquoi', d.pourquoi)}
+        ${rubrique('Comment', d.comment)}
+        ${rubrique('Ce qu’il faut savoir avant de décider', d.limites, true)}
+      </div>
+    </details>`;
+}
+
+/* =====================================================================
    GRAND GRAPHIQUE — une ou deux séries, même unité obligatoire
    ===================================================================== */
 function grandGraphique(series) {
@@ -342,6 +430,12 @@ function rendre() {
       </div>
     </div>
 
+    <!-- ===== comment lire cette page ===== -->
+    <section class="lire-page">
+      <h2>${esc(LEX.intro.titre)}</h2>
+      ${LEX.intro.paragraphes.map(t => `<p>${esc(t)}</p>`).join('')}
+    </section>
+
     <!-- ===== graphique ===== -->
     <section class="bloc">
       <div class="b-h">
@@ -419,6 +513,8 @@ function rendre() {
         </div>
       </div>
 
+      ${blocExplication(p.id)}
+
       <div class="avis">
         ${ic('i-info')}
         <span><b>Deux sortes de couleurs sur cette page, et il faut les distinguer.</b>
@@ -450,6 +546,7 @@ function rendre() {
                 ${mini(x)}
                 <span class="m-val"><b>${fmtVal(x.valeurs[x.valeurs.length - 1])}</b> ${esc(x.unite)}</span>
                 <span class="m-per">${esc(courteDate(DATES[0]))} → ${esc(courteDate(DATES[DATES.length - 1]))}</span>
+                <span class="m-res">${esc(LEX.parametres[x.id].resume)}</span>
               </button>`).join('')}
           </div>
         </div>`).join('')}
@@ -470,9 +567,32 @@ function rendre() {
               <b class="ev-t">${esc(e.titre)}</b>
               <span class="ev-x">${esc(e.detail)}</span>
               <span class="ev-l">${ic('i-pin')} ${esc(e.lieu)}</span>
+              ${blocActe(e.type)}
             </div>
           </li>`).join('')}
       </ol>
+    </section>
+
+    <!-- ===== les actes, expliqués un par un ===== -->
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Chaque acte, expliqué</h2>
+        <p class="b-s">Ce qui se passe concrètement, combien de temps ça prend, ce que ça fait,
+        ce qui est normal ensuite, et ce que l’acte n’est pas. Y compris les actes que vous
+        n’avez pas eus : autant savoir avant, si l’un d’eux vous est proposé un jour.</p>
+      </div></div>
+      ${ORDRE_ACTES.map(k => `
+        <div class="grp">
+          <p class="grp-t" style="--fc:var(--pri)">${esc(LEX.actes[k].titre)}</p>
+          <div class="lire-c" style="margin-top:0;max-width:none">
+            ${rubrique('De quoi il s’agit', LEX.actes[k].quoi)}
+            ${rubrique('Comment ça se passe', LEX.actes[k].deroulement)}
+            ${LEX.actes[k].duree && LEX.actes[k].duree !== '—'
+              ? rubrique('Combien de temps', LEX.actes[k].duree) : ''}
+            ${rubrique('Après', LEX.actes[k].apres)}
+            ${rubrique('Ce que ce n’est pas', LEX.actes[k].pasCeQue, true)}
+          </div>
+        </div>`).join('')}
     </section>
 
     <!-- ===== couverture ===== -->
@@ -487,11 +607,20 @@ function rendre() {
         <thead><tr><th>Acte</th><th>Mon dernier</th><th>Ce que prévoit le programme</th></tr></thead>
         <tbody>
           ${COUVERTURE.map(c => `<tr>
-            <td><b>${esc(c.libelle)}</b></td>
+            <td><b>${esc(c.libelle)}</b>${blocDepistage(c.libelle)}</td>
             <td class="cv-d">${c.dernier ? esc(jolieDate(c.dernier)) : '<span class="cv-non">Aucun enregistré</span>'}</td>
             <td class="cv-r">${esc(c.reference)}</td></tr>`).join('')}
         </tbody>
       </table>
+      <div class="avis" style="margin-top:22px">
+        ${ic('i-info')}
+        <span><b>Un rapprochement de dates, pas un rappel.</b> Le tableau met côte à côte
+        une date et ce que prévoit un programme national. Il ne conclut pas que quelque chose
+        est en retard, parce que la réponse dépend de votre âge, de vos antécédents et de vos
+        traitements — et parce qu’un dépistage n’est pas une obligation mais une décision qui
+        vous appartient, prise en connaissance de ses limites. Celles-ci sont écrites, pour
+        chaque ligne, sous « Comprendre ».</span>
+      </div>
     </section>
 
     <!-- ===== documents ===== -->
@@ -512,6 +641,22 @@ function rendre() {
       l’hébergement certifié HDS.</p>
     </section>
 
+    <!-- ===== glossaire ===== -->
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Les mots qu’on emploie</h2>
+        <p class="b-s">Les termes qui reviennent sur un compte rendu, dans une ordonnance ou
+        dans une consultation, et que personne ne prend le temps d’expliquer.</p>
+      </div></div>
+      <div class="glo">
+        ${LEX.glossaire.map(g => `
+          <div class="glo-i">
+            <span class="glo-t">${esc(g.terme)}</span>
+            <p class="glo-d">${esc(g.def)}</p>
+          </div>`).join('')}
+      </div>
+    </section>
+
     <!-- ===== limites ===== -->
     <section class="limites">
       <h2>Ce que ce tableau de bord ne fait pas</h2>
@@ -520,6 +665,7 @@ function rendre() {
         <li>${ic('i-x')}<span>Il ne colore, ne surligne et ne signale aucun résultat selon sa valeur. Les teintes des courbes désignent des familles d’analyses.</span></li>
         <li>${ic('i-x')}<span>Il ne calcule aucun score de santé, aucun âge biologique, aucun indice de synthèse.</span></li>
         <li>${ic('i-x')}<span>Il ne propose aucun examen et ne recommande aucune conduite.</span></li>
+        <li>${ic('i-x')}<span>Il n’adapte aucune explication à vos résultats. Les textes « Comprendre » décrivent la mesure ou l’acte, et sont rigoureusement les mêmes pour tout le monde. Une explication qui changerait selon vos chiffres serait une interprétation déguisée.</span></li>
         <li>${ic('i-x')}<span>Il ne transmet rien à votre employeur, ni à un assureur, ni à un tiers commercial.</span></li>
       </ul>
       <p>Ce n’est pas une limite technique mais un choix de conception. Un logiciel qui compare
