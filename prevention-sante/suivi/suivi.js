@@ -41,62 +41,62 @@
 
 'use strict';
 
-const DATES = ['2022-04-12', '2023-05-03', '2024-05-21', '2025-06-14', '2026-07-20'];
-
-/* Rampe pétrole → violet. Aucune teinte à dominante rouge ou verte. */
-const FAMILLES = [
-  { nom: 'Numération',        c: '#0f5f6b', c2: '#0f5f6b22' },
-  { nom: 'Métabolique',       c: '#1a6f8c', c2: '#1a6f8c22' },
-  { nom: 'Rénal',             c: '#2a5f9c', c2: '#2a5f9c22' },
-  { nom: 'Hormonal',          c: '#41529b', c2: '#41529b22' },
-  { nom: 'Hépatique',         c: '#57488f', c2: '#57488f22' },
-  { nom: 'Mesuré sur place',  c: '#6b4382', c2: '#6b438222' }
-];
-const famille = nom => FAMILLES.find(f => f.nom === nom) || FAMILLES[0];
-
-const PARAMETRES = [
-  { id: 'hb',    nom: 'Hémoglobine',        unite: 'g/dL',   groupe: 'Numération',       valeurs: [14.1, 13.8, 13.6, 13.4, 13.6] },
-  { id: 'ferr',  nom: 'Ferritine',          unite: 'µg/L',   groupe: 'Numération',       valeurs: [58, 47, 42, 31, 24] },
-  { id: 'gly',   nom: 'Glycémie à jeun',    unite: 'g/L',    groupe: 'Métabolique',      valeurs: [0.88, 0.91, 0.94, 0.98, 1.02] },
-  { id: 'chol',  nom: 'Cholestérol total',  unite: 'g/L',    groupe: 'Métabolique',      valeurs: [1.94, 2.02, 2.11, 2.18, 2.14] },
-  { id: 'hdl',   nom: 'HDL',                unite: 'g/L',    groupe: 'Métabolique',      valeurs: [0.58, 0.56, 0.54, 0.52, 0.55] },
-  { id: 'tg',    nom: 'Triglycérides',      unite: 'g/L',    groupe: 'Métabolique',      valeurs: [0.92, 1.05, 1.18, 1.34, 1.21] },
-  { id: 'creat', nom: 'Créatinine',         unite: 'µmol/L', groupe: 'Rénal',            valeurs: [71, 73, 74, 76, 75] },
-  { id: 'tsh',   nom: 'TSH',                unite: 'mUI/L',  groupe: 'Hormonal',         valeurs: [1.8, 2.1, 2.4, 2.2, 2.6] },
-  { id: 'vitd',  nom: 'Vitamine D',         unite: 'nmol/L', groupe: 'Hormonal',         valeurs: [42, 38, 51, 44, 47] },
-  { id: 'alat',  nom: 'ALAT',               unite: 'UI/L',   groupe: 'Hépatique',        valeurs: [22, 24, 27, 31, 28] },
-  { id: 'pas',   nom: 'Pression systolique', unite: 'mmHg',  groupe: 'Mesuré sur place', valeurs: [118, 121, 124, 128, 126] },
-  { id: 'poids', nom: 'Poids',              unite: 'kg',     groupe: 'Mesuré sur place', valeurs: [71.5, 73.2, 75.8, 77.1, 76.4] }
-];
+/* Source partagée avec la vue médecin : ../plateforme/biologie.js.
+   Une seule définition des paramètres, des dates et des familles, pour
+   que ce que le médecin annote soit exactement ce que le patient voit. */
+const DATES = BIO_DATES;
+const FAMILLES = BIO_FAMILLES;
+const PARAMETRES = BIO_PARAMETRES;
+const famille = nom => Biologie.famille(nom);
 
 /* =====================================================================
-   MARQUES DU MÉDECIN
+   MARQUES DU MÉDECIN — LUES DANS LE DOSSIER, PAS ÉCRITES EN DUR
    ---------------------------------------------------------------------
    Les seules couleurs évaluatives de cette page. Elles ne sont JAMAIS
    dérivées d'une valeur par le logiciel : elles proviennent d'un
-   enregistrement fait par un médecin, qui a choisi la couleur lui-même.
+   enregistrement posé par un médecin depuis l'onglet Biologie de la vue
+   praticien, sur une valeur précise à une date précise.
 
-   Trois conditions d'affichage, sans exception :
+   La chaîne est réelle : le médecin annote, le patient voit. Aucune
+   donnée d'affichage n'est simulée ici.
+
+   Trois conditions, sans exception :
      - la marque existe parce qu'un médecin l'a posée ;
-     - elle est toujours accompagnée de son nom et de la date ;
+     - elle est accompagnée de son nom et de la date ;
      - elle porte le mot « médecin » en clair, pour qu'aucun patient ne
        puisse la prendre pour un signalement automatique.
 
-   Une marque sans auteur n'est pas affichée. C'est vérifié à l'exécution.
+   Le contrôle de complétude est dans Biologie.lire() : une marque sans
+   couleur, sans auteur ou sans horodatage n'est pas restituée.
    ===================================================================== */
-const MARQUES_MEDECIN = {
-  ferr:  { couleur: 'orange', commentaire: 'Baisse régulière depuis 2022. Nous en reparlons à la prochaine visite, j’ai prescrit un bilan complémentaire.', medecin: 'Dr DÉMO (fictif)', date: '2026-07-20' },
-  gly:   { couleur: 'orange', commentaire: 'À surveiller. Nous avons parlé d’activité physique et d’alimentation.', medecin: 'Dr DÉMO (fictif)', date: '2026-07-20' },
-  hb:    { couleur: 'vert',   commentaire: 'Stable et sans particularité.', medecin: 'Dr DÉMO (fictif)', date: '2026-07-20' },
-  creat: { couleur: 'vert',   commentaire: 'Fonction rénale stable.', medecin: 'Dr DÉMO (fictif)', date: '2026-07-20' }
-};
+const CLE_DOSSIERS = 'pv-sante-test-v1';
+const CLE_COMPTE = 'pv-sante-compte-v1';
 
-/* Accès contrôlé : une marque sans auteur ou sans date n'est pas rendue. */
+/* Dossier consulté : celui du compte connecté, sinon le premier dossier
+   disponible pour la démonstration. */
+function dossierCourant() {
+  let base = null, compte = null;
+  try { base = JSON.parse(localStorage.getItem(CLE_DOSSIERS) || 'null'); } catch (e) {}
+  try { compte = JSON.parse(localStorage.getItem(CLE_COMPTE) || 'null'); } catch (e) {}
+  if (!base || !Array.isArray(base.dossiers) || !base.dossiers.length) return null;
+  if (compte && compte.dossierId) {
+    const d = base.dossiers.find(x => x.id === compte.dossierId);
+    if (d && Biologie.compte(d)) return d;
+  }
+  const avecMarques = base.dossiers.find(x => Biologie.compte(x));
+  return avecMarques || base.dossiers[0];
+}
+
+let DOSSIER = null;
+
+/* La marque la plus récente posée sur un paramètre. */
 function marqueDu(id) {
-  const m = MARQUES_MEDECIN[id];
-  if (!m) return null;
-  if (!m.medecin || !m.date) return null;
-  return m;
+  return DOSSIER ? Biologie.derniere(DOSSIER, id) : null;
+}
+
+/* Toutes les marques d'un paramètre, du relevé le plus récent au plus ancien. */
+function marquesDu(id) {
+  return DOSSIER ? Biologie.duParametre(DOSSIER, id) : [];
 }
 
 const LIB_COULEUR = { vert: 'Vert', orange: 'Orange', rouge: 'Rouge' };
@@ -377,18 +377,16 @@ function rendre() {
           </div>
           <div class="g-wrap" id="gwrap">${grandGraphique(series)}</div>
 
-          ${(function () {
-            const m = marqueDu(p.id);
-            if (!m) return '';
-            return `<div class="mqm m-${esc(m.couleur)}">
+          ${marquesDu(p.id).map(m => `
+            <div class="mqm m-${esc(m.couleur)}">
               <span class="mqm-pt"></span>
               <div>
-                <p class="mqm-k">Note de votre médecin — marque ${esc(LIB_COULEUR[m.couleur])}</p>
-                <p class="mqm-c">${esc(m.commentaire)}</p>
-                <p class="mqm-s">${esc(m.medecin)} · ${esc(jolieDate(m.date))}</p>
+                <p class="mqm-k">Note de votre médecin — marque ${esc(LIB_COULEUR[m.couleur])}
+                  · sur le relevé du ${esc(jolieDate(m.dateValeur))}</p>
+                <p class="mqm-c">${m.commentaire ? esc(m.commentaire) : 'Valeur marquée, sans commentaire écrit.'}</p>
+                <p class="mqm-s">${esc(m.medecin)} · annotation du ${esc(jolieDate(m.date))}</p>
               </div>
-            </div>`;
-          })()}
+            </div>`).join('')}
 
           ${memeUnite(p).length ? `
           <div class="cmp">
@@ -573,4 +571,7 @@ function brancherInfobulle(series) {
   });
 }
 
-window.addEventListener('DOMContentLoaded', rendre);
+window.addEventListener('DOMContentLoaded', () => {
+  DOSSIER = dossierCourant();
+  rendre();
+});
