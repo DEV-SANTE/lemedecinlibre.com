@@ -189,10 +189,17 @@ function grandGraphique(series) {
       ' L' + pts.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' L') +
       ' L' + pts[pts.length - 1].x.toFixed(1) + ',' + (H - mg.b) + ' Z" fill="url(#ga' + k + ')"/>';
   });
-  series.forEach(s => {
+  /* La seconde série est tracée en TIRETÉ, et non dans une autre teinte.
+     Deux paramètres de même unité appartiennent presque toujours à la
+     même famille : leur donner deux couleurs casserait la logique
+     catégorielle, où une teinte désigne une famille. Le tireté distingue
+     sans mentir, et reste lisible en cas de déficience de la vision des
+     couleurs. */
+  series.forEach((s, k) => {
     const co = famille(s.groupe).c;
     const pts = s.valeurs.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1));
-    out += '<polyline points="' + pts.join(' ') + '" class="gp" stroke="' + co + '"/>';
+    out += '<polyline points="' + pts.join(' ') + '" class="gp' + (k === 1 ? ' gp2' : '') +
+      '" stroke="' + co + '"/>';
   });
 
   /* points */
@@ -200,10 +207,12 @@ function grandGraphique(series) {
     const co = famille(s.groupe).c;
     s.valeurs.forEach((v, i) => {
       const dernier = i === s.valeurs.length - 1;
+      const plein = dernier && k === 0;
       out += '<g class="gpt" data-i="' + i + '" data-s="' + k + '" tabindex="0">' +
         '<line x1="' + x(i).toFixed(1) + '" y1="' + mg.h + '" x2="' + x(i).toFixed(1) + '" y2="' + (H - mg.b) + '" class="gv"/>' +
         (dernier ? '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="11" fill="' + co + '" opacity=".14"/>' : '') +
-        '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="' + (dernier ? 7 : 6) + '" class="gdot" stroke="' + co + '" fill="' + (dernier ? co : '#fff') + '"/>' +
+        '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="' + (dernier ? 7 : 6) +
+          '" class="gdot" stroke="' + co + '" fill="' + (plein ? co : '#fff') + '"/>' +
         '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="22" class="ghit"/>' +
         '</g>';
     });
@@ -328,6 +337,11 @@ function rendre() {
               <span class="g-unit">${esc(p.unite)}</span>
               <span class="g-fam" style="--fc:${co}">${esc(p.groupe)}</span>
             </div>
+            ${series.length > 1 ? `
+            <div class="g-leg">
+              <span><i style="--fc:${famille(series[0].groupe).c}"></i>${esc(series[0].nom)}</span>
+              <span><i class="tirets" style="--fc:${famille(series[1].groupe).c}"></i>${esc(series[1].nom)}</span>
+            </div>` : ''}
           </div>
           <div class="g-wrap" id="gwrap">${grandGraphique(series)}</div>
 
@@ -350,8 +364,9 @@ function rendre() {
         <div class="g-side">
           <p class="s-k">Les relevés</p>
           <table class="s-tbl">
-            ${series.map(s => `
+            ${series.map((s, k) => `
               <tr class="s-sep"><td colspan="2" style="color:${famille(s.groupe).c}">
+                <i class="s-mk ${k === 1 ? 'tirets' : ''}" style="--fc:${famille(s.groupe).c}"></i>
                 <b>${esc(s.nom)}</b> <span>${esc(s.unite)}</span></td></tr>
               ${s.valeurs.map((v, i) => `<tr>
                 <td class="s-d">${esc(jolieDate(DATES[i]))}</td>

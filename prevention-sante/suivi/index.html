@@ -129,7 +129,13 @@ main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
 /* ---------- disposition graphique + relevés ---------- */
 .g-layout{display:grid;grid-template-columns:1fr 224px;gap:28px;align-items:start}
 @media(max-width:940px){.g-layout{grid-template-columns:1fr}}
-.g-head{padding-bottom:14px;border-bottom:1px solid var(--line-2);margin-bottom:10px}
+.g-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  padding-bottom:14px;border-bottom:1px solid var(--line-2);margin-bottom:10px}
+.g-leg{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);padding-bottom:2px}
+.g-leg span{display:inline-flex;align-items:center;gap:8px}
+.g-leg i{display:inline-block;width:22px;height:0;flex:0 0 22px;
+  border-top:2.6px solid var(--fc);border-radius:2px}
+.g-leg i.tirets{border-top-style:dashed}
 .g-nom{font-size:21px;font-weight:740;letter-spacing:-.028em}
 .g-unit{font-size:13.5px;color:var(--ink-4);margin-left:9px;font-family:var(--mono)}
 .g-fam{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.1em;
@@ -144,6 +150,9 @@ main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
 .gu{fill:var(--ink-4);font-size:10.5px;font-family:var(--mono);text-anchor:end;letter-spacing:.04em}
 .gx{fill:var(--ink-4);font-size:11.5px;text-anchor:middle;font-weight:560}
 .gp{fill:none;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+/* Seconde série : tiretée, jamais d'une autre teinte — la couleur reste
+   réservée à la famille d'analyses. */
+.gp2{stroke-dasharray:7 5}
 .gv{stroke:var(--line);stroke-width:1;opacity:0;transition:opacity .15s}
 .gdot{stroke-width:2.8;transition:r .14s}
 .ghit{fill:transparent;cursor:pointer}
@@ -164,6 +173,9 @@ main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
 .s-sep td{padding:14px 0 7px;border-bottom:1.5px solid currentColor!important;font-size:12.5px}
 .s-sep:first-child td{padding-top:0}
 .s-sep b{font-weight:700;letter-spacing:-.015em}
+.s-mk{display:inline-block;width:18px;height:0;border-top:2.4px solid var(--fc);
+  border-radius:2px;margin-right:7px;vertical-align:3px}
+.s-mk.tirets{border-top-style:dashed}
 .s-sep span{font-family:var(--mono);font-size:11px;opacity:.7;margin-left:5px}
 .s-d{color:var(--ink-3);font-family:var(--mono);font-size:12.3px}
 .s-v{text-align:right}
