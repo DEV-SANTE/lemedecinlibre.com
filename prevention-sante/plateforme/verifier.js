@@ -657,7 +657,7 @@ const VISUELS = require('../commun/visuels.js');
 ['index.html', 'plateforme/index.html', 'plateforme/style.css',
  'espace/index.html', 'pilotage/index.html', 'entreprise/index.html',
  'contenus/index.html', 'suivi/index.html',
- 'commun/navigation.js', 'commun/visuels.js'].forEach(f => {
+ 'commun/navigation.js', 'commun/visuels.js', 'commun/lexique.js'].forEach(f => {
   const src = lire(f);
   const fautes = [];
   if (/<script[^>]+src\s*=\s*["'](?:https?:)?\/\//i.test(src)) fautes.push('script distant');
@@ -672,7 +672,7 @@ const VISUELS = require('../commun/visuels.js');
 /* --- 7.2 Aucune image distante hors de la page publique --- */
 ['plateforme/index.html', 'plateforme/style.css', 'espace/index.html',
  'pilotage/index.html', 'entreprise/index.html', 'contenus/index.html',
- 'suivi/index.html', 'commun/navigation.js'].forEach(f => {
+ 'suivi/index.html', 'commun/navigation.js', 'commun/lexique.js'].forEach(f => {
   const src = lire(f);
   const ext = (src.match(/(https?:)?\/\/[a-z0-9.-]+\.[a-z]{2,}/gi) || [])
     .filter(u => !/w3\.org/.test(u));
@@ -759,6 +759,187 @@ const VISUELS = require('../commun/visuels.js');
     null);
   verifier('index.html — la fuite d’adresse IP est écrite noir sur blanc',
     /adresse\s+IP/i.test(src));
+})();
+
+/* ==================================================================
+   8. LES EXPLICATIONS NE PEUVENT PAS DEVENIR UNE INTERPRÉTATION
+
+   Expliquer beaucoup est un progrès pour la personne, et un risque
+   pour le périmètre. Le glissement est facile et il se ferait en une
+   ligne : il suffirait qu'un texte change selon la valeur mesurée pour
+   que la page produise une information propre à un patient à des fins
+   de décision médicale — c'est-à-dire pour qu'elle sorte du cadre de la
+   version 1. Les contrôles ci-dessous ferment cette porte.
+
+   Trois verrous, de nature différente :
+     - COUVERTURE : rien ne peut être affiché sans explication, et rien
+       ne peut être expliqué sans être affiché.
+     - CONTENU : aucun seuil chiffré, aucune affirmation sur le lecteur.
+       Publier une valeur limite reviendrait à faire interpréter la
+       personne à notre place, ce qui est le même acte déguisé.
+     - STRUCTURE : les fonctions d'affichage ne reçoivent qu'un
+       identifiant. La valeur ne leur est pas accessible, il n'y a donc
+       rien à comparer, même par inadvertance.
+================================================================== */
+section('8. Explications non individualisées');
+
+const LEXIQUE = require('../commun/lexique.js');
+
+(function () {
+  const srcBio = lire('plateforme/biologie.js');
+  const srcSuivi = lire('suivi/suivi.js');
+  const srcLex = lire('commun/lexique.js');
+
+  /* Les contrôles de contenu portent sur ce qui est AFFICHÉ, donc sur le
+     texte hors commentaires. L'en-tête du lexique énonce les interdits
+     en les citant — « votre taux », « vous avez » — et se ferait
+     évidemment refuser par ses propres règles. Un fichier qui ne peut
+     pas documenter sa propre discipline finit par ne plus la documenter. */
+  const texteLex = sansCommentaires(srcLex);
+
+  /* --- 8.1 Un paramètre affiché sans explication est un paramètre
+         que la personne ne peut pas comprendre. --- */
+  const blocParam = (srcBio.match(/BIO_PARAMETRES\s*=\s*\[([\s\S]*?)\n\];/) || [])[1] || '';
+  const ids = (blocParam.match(/id:\s*'([a-z0-9]+)'/g) || [])
+    .map(s => s.replace(/.*'([a-z0-9]+)'.*/, '$1'));
+
+  verifier('biologie.js — identifiants de paramètres relus (' + ids.length + ')',
+    ids.length >= 12, ids.length < 12 ? 'Extraction incomplète : contrôle non concluant.' : null);
+
+  const CHAMPS = ['resume', 'quoi', 'pourquoi', 'comment', 'varie', 'limites', 'unite'];
+  ids.forEach(id => {
+    const e = LEXIQUE.parametres[id];
+    verifier('lexique — ' + id + ' expliqué', !!e,
+      !e ? 'Aucune explication : ce paramètre s’afficherait sans que la personne sache de quoi il s’agit.' : null);
+    if (!e) return;
+    const manquants = CHAMPS.filter(c => !e[c] || String(e[c]).trim().length < 12);
+    verifier('lexique — ' + id + ' : sept rubriques renseignées', manquants.length === 0,
+      manquants.length ? 'Rubriques vides ou trop courtes : ' + manquants.join(', ') : null);
+  });
+
+  /* --- 8.2 Et l'inverse : une explication orpheline décrirait une
+         mesure qui n'existe plus, donc mentirait. --- */
+  const orphelins = Object.keys(LEXIQUE.parametres).filter(k => ids.indexOf(k) === -1);
+  verifier('lexique — aucune explication orpheline', orphelins.length === 0,
+    orphelins.length ? 'Expliqués sans exister dans biologie.js : ' + orphelins.join(', ') : null);
+
+  /* --- 8.3 Aucun seuil chiffré dans une unité biologique.
+         Écrire un chiffre suivi de son unité fournirait au lecteur de
+         quoi se juger seul : c'est déplacer l'interprétation, pas
+         l'éviter. Les âges et les durées restent permis. --- */
+  const UNITES = ['g/dL', 'µg/L', 'g/L', 'µmol/L', 'mmol/L', 'mUI/L', 'nmol/L',
+                  'ng/mL', 'UI/L', 'mmHg', 'mg/L'];
+  const motifUnite = new RegExp(
+    '\\d+(?:[.,]\\d+)?\\s*(?:' + UNITES.map(u => u.replace(/[/]/g, '\\/')).join('|') + ')', 'g');
+  const seuils = texteLex.match(motifUnite) || [];
+  verifier('lexique.js — aucun seuil chiffré dans une unité biologique', seuils.length === 0,
+    seuils.length ? 'Trouvé : ' + [...new Set(seuils)].join(', ')
+      + ' — les intervalles de référence appartiennent au compte rendu du laboratoire.' : null);
+
+  const comparaisons = texteLex.match(/(sup[eé]rieur|inf[eé]rieur|au-dessus|au-dessous)\s+(?:à\s+|de\s+)?\d/gi) || [];
+  verifier('lexique.js — aucune comparaison chiffrée', comparaisons.length === 0,
+    comparaisons.length ? 'Trouvé : ' + comparaisons.join(', ') : null);
+
+  /* --- 8.4 Aucune affirmation sur le lecteur. Le « vous » est admis
+         pour décrire un acte ou une consigne, jamais pour lui dire
+         quelque chose sur son état. --- */
+  const affirmations = texteLex.match(
+    /votre\s+(taux|valeur|r[eé]sultat|chiffre|risque|bilan|score)|vous\s+(avez|pr[eé]sentez|souffrez|êtes\s+en)/gi) || [];
+  verifier('lexique.js — aucune affirmation sur l’état du lecteur', affirmations.length === 0,
+    affirmations.length ? 'Trouvé : ' + [...new Set(affirmations)].join(', ') : null);
+
+  /* --- 8.5 Le lexique est statique : il ne lit aucun dossier. --- */
+  const fuites = ['localStorage', 'sessionStorage', 'DOSSIER', 'dossierCourant', 'Biologie.']
+    .filter(t => srcLex.indexOf(t) !== -1);
+  verifier('lexique.js — aucun accès aux données d’une personne', fuites.length === 0,
+    fuites.length ? 'Références trouvées : ' + fuites.join(', ') : null);
+
+  /* --- 8.6 STRUCTURE : les fonctions d'affichage reçoivent un
+         identifiant et rien d'autre. C'est ce contrôle qui empêche
+         durablement le glissement, parce qu'il porte sur la forme du
+         code et non sur le texte. --- */
+  ['blocExplication', 'blocActe', 'blocDepistage'].forEach(fn => {
+    const sig = new RegExp('function\\s+' + fn + '\\s*\\(([^)]*)\\)').exec(srcSuivi);
+    verifier('suivi.js — ' + fn + ' existe', !!sig);
+    if (!sig) return;
+    const args = sig[1].split(',').map(s => s.trim()).filter(Boolean);
+    verifier('suivi.js — ' + fn + ' ne reçoit qu’un identifiant', args.length === 1,
+      args.length !== 1 ? 'Arguments : ' + args.join(', ')
+        + ' — une valeur passée ici rendrait une interprétation possible.' : null);
+
+    /* Corps de la fonction, jusqu'à la prochaine déclaration. */
+    const dep = srcSuivi.indexOf(sig[0]);
+    const suite = srcSuivi.slice(dep + sig[0].length);
+    const fin = suite.search(/\nfunction\s|\n\/\* =====/);
+    const corps = fin === -1 ? suite : suite.slice(0, fin);
+    const interdits = ['.valeurs', 'Biologie.valeur', 'fmtVal', 'DATES['].filter(t => corps.indexOf(t) !== -1);
+    verifier('suivi.js — ' + fn + ' ne touche aucune valeur mesurée', interdits.length === 0,
+      interdits.length ? 'Trouvé dans le corps : ' + interdits.join(', ') : null);
+  });
+
+  verifier('suivi.js — l’explication est demandée par identifiant',
+    /blocExplication\(\s*p\.id\s*\)/.test(srcSuivi),
+    !/blocExplication\(\s*p\.id\s*\)/.test(srcSuivi)
+      ? 'L’appel doit passer un identifiant, pas un objet porteur de valeurs.' : null);
+
+  /* --- 8.7 Les huit actes du parcours sont expliqués, y compris ceux
+         que la personne n'a pas eus : le consentement suppose de savoir
+         avant, pas après. --- */
+  const ordre = ((srcSuivi.match(/ORDRE_ACTES\s*=\s*\[([\s\S]*?)\]/) || [])[1] || '')
+    .match(/'([a-z]+)'/g) || [];
+  const clesActes = ordre.map(s => s.replace(/'/g, ''));
+  verifier('suivi.js — ordre de lecture des actes défini (' + clesActes.length + ')',
+    clesActes.length >= 8);
+  clesActes.forEach(k => {
+    const a = LEXIQUE.actes[k];
+    verifier('lexique — acte « ' + k + ' » expliqué',
+      !!a && !!a.titre && !!a.quoi && !!a.deroulement && !!a.apres && !!a.pasCeQue);
+  });
+  const actesOrphelins = Object.keys(LEXIQUE.actes).filter(k => clesActes.indexOf(k) === -1);
+  verifier('lexique — aucun acte expliqué sans être affiché', actesOrphelins.length === 0,
+    actesOrphelins.length ? 'Non affichés : ' + actesOrphelins.join(', ') : null);
+
+  /* --- 8.8 Chaque ligne du tableau vaccinations-dépistages a son
+         explication, limites comprises. Un dépistage présenté sans ses
+         limites n'est pas une information, c'est une incitation. --- */
+  const blocCouv = (srcSuivi.match(/COUVERTURE\s*=\s*\[([\s\S]*?)\n\];/) || [])[1] || '';
+  const libelles = (blocCouv.match(/libelle:\s*'([^']+)'/g) || [])
+    .map(s => s.replace(/libelle:\s*'([^']+)'/, '$1'));
+  verifier('suivi.js — libellés de couverture relus (' + libelles.length + ')', libelles.length >= 6);
+  libelles.forEach(l => {
+    const d = LEXIQUE.depistages[l];
+    verifier('lexique — « ' + l +
+      ' » expliqué, limites comprises', !!d && !!d.quoi && !!d.pourquoi && !!d.limites,
+      !d ? 'Aucune entrée dans LEXIQUE.depistages.' : null);
+  });
+
+  /* --- 8.9 Le glossaire : c'est lui qui rend le reste lisible. --- */
+  verifier('lexique — glossaire fourni (' + LEXIQUE.glossaire.length + ' entrées)',
+    LEXIQUE.glossaire.length >= 15);
+  const glosFaibles = LEXIQUE.glossaire.filter(g => !g.terme || !g.def || g.def.length < 40);
+  verifier('lexique — chaque terme du glossaire est réellement défini', glosFaibles.length === 0,
+    glosFaibles.length ? 'Définitions manquantes ou trop courtes : '
+      + glosFaibles.map(g => g.terme).join(', ') : null);
+
+  /* Les notions qui évitent les conclusions hâtives ne sont pas
+     facultatives : sans elles, expliquer davantage revient à donner
+     plus d'assurance, pas plus de discernement. */
+  ['Intervalle de référence', 'Faux positif', 'Faux négatif', 'Surdiagnostic',
+   'Variabilité de la mesure', 'Dépistage', 'Diagnostic'].forEach(t => {
+    verifier('lexique — notion présente au glossaire : ' + t,
+      LEXIQUE.glossaire.some(g => g.terme === t));
+  });
+
+  /* --- 8.10 La page charge bien le lexique. --- */
+  verifier('suivi/index.html — le lexique est chargé',
+    /commun\/lexique\.js/.test(lire('suivi/index.html')));
+
+  /* --- 8.11 Et elle dit à la personne que ces textes ne la visent
+         pas personnellement. Sans cette phrase, un lecteur peut croire
+         que le contenu a été adapté à son cas. --- */
+  verifier('suivi.js — la non-individualisation est écrite pour la personne',
+    /identique pour tout le monde/i.test(srcSuivi) &&
+    /n’adapte aucune explication|n'adapte aucune explication/i.test(srcSuivi));
 })();
 
 /* ================================================================== */
