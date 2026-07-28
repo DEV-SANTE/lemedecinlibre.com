@@ -657,7 +657,8 @@ const VISUELS = require('../commun/visuels.js');
 ['index.html', 'plateforme/index.html', 'plateforme/style.css',
  'espace/index.html', 'pilotage/index.html', 'entreprise/index.html',
  'contenus/index.html', 'suivi/index.html',
- 'commun/navigation.js', 'commun/visuels.js', 'commun/lexique.js'].forEach(f => {
+ 'commun/navigation.js', 'commun/visuels.js', 'commun/lexique.js',
+ 'commun/themes.js'].forEach(f => {
   const src = lire(f);
   const fautes = [];
   if (/<script[^>]+src\s*=\s*["'](?:https?:)?\/\//i.test(src)) fautes.push('script distant');
@@ -672,7 +673,8 @@ const VISUELS = require('../commun/visuels.js');
 /* --- 7.2 Aucune image distante hors de la page publique --- */
 ['plateforme/index.html', 'plateforme/style.css', 'espace/index.html',
  'pilotage/index.html', 'entreprise/index.html', 'contenus/index.html',
- 'suivi/index.html', 'commun/navigation.js', 'commun/lexique.js'].forEach(f => {
+ 'suivi/index.html', 'commun/navigation.js', 'commun/lexique.js',
+ 'commun/themes.js'].forEach(f => {
   const src = lire(f);
   const ext = (src.match(/(https?:)?\/\/[a-z0-9.-]+\.[a-z]{2,}/gi) || [])
     .filter(u => !/w3\.org/.test(u));
@@ -940,6 +942,145 @@ const LEXIQUE = require('../commun/lexique.js');
   verifier('suivi.js — la non-individualisation est écrite pour la personne',
     /identique pour tout le monde/i.test(srcSuivi) &&
     /n’adapte aucune explication|n'adapte aucune explication/i.test(srcSuivi));
+})();
+
+/* ==================================================================
+   9. LES THÈMES CHANGENT L'APPARENCE, JAMAIS LE SENS
+
+   Proposer une version « plus colorée » du tableau de bord touche à la
+   seule chose que ce projet a soigneusement encadrée depuis le début :
+   la signification de la couleur. Une teinte y désigne une famille
+   d'analyses et jamais un état de santé. Élargir la palette est donc
+   permis, mais deux confusions deviennent possibles et sont fermées ici.
+
+   PREMIÈRE CONFUSION — une famille pourrait prendre la couleur d'une
+   marque. Si « Métabolique » devenait orange, une courbe orange se
+   lirait comme un avertissement. Aucune palette ne reprend donc le
+   vert, l'orange ni le rouge : ces trois teintes appartiennent aux
+   marques du médecin, dans les cinq thèmes.
+
+   SECONDE CONFUSION — un thème pourrait modifier ce qui est dit. Un
+   thème qui masquerait une réserve ou raccourcirait une explication ne
+   serait plus une apparence, ce serait une autre version du contenu.
+   Le contrôle porte sur la forme du code : rien ne se décide en
+   fonction du thème en dehors de la teinte et de la barre de choix.
+================================================================== */
+section('9. Thèmes — apparence seulement');
+
+const THEMES = require('../commun/themes.js');
+
+(function () {
+  const srcSuivi = lire('suivi/suivi.js');
+  const srcTh = lire('commun/themes.js');
+  const srcBio = lire('plateforme/biologie.js');
+
+  /* --- 9.1 Les familles déclarées dans les thèmes sont exactement
+         celles de biologie.js, qui fait autorité. --- */
+  const blocFam = (srcBio.match(/BIO_FAMILLES\s*=\s*\[([\s\S]*?)\n\];/) || [])[1] || '';
+  const famBio = (blocFam.match(/nom:\s*'([^']+)'/g) || [])
+    .map(s => s.replace(/nom:\s*'([^']+)'/, '$1'));
+  verifier('biologie.js — familles relues (' + famBio.length + ')', famBio.length >= 6);
+  verifier('themes.js — même liste de familles que biologie.js',
+    famBio.length === THEMES.familles.length &&
+    famBio.every(f => THEMES.familles.indexOf(f) !== -1),
+    'Attendu : ' + famBio.join(', ') + ' — déclaré : ' + THEMES.familles.join(', '));
+
+  verifier('themes.js — cinq apparences proposées (' + THEMES.liste.length + ')',
+    THEMES.liste.length >= 4);
+  verifier('themes.js — le thème par défaut existe',
+    THEMES.liste.some(t => t.id === THEMES.defaut));
+
+  const reservees = THEMES.reservees.map(c => c.toLowerCase());
+  verifier('themes.js — les trois teintes de marque sont déclarées réservées',
+    reservees.length === 3);
+
+  THEMES.liste.forEach(t => {
+    /* --- 9.2 Couverture exacte : ni famille sans teinte, ni teinte
+           orpheline. Une famille sans couleur casserait le classement. --- */
+    const cles = Object.keys(t.palette);
+    const manquantes = THEMES.familles.filter(f => !t.palette[f]);
+    const enTrop = cles.filter(k => THEMES.familles.indexOf(k) === -1);
+    verifier('thème « ' + t.nom + ' » — une teinte par famille, sans surplus',
+      manquantes.length === 0 && enTrop.length === 0,
+      manquantes.length ? 'Sans teinte : ' + manquantes.join(', ')
+        : (enTrop.length ? 'Teintes orphelines : ' + enTrop.join(', ') : null));
+
+    /* --- 9.3 Six teintes distinctes : deux familles de même couleur
+           ne se distingueraient plus, ce qui est le seul travail que la
+           couleur ait à faire ici. --- */
+    const vals = THEMES.familles.map(f => (t.palette[f] || '').toLowerCase());
+    verifier('thème « ' + t.nom + ' » — six teintes distinctes',
+      new Set(vals).size === vals.length,
+      new Set(vals).size !== vals.length ? 'Doublons : ' + vals.join(', ') : null);
+
+    /* --- 9.4 Aucune teinte de famille ne reprend une couleur de
+           marque. C'est le contrôle qui autorise un thème vif. --- */
+    const collisions = vals.filter(v => reservees.indexOf(v) !== -1);
+    verifier('thème « ' + t.nom + ' » — aucune teinte réservée aux marques',
+      collisions.length === 0,
+      collisions.length ? 'Reprend une couleur de marque : ' + collisions.join(', ') : null);
+
+    /* --- 9.5 Chaque thème s'annonce, avec ses inconvénients. Un thème
+           décrit seulement par ses qualités n'aide pas à choisir. --- */
+    verifier('thème « ' + t.nom + ' » — nommé, résumé et décrit',
+      !!t.nom && !!t.resume && !!t.desc && t.desc.length > 80);
+  });
+
+  /* --- 9.6 Aucune couleur écrite en dur dans le rendu : tout passe par
+         les variables CSS ou par themes.js. --- */
+  const hexSuivi = (codeSeul(srcSuivi).match(/#[0-9a-fA-F]{3,8}\b/g) || []);
+  verifier('suivi.js — aucune couleur écrite en dur', hexSuivi.length === 0,
+    hexSuivi.length ? 'Trouvées : ' + [...new Set(hexSuivi)].join(', ') : null);
+
+  /* --- 9.7 STRUCTURE : rien ne se décide en fonction du thème en
+         dehors de la teinte et de la barre de choix. C'est ce contrôle
+         qui garantit qu'un thème ne peut pas devenir une autre version
+         du contenu. --- */
+  const code = codeSeul(srcSuivi);
+  const branches = (code.match(/\btheme\b/g) || []).length;
+  verifier('suivi.js — le thème n’est lu qu’à quelques endroits identifiés (' + branches + ')',
+    branches <= 8, branches > 8
+      ? 'Trop de lectures du thème : vérifier qu’aucune ne conditionne du contenu.' : null);
+  const conditionnel = /\btheme\s*(===|!==|==|!=)\s*['"][a-z]+['"]/.test(code);
+  verifier('suivi.js — aucun contenu conditionné par le thème', !conditionnel,
+    conditionnel ? 'Une comparaison du thème à une valeur littérale a été trouvée : '
+      + 'elle permettrait d’afficher un texte dans un thème et pas dans un autre.' : null);
+  verifier('suivi.js — la teinte est demandée par nom de famille',
+    /THEMES\.teinte\(\s*theme\s*,\s*base\.nom\s*\)/.test(srcSuivi));
+
+  /* --- 9.8 Le thème ne connaît pas les données. Contrôle sur le code
+         exécutable : le fichier doit pouvoir expliquer en commentaire
+         pourquoi trois couleurs sont réservées aux marques du médecin
+         sans que le mot « marque » soit pris pour un accès. --- */
+  const fuites = ['localStorage', 'sessionStorage', 'BIO_PARAMETRES', 'Biologie',
+                  '.valeurs', 'DOSSIER', 'marquesBio']
+    .filter(t => codeSeul(srcTh).indexOf(t) !== -1);
+  verifier('themes.js — aucune donnée de patient, aucun stockage', fuites.length === 0,
+    fuites.length ? 'Références trouvées : ' + fuites.join(', ') : null);
+
+  /* --- 9.9 Une marque reste reconnaissable sans la couleur. Dans un
+         thème coloré, une pastille nue serait indistinguable d'une
+         teinte de famille — et invisible pour qui distingue mal les
+         couleurs. Elle porte donc une initiale. --- */
+  verifier('suivi.js — la pastille de marque porte une initiale',
+    /mqm-tag[\s\S]{0,320}LIB_COULEUR\[[^\]]+\]\.charAt\(0\)/.test(srcSuivi),
+    'La marque ne doit pas reposer sur la seule couleur.');
+
+  /* --- 9.10 La page charge le module, et la barre est bien hors du
+         contenu reconstruit à chaque rendu. --- */
+  const srcHtml = lire('suivi/index.html');
+  verifier('suivi/index.html — le module de thèmes est chargé',
+    /commun\/themes\.js/.test(srcHtml));
+  verifier('suivi/index.html — la barre de choix est hors du contenu',
+    srcHtml.indexOf('id="th-b"') !== -1 &&
+    srcHtml.indexOf('id="th-b"') < srcHtml.indexOf('<main id="app">'));
+  verifier('suivi/index.html — les cinq apparences ont leurs règles',
+    THEMES.liste.filter(t => t.id !== THEMES.defaut)
+      .every(t => srcHtml.indexOf('data-theme="' + t.id + '"') !== -1));
+
+  /* --- 9.11 La barre est provisoire, et le dit. --- */
+  verifier('suivi.js — la barre de thèmes est annoncée comme provisoire',
+    /Provisoire/i.test(srcSuivi) && /retirer/i.test(srcSuivi));
 })();
 
 /* ================================================================== */
