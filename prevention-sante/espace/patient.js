@@ -85,12 +85,17 @@ const ETAPES = [
 
 function etapeCourante() {
   const h = (location.hash.replace(/^#\/?/, '') || 'accueil').split('/')[0];
-  return ETAPES.some(e => e.id === h) ? h : 'accueil';
+  if (ETAPES.some(e => e.id === h)) return h;
+  if (typeof ONGLETS_ESPACE !== 'undefined' && ONGLETS_ESPACE.some(o => o.id === h)) return h;
+  return 'accueil';
 }
 
 function rendreProgression() {
   const cur = etapeCourante();
-  const i = ETAPES.findIndex(e => e.id === cur);
+  /* Dans « Mon espace », le parcours d'entrée est terminé : toutes les
+     étapes sont affichées comme franchies. */
+  const dansEspace = typeof ONGLETS_ESPACE !== 'undefined' && ONGLETS_ESPACE.some(o => o.id === cur);
+  const i = dansEspace ? ETAPES.length : ETAPES.findIndex(e => e.id === cur);
   $('#prog').innerHTML = '<ol>' + ETAPES.map((e, k) => {
     const cls = k === i ? 'on' : (k < i ? 'done' : '');
     return '<li class="' + cls + '"><i>' + (k < i ? '✓' : (k + 1)) + '</i><span>' + esc(e.n) + '</span></li>';
@@ -594,21 +599,64 @@ function vueFin() {
 
       <div class="avis">
         ${ic('i-calendar')}
-        <span>Prochaine étape : prendre rendez-vous dans le centre de votre choix. La liste
-        des centres partenaires et le choix du laboratoire vous seront présentés à cette
-        étape. <span class="todo">[Module de rendez-vous à construire]</span></span>
+        <span>Prochaine étape : prendre rendez-vous dans le centre de votre choix. Vous
+        choisirez également librement le laboratoire qui réalisera vos analyses.</span>
       </div>
 
       <p class="hint" style="margin-top:20px">Référence de votre dossier :
       <b>${esc(d ? d.id : '—')}</b></p>
 
       <div class="acts">
-        <button class="btn b-g" id="b-rev">Revoir et corriger mes réponses</button>
+        <a class="btn b-p" href="#/rendezvous">Prendre rendez-vous ${ic('i-arrow')}</a>
+        <button class="btn b-g" id="b-rev">Revoir mes réponses</button>
         <a class="btn b-g" href="../plateforme/#/medecin/${esc(d ? d.id : '')}">Voir ce que le médecin reçoit</a>
       </div>
     </div>`;
 
   $('#b-rev').onclick = () => { etapeQ = 0; vueQuestionnaire(); window.scrollTo(0, 0); };
+}
+
+/* =====================================================================
+   MON ESPACE — modules M4, M5, M6, M7 (voir modules.js)
+   ===================================================================== */
+const ONGLETS_ESPACE = [
+  { id: 'rendezvous', n: 'Mon rendez-vous', f: 'rendezvous' },
+  { id: 'devis',      n: 'Mes devis',       f: 'devis' },
+  { id: 'documents',  n: 'Mes documents',   f: 'documents' },
+  { id: 'factures',   n: 'Mes factures',    f: 'factures' }
+];
+
+/* Contexte transmis aux modules : ils ne touchent ni au stockage ni au
+   routage directement, ce qui garde la migration HDS localisée. */
+function contexteModule() {
+  return {
+    compte: compte,
+    esc: esc,
+    ic: ic,
+    sauverCompte: function () { Db.ecrireCompte(compte); },
+    render: function (html) { app().innerHTML = barreEspace() + html; brancherBarre(); }
+  };
+}
+
+function barreEspace() {
+  const cur = etapeCourante();
+  return '<div class="onglets-espace">' + ONGLETS_ESPACE.map(o =>
+    '<button data-o="' + o.id + '" class="' + (cur === o.id ? 'on' : '') + '">' +
+    esc(o.n) + '</button>').join('') +
+    '<a class="revoir" href="#/questionnaire">Revoir mon questionnaire</a></div>';
+}
+
+function brancherBarre() {
+  document.querySelectorAll('.onglets-espace button').forEach(b => {
+    b.onclick = () => { location.hash = '#/' + b.dataset.o; };
+  });
+}
+
+function vueEspace(id) {
+  if (!compte) { location.hash = '#/inscription'; return; }
+  const o = ONGLETS_ESPACE.find(x => x.id === id);
+  if (!o || !window.Modules || !window.Modules[o.f]) { location.hash = '#/accueil'; return; }
+  window.Modules[o.f](contexteModule());
 }
 
 /* =====================================================================
@@ -618,7 +666,9 @@ function router() {
   compte = Db.lireCompte();
   rendreProgression();
   rendreEntete();
-  switch (etapeCourante()) {
+  const e = etapeCourante();
+  if (ONGLETS_ESPACE.some(o => o.id === e)) return vueEspace(e);
+  switch (e) {
     case 'inscription':   return vueInscription();
     case 'formule':       return vueFormule();
     case 'paiement':      return vuePaiement();

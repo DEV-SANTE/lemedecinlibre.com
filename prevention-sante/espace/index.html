@@ -165,6 +165,16 @@ input:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0
   text-transform:uppercase;color:var(--ink-4);background:var(--surf);border:1px solid var(--line);
   padding:2px 7px;border-radius:5px;margin-left:8px;font-weight:600;vertical-align:middle}
 
+/* onglets de « Mon espace » (M4 à M7) */
+.onglets-espace{display:flex;gap:4px;align-items:center;border-bottom:1px solid var(--line);
+  margin-bottom:26px;flex-wrap:wrap}
+.onglets-espace button{font:inherit;font-size:15px;font-weight:590;padding:12px 17px;
+  border:none;background:none;color:var(--ink-3);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px}
+.onglets-espace button:hover{color:var(--ink)}
+.onglets-espace button.on{color:var(--pri-d);border-bottom-color:var(--pri);font-weight:660}
+.onglets-espace .revoir{margin-left:auto;font-size:13.7px;color:var(--pri-d);padding:12px 4px}
+
 .pied{border-top:1px solid var(--line);background:var(--surf);padding:28px 24px;
   font-size:13px;color:var(--ink-3);line-height:1.6}
 .pied-in{max-width:920px;margin:0 auto}
@@ -227,6 +237,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0
 </footer>
 
 <script src="../plateforme/questionnaire.js"></script>
+<script src="modules.js"></script>
 <script src="patient.js"></script>
 </body>
 </html>
