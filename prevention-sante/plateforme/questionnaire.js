@@ -199,8 +199,46 @@ const QUESTIONNAIRE = {
     {
       id: 'respiratoire',
       titre: 'Respiration',
+      intro: 'Les cinq premières questions reproduisent mot pour mot un questionnaire publié de repérage. Les suivantes complètent le tableau clinique.',
       questions: [
-        { id: 'resp_dyspnee', type: 'radio', label: 'Êtes-vous essoufflé à l’effort plus qu’avant ?', options: OUI_NON },
+        /* ------------------------------------------------------------
+           REPÉRAGE BPCO — LES CINQ QUESTIONS PUBLIÉES, MOT POUR MOT
+
+           Instrument diffusé par la HAS, repris de GOLD. Sa valeur tient
+           entièrement à sa formulation : « Toussez-vous souvent ? » et
+           « Toussez-vous depuis plus de trois mois ? » ne sont pas la
+           même question, et la seconde ne peut pas servir de réponse à
+           la première. Un instrument reformulé n'est plus l'instrument.
+
+           TROIS REDONDANCES ASSUMÉES. L'âge et le statut tabagique sont
+           déjà recueillis au module Socle, et l'essoufflement est
+           abordé plus bas. On les repose quand même : les cinq réponses
+           doivent venir de l'instrument tel qu'il est administré, pas
+           d'un assemblage de réponses empruntées ailleurs. Le coût est
+           d'une trentaine de secondes pour la personne.
+
+           AUCUN DÉCOMPTE ICI. Le repère publié — deux « oui » constituent
+           un signal d'alerte — est du contenu documentaire : il figure
+           au Référentiel, à l'écran du médecin, qui compte lui-même. La
+           plateforme n'additionne rien, ne signale rien, ne met rien en
+           avant. Compter cinq cases est l'affaire de quelques secondes ;
+           les faire compter par le logiciel ferait de cette page un
+           dispositif médical.
+        ------------------------------------------------------------ */
+        { id: 'bpco5_toux', type: 'radio', label: 'Toussez-vous souvent ?',
+          options: OUI_NON, instrument: 'Repérage BPCO — 5 questions',
+          aide: 'Questionnaire publié de repérage. Répondez spontanément, sans chercher à interpréter.' },
+        { id: 'bpco5_expecto', type: 'radio', label: 'Avez-vous fréquemment une toux grasse ou qui ramène des crachats ?',
+          options: OUI_NON, instrument: 'Repérage BPCO — 5 questions' },
+        { id: 'bpco5_essouffle', type: 'radio', label: 'Êtes-vous plus facilement essoufflé que les personnes de votre âge ?',
+          options: OUI_NON, instrument: 'Repérage BPCO — 5 questions' },
+        { id: 'bpco5_age40', type: 'radio', label: 'Avez-vous plus de 40 ans ?',
+          options: OUI_NON, instrument: 'Repérage BPCO — 5 questions',
+          aide: 'Votre année de naissance est déjà connue. Cette question fait partie du questionnaire publié : la retirer changerait l’instrument.' },
+        { id: 'bpco5_tabac', type: 'radio', label: 'Avez-vous fumé ou fumez-vous ?',
+          options: OUI_NON, instrument: 'Repérage BPCO — 5 questions' },
+
+        /* Questions complémentaires, hors instrument. */
         { id: 'resp_toux', type: 'radio', label: 'Toussez-vous depuis plus de trois mois ?', options: OUI_NON },
         { id: 'resp_expecto', type: 'radio', label: 'Crachez-vous régulièrement, notamment le matin ?', options: OUI_NON },
         { id: 'resp_sifflements', type: 'radio', label: 'Avez-vous des sifflements dans la poitrine ?', options: OUI_NON },
@@ -508,11 +546,33 @@ const REFERENTIEL = [
     ]
   },
   {
-    titre: 'Exploration fonctionnelle respiratoire — repères d’indication',
+    titre: 'Repérage de la BPCO — questionnaire publié en cinq questions',
     contenu: [
-      'Repère publié : au moins dix paquets-années ou une exposition professionnelle documentée, associés à au moins un symptôme respiratoire.',
+      'Les cinq questions, telles que diffusées : toux fréquente ; toux grasse ou ramenant des crachats ; essoufflement plus marqué que les personnes du même âge ; plus de 40 ans ; tabagisme actuel ou passé.',
+      'Repère publié : deux réponses « oui » constituent un signal d’alerte, qui doit conduire à une mesure du souffle.',
+      'Le décompte n’est pas fait par la plateforme. Les cinq réponses sont affichées telles quelles ; c’est vous qui les comptez et qui décidez.',
+      'Ce questionnaire ne fait pas de diagnostic et ne remplace pas la spirométrie. Il sert à choisir à qui la proposer.',
+      'À l’inverse, deux « oui » n’obligent à rien : la décision reste la vôtre, au vu de l’ensemble de la consultation.'
+    ]
+  },
+  {
+    titre: 'Souffle — la séquence en deux temps',
+    contenu: [
+      'Premier temps, sur place : spirométrie avec test de réversibilité. C’est l’examen de première intention, et le seul qui permette de poser un trouble ventilatoire obstructif.',
+      'Second temps, sur indication du résultat : exploration fonctionnelle respiratoire complète — volumes statiques, transfert du CO — réalisée par le pneumologue.',
+      'L’EFR complète n’est pas déclenchée par le questionnaire. Aucune donnée déclarative ne la justifie : c’est le résultat de la spirométrie, ou le tableau clinique, qui l’indiquent.',
+      'Repère publié pour la spirométrie : au moins dix paquets-années ou une exposition professionnelle documentée, associés à au moins un symptôme respiratoire.',
       'Chez le fumeur totalement asymptomatique, le dépistage spirométrique systématique n’est pas recommandé.',
       'Le calcul des paquets-années n’est pas réalisé par la plateforme : les cigarettes par jour et le nombre d’années sont transmis bruts.'
+    ]
+  },
+  {
+    titre: 'Spirométrie — lecture du résultat',
+    contenu: [
+      'Le diagnostic repose sur un trouble ventilatoire obstructif non réversible après bronchodilatateur.',
+      'Le repère fixe VEMS/CVF publié sous-diagnostique avant 50 ans et surdiagnostique chez les sujets plus âgés. La limite inférieure de la normale est l’alternative retenue par la HAS.',
+      'Un tracé mal réalisé ne donne pas un résultat approximatif : il donne un résultat faux, qui sera cru. Il est refait.',
+      'La plateforme ne calcule ni le rapport VEMS/CVF, ni le pourcentage de la valeur prédite. Ces valeurs figurent sur le compte rendu de l’appareil, qui est lui-même un dispositif marqué CE.'
     ]
   },
   {

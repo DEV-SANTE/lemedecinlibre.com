@@ -1189,6 +1189,182 @@ section('10. Dispositions — aucune section escamotée');
     /DISPOSITIONS\s*=\s*\[[\s\S]*?id:\s*'deroule'[\s\S]*?id:\s*'rail'/.test(src));
 })();
 
+/* ==================================================================
+   11. UN INSTRUMENT REPRODUIT, JAMAIS SCORÉ
+
+   Le questionnaire de repérage de la BPCO en cinq questions est le cas
+   limite de toute cette architecture. Son intérêt clinique tient à une
+   règle de décompte — deux réponses « oui » constituent un signal — et
+   cette règle est exactement ce que la version 1 ne peut pas appliquer.
+   Additionner cinq cases et en tirer une conséquence serait produire une
+   information propre à un patient à des fins de décision médicale.
+
+   La solution retenue n'est pas de retirer l'instrument, ce qui priverait
+   le médecin d'un outil validé, mais de séparer strictement le RECUEIL
+   de l'INTERPRÉTATION : les cinq réponses sont affichées telles quelles,
+   la règle publiée figure au Référentiel, et le médecin compte. Cinq
+   cases se comptent en quelques secondes.
+
+   Deuxième point contrôlé : l'EFR complète ne doit jamais être
+   déclenchée par du déclaratif. Aucune réponse à un questionnaire ne
+   justifie une pléthysmographie. C'est le résultat de la spirométrie qui
+   l'indique — et le vérificateur s'assure que le référentiel le dit.
+================================================================== */
+section('11. Repérage BPCO — recueil sans décompte');
+
+(function () {
+  const src = lire('plateforme/questionnaire.js');
+  const code = codeSeul(src);
+  const app = codeSeul(lire('plateforme/app.js'));
+
+  const CINQ = ['bpco5_toux', 'bpco5_expecto', 'bpco5_essouffle', 'bpco5_age40', 'bpco5_tabac'];
+
+  /* --- 11.1 Les cinq questions existent, en oui/non, et déclarent
+         l'instrument dont elles proviennent. --- */
+  CINQ.forEach(id => {
+    const ligne = (src.match(new RegExp("\\{[^{}]*id: '" + id + "'[\\s\\S]{0,320}?\\}", '')) || [])[0] || '';
+    verifier('questionnaire.js — ' + id + ' présente', ligne !== '');
+    verifier('questionnaire.js — ' + id + ' en oui/non, instrument déclaré',
+      /options:\s*OUI_NON/.test(ligne) && /instrument:\s*'Repérage BPCO/.test(ligne),
+      ligne === '' ? 'Question introuvable.' : null);
+  });
+
+  /* --- 11.2 Rien ne branche sur ces réponses : un affichage
+         conditionné par elles serait déjà une mise en avant. --- */
+  const branche = CINQ.filter(id =>
+    new RegExp('showIf[^}]*' + id).test(code) || new RegExp(id + "[^)]*\\)\\s*[><=]{1,3}").test(code));
+  verifier('questionnaire.js — aucun affichage conditionné par ces réponses', branche.length === 0,
+    branche.length ? 'Conditionnement trouvé sur : ' + branche.join(', ') : null);
+
+  /* --- 11.3 CONTRÔLE CENTRAL : personne ne compte les « oui ».
+         On cherche dans le code exécutable de la vue médecin toute
+         agrégation portant sur ces identifiants. --- */
+  const agrege = /bpco5[\s\S]{0,200}?(reduce|filter\s*\([^)]*\)\s*\.length|\+\+|nb\s*=|total|somme|compte)/i.test(app) ||
+                 /bpco5[\s\S]{0,200}?(reduce|\+\+|total|somme)/i.test(code);
+  verifier('aucun décompte des réponses de l’instrument', !agrege,
+    agrege ? 'Une agrégation portant sur bpco5 a été trouvée : la règle des deux « oui » '
+      + 'doit rester à la charge du médecin.' : null);
+
+  /* --- 11.4 La règle publiée est fournie au médecin, et son statut est
+         explicite : c'est un repère, pas un verdict, et ce n'est pas la
+         plateforme qui l'applique. --- */
+  const ref = (src.match(/const REFERENTIEL\s*=\s*\[([\s\S]*)\n\];/) || [])[1] || '';
+  verifier('référentiel — la règle des deux « oui » est fournie au médecin',
+    /deux réponses «\s*oui\s*» constituent un signal/i.test(ref));
+  verifier('référentiel — le décompte est explicitement laissé au médecin',
+    /décompte n’est pas fait par la plateforme/i.test(ref));
+  verifier('référentiel — le questionnaire est présenté comme non diagnostique',
+    /ne fait pas de diagnostic et ne remplace pas la spirométrie/i.test(ref));
+  verifier('référentiel — deux « oui » n’obligent à rien',
+    /n’obligent à rien/i.test(ref));
+
+  /* --- 11.5 La séquence en deux temps est écrite, et l'EFR complète
+         n'est jamais déclenchée par du déclaratif. --- */
+  verifier('référentiel — la spirométrie est posée en première intention',
+    /examen de première intention/i.test(ref));
+  verifier('référentiel — l’EFR complète n’est pas déclenchée par le questionnaire',
+    /EFR complète n’est pas déclenchée par le questionnaire/i.test(ref));
+  verifier('référentiel — le surdiagnostic du repère fixe est signalé',
+    /surdiagnostique chez les sujets plus âgés/i.test(ref));
+  verifier('référentiel — la plateforme ne calcule ni rapport ni valeur prédite',
+    /ne calcule ni le rapport VEMS\/CVF, ni le pourcentage de la valeur prédite/i.test(ref));
+
+  /* --- 11.6 La reproduction mot pour mot est annoncée à la personne :
+         sans cela, cinq questions qui ressemblent aux voisines passent
+         pour une redondance négligée. --- */
+  verifier('questionnaire.js — la reproduction littérale est annoncée',
+    /reproduisent mot pour mot un questionnaire publié/i.test(src));
+})();
+
+/* ==================================================================
+   12. SURVEILLANCE DU PLATEAU DE PNEUMOLOGIE
+
+   Le groupe dispose déjà d'un plateau d'exploration fonctionnelle qui
+   sert au pneumologue en soins courants. Le capital est engagé, donc
+   l'argument « ne l'installez pas » ne s'applique plus. Reste le risque
+   qui ne se corrige par aucun contrôle technique : une capacité
+   installée finit par trouver des indications, et un parcours de
+   prévention est un pourvoyeur commode.
+
+   Trois indicateurs, et il en faut trois parce qu'un seul mentirait :
+     - la part des explorations précédées d'une spirométrie anormale
+       mesure la séquence voulue ;
+     - la part des explorations sans justification écrite mesure la
+       dérive, et c'est la seule ligne qu'un contrôle opposera ;
+     - la part des spirométries anormales suivies d'une exploration
+       mesure le risque symétrique, celui d'un repérage sans suite —
+       qui n'est pas un risque de contrôle mais un risque pour la
+       personne.
+
+   Viser cent pour cent sur le premier serait une faute : cela pousserait
+   à ne plus tracer les indications cliniques légitimes, donc à les
+   rendre invisibles. Le contrôle vérifie que cette nuance est écrite.
+================================================================== */
+section('12. Plateau de pneumologie — surveillance de la dérive');
+
+(function () {
+  const src = lire('pilotage/pilotage.js');
+  const TROIS = ['efr_origine', 'efr_sans_justif', 'tvo_suite'];
+
+  TROIS.forEach(id => {
+    const bloc = (src.match(new RegExp("id: '" + id + "'[\\s\\S]{0,900}?\\n    \\}", '')) || [])[0] || '';
+    verifier('pilotage.js — indicateur « ' + id + ' » présent', bloc !== '');
+    if (!bloc) return;
+
+    /* --- 12.1 Garde d'effectif : pas d'alerte sur du bruit. --- */
+    verifier('pilotage.js — ' + id + ' déclare son effectif et son minimum',
+      /effectif:/.test(bloc) && /effectifMin:\s*\d+/.test(bloc));
+
+    /* --- 12.2 Lisible sans le taux : à faible effectif, ce sont les
+           effectifs bruts qui informent, pas le pourcentage. --- */
+    verifier('pilotage.js — ' + id + ' affiche des effectifs bruts',
+      /base:[^\n]*compte\([\s\S]{0,120}compte\(/.test(bloc),
+      'La base doit donner numérateur et dénominateur en clair.');
+
+    verifier('pilotage.js — ' + id + ' explique ce que l’écart révèle',
+      /revele:/.test(bloc) && bloc.indexOf('revele') !== -1);
+  });
+
+  /* --- 12.3 Le sens des seuils : la dérive se surveille par le haut,
+         la séquence et le suivi par le bas. Une inversion viderait les
+         indicateurs de leur sens sans rien casser visiblement. --- */
+  const sens = id => ((src.match(new RegExp("id: '" + id + "'[\\s\\S]{0,900}?sens: '([a-z]+)'", '')) || [])[1]);
+  verifier('pilotage.js — la dérive est surveillée par le haut',
+    sens('efr_sans_justif') === 'max');
+  verifier('pilotage.js — la séquence en deux temps est surveillée par le bas',
+    sens('efr_origine') === 'min');
+  verifier('pilotage.js — le repérage sans suite est surveillé par le bas',
+    sens('tvo_suite') === 'min');
+
+  /* --- 12.4 La garde d'effectif est réellement appliquée, et elle
+         suspend l'alerte au lieu de la transformer en « dans la cible » :
+         un indicateur sans effectif n'est pas un indicateur satisfait. --- */
+  verifier('pilotage.js — l’alerte est suspendue sous l’effectif minimal',
+    /if \(ind\.effectifMin != null && \(ind\.effectif \|\| 0\) < ind\.effectifMin\) return 'attente';/.test(src));
+  verifier('pilotage.js — l’état « attente » a son propre libellé',
+    /Effectif insuffisant/.test(src));
+  verifier('pilotage.js — le seuil suspendu est signalé en clair',
+    /suspendu, effectif inférieur à/.test(src));
+
+  /* --- 12.5 L'indication clinique tracée est distinguée de l'absence
+         de justification. Sans cette distinction, l'indicateur pousse à
+         cacher les indications légitimes plutôt qu'à les écrire. --- */
+  verifier('pilotage.js — une exploration peut être justifiée sans spirométrie anormale',
+    /efrIndicTracee/.test(src));
+  verifier('pilotage.js — l’absence de justification est définie comme le solde des deux',
+    /efrSansJustif:\s*efr && !efrApresTvo && !efrIndicTracee/.test(src));
+  verifier('pilotage.js — le piège du cent pour cent est documenté',
+    /serait une erreur|serait une faute/i.test(src) && /invisibles/i.test(src));
+
+  /* --- 12.6 Le périmètre agrégé reste respecté : ces indicateurs
+         comptent, ils ne lisent personne. --- */
+  const code = codeSeul(src);
+  const nominatif = ['nom', 'prenom', 'nir', 'dateNaissance', 'localStorage']
+    .filter(t => new RegExp('\\b' + t + '\\b').test(code));
+  verifier('pilotage.js — aucune lecture nominative introduite', nominatif.length === 0,
+    nominatif.length ? 'Trouvé : ' + nominatif.join(', ') : null);
+})();
+
 /* ================================================================== */
 console.log('');
 if (echecs === 0) {
