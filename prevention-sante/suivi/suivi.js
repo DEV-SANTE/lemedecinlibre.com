@@ -396,6 +396,103 @@ function mini(p) {
 let choisi = 'chol';
 let compare = null;   /* id du second paramètre, même unité seulement */
 
+/* =====================================================================
+   DISPOSITIONS
+
+   « Déroulé » : tout sur une page, dans l'ordre. Rien n'est caché, mais
+   la page est longue et le premier écran ne dit pas par où commencer.
+
+   « Rail et panneau » : la liste des douze mesures reste visible à
+   gauche, le détail s'affiche à droite. La page cesse d'être longue,
+   au prix d'un clic pour atteindre chaque chose.
+
+   CE QUI NE CHANGE PAS D'UNE DISPOSITION À L'AUTRE
+   Les dix sections sont construites une seule fois, identiquement, puis
+   arrangées. Chacune apparaît exactement une fois dans chaque shell : le
+   vérificateur le contrôle dans les deux sens. Autrement dit, aucune
+   information ne peut se perdre en changeant d'agencement, et aucune ne
+   peut apparaître dans l'un et pas dans l'autre.
+
+   La seule chose qu'une disposition masque est un DOUBLON DE
+   NAVIGATION : dans le rail, les pastilles de choix du paramètre sont
+   cachées parce que le rail fait déjà ce travail. Masquer un bouton
+   redondant n'est pas masquer une information — mais la frontière est
+   assez fine pour être écrite ici et contrôlée.
+   ===================================================================== */
+const DISPOSITIONS = [
+  { id: 'deroule', nom: 'Déroulé', resume: 'Tout sur une page' },
+  { id: 'rail',    nom: 'Rail et panneau', resume: 'Liste à gauche, détail à droite' }
+];
+let disposition = 'deroule';
+
+/* Vue affichée dans le panneau. « mesure » suit le paramètre choisi. */
+let vue = 'accueil';
+let railOuvert = false;
+
+/* Entrées du rail qui ne sont pas des mesures. */
+const VUES = [
+  { id: 'accueil',    nom: 'Accueil',                 sections: ['cockpit', 'lire', 'vignettes'] },
+  { id: 'parcours',   nom: 'Mon parcours',            sections: ['parcours'] },
+  { id: 'couverture', nom: 'Vaccinations, dépistages', sections: ['couverture'] },
+  { id: 'documents',  nom: 'Mes comptes rendus',      sections: ['documents'] },
+  { id: 'actes',      nom: 'Chaque acte expliqué',    sections: ['actes'] },
+  { id: 'glossaire',  nom: 'Les mots qu’on emploie',  sections: ['glossaire'] },
+  { id: 'limites',    nom: 'Ce que la page ne fait pas', sections: ['limites'] }
+];
+
+/* Ordre de la page longue. Les dix sections, une fois chacune. */
+const ORDRE_DEROULE = ['cockpit', 'lire', 'graphique', 'vignettes', 'parcours',
+                       'actes', 'couverture', 'documents', 'glossaire', 'limites'];
+
+function shellDeroule(S) {
+  return ORDRE_DEROULE.map(k => S[k]).join('\n');
+}
+
+function shellRail(S, groupes, p) {
+  const item = (id, nom, actif, couleur) =>
+    '<button class="rail-x' + (actif ? ' on' : '') + '" data-vue="' + esc(id) + '"' +
+    (couleur ? ' style="--fc:' + couleur + '"' : '') + '>' +
+    (couleur ? '<i class="pt"></i>' : '') + esc(nom) + '</button>';
+
+  const mesures = groupes.map(g =>
+    '<p class="rail-f" style="--fc:' + famille(g.nom).c + '">' + esc(g.nom) + '</p>' +
+    g.items.map(x => item('mesure:' + x.id,
+      x.nom,
+      vue === 'mesure' && x.id === choisi,
+      famille(x.groupe).c)).join('')).join('');
+
+  /* Sections affichées dans le panneau, selon la vue. */
+  let panneau;
+  if (vue === 'mesure') {
+    panneau = S.graphique;
+  } else {
+    const v = VUES.filter(x => x.id === vue)[0] || VUES[0];
+    panneau = v.sections.map(k => S[k]).join('\n');
+  }
+
+  const titreCourant = vue === 'mesure'
+    ? p.nom
+    : (VUES.filter(x => x.id === vue)[0] || VUES[0]).nom;
+
+  return `
+    <div class="shell">
+      <aside class="rail">
+        <button class="rail-b" id="rail-b" aria-expanded="${railOuvert ? 'true' : 'false'}">
+          ${ic('i-clipboard')}<span>${esc(titreCourant)}</span><i class="chev"></i>
+        </button>
+        <nav class="rail-nav${railOuvert ? ' ouvert' : ''}" aria-label="Mes mesures et mes pages">
+          ${item('accueil', 'Accueil', vue === 'accueil', null)}
+          <p class="rail-t">Mes mesures</p>
+          ${mesures}
+          <p class="rail-t">Mes pages</p>
+          ${VUES.filter(v => v.id !== 'accueil').map(v =>
+            item(v.id, v.nom, vue === v.id, null)).join('')}
+        </nav>
+      </aside>
+      <div class="panneau">${panneau}</div>
+    </div>`;
+}
+
 function rendre() {
   const p = PARAMETRES.find(x => x.id === choisi) || PARAMETRES[0];
   const alt = compare ? PARAMETRES.find(x => x.id === compare) : null;
@@ -409,7 +506,13 @@ function rendre() {
     g.items.push(x);
   });
 
-  $('#app').innerHTML = `
+  /* Chaque section est construite à part, puis DISPOSÉE par un shell.
+     Le contenu ne dépend jamais de la disposition retenue : c'est la même
+     condition que pour les thèmes, et pour la même raison. Changer
+     d'agencement ne doit rien changer de ce que la personne apprend.
+     Le vérificateur contrôle qu'aucune section n'est absente d'un shell. */
+  const S = {};
+  S.cockpit = `
     <!-- ===== cockpit ===== -->
     <div class="cockpit">
       <div class="c-hello">
@@ -450,13 +553,15 @@ function rendre() {
           <span class="t-d">depuis avril 2022</span></div>
       </div>
     </div>
-
+  `;
+  S.lire = `
     <!-- ===== comment lire cette page ===== -->
     <section class="lire-page">
       <h2>${esc(LEX.intro.titre)}</h2>
       ${LEX.intro.paragraphes.map(t => `<p>${esc(t)}</p>`).join('')}
     </section>
-
+  `;
+  S.graphique = `
     <!-- ===== graphique ===== -->
     <section class="bloc">
       <div class="b-h">
@@ -547,7 +652,8 @@ function rendre() {
         de votre laboratoire, plus bas.</span>
       </div>
     </section>
-
+  `;
+  S.vignettes = `
     <!-- ===== vignettes ===== -->
     <section class="bloc">
       <div class="b-h"><div>
@@ -573,7 +679,8 @@ function rendre() {
           </div>
         </div>`).join('')}
     </section>
-
+  `;
+  S.parcours = `
     <!-- ===== frise ===== -->
     <section class="bloc">
       <div class="b-h"><div>
@@ -594,7 +701,8 @@ function rendre() {
           </li>`).join('')}
       </ol>
     </section>
-
+  `;
+  S.actes = `
     <!-- ===== les actes, expliqués un par un ===== -->
     <section class="bloc">
       <div class="b-h"><div>
@@ -616,7 +724,8 @@ function rendre() {
           </div>
         </div>`).join('')}
     </section>
-
+  `;
+  S.couverture = `
     <!-- ===== couverture ===== -->
     <section class="bloc">
       <div class="b-h"><div>
@@ -644,7 +753,8 @@ function rendre() {
         chaque ligne, sous « Comprendre ».</span>
       </div>
     </section>
-
+  `;
+  S.documents = `
     <!-- ===== documents ===== -->
     <section class="bloc" id="documents">
       <div class="b-h"><div>
@@ -662,7 +772,8 @@ function rendre() {
       <p class="b-s" style="margin-top:14px">L’ouverture et le téléchargement seront activés sur
       l’hébergement certifié HDS.</p>
     </section>
-
+  `;
+  S.glossaire = `
     <!-- ===== glossaire ===== -->
     <section class="bloc">
       <div class="b-h"><div>
@@ -678,7 +789,8 @@ function rendre() {
           </div>`).join('')}
       </div>
     </section>
-
+  `;
+  S.limites = `
     <!-- ===== limites ===== -->
     <section class="limites">
       <h2>Ce que ce tableau de bord ne fait pas</h2>
@@ -694,7 +806,12 @@ function rendre() {
       vos valeurs à des seuils et en tire une conclusion devient un dispositif médical, soumis à
       une certification que nous n’avons pas encore. En attendant, il vous montre vos données
       complètes et sans filtre, et c’est le médecin qui les interprète avec vous.</p>
-    </section>`;
+    </section>
+  `;
+
+  $('#app').innerHTML = disposition === 'rail'
+    ? shellRail(S, groupes, p)
+    : shellDeroule(S);
 
   document.querySelectorAll('[data-p]').forEach(b => {
     b.onclick = () => {
@@ -711,6 +828,32 @@ function rendre() {
   document.querySelectorAll('[data-c]').forEach(b => {
     b.onclick = () => { compare = b.dataset.c || null; rendre(); };
   });
+
+  /* Rail : une entrée « mesure:id » sélectionne un paramètre, les autres
+     changent de vue. Les deux passent par le même chemin de rendu. */
+  document.querySelectorAll('[data-vue]').forEach(b => {
+    b.onclick = () => {
+      const v = b.dataset.vue;
+      if (v.indexOf('mesure:') === 0) {
+        const id = v.slice(7);
+        const prec = PARAMETRES.find(x => x.id === choisi);
+        const nouv = PARAMETRES.find(x => x.id === id);
+        if (compare && (!prec || nouv.unite !== prec.unite)) compare = null;
+        if (compare === id) compare = null;
+        choisi = id;
+        vue = 'mesure';
+      } else {
+        vue = v;
+      }
+      railOuvert = false;
+      rendre();
+      const h = document.querySelector('.panneau');
+      if (h && window.innerWidth <= 960) h.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    };
+  });
+
+  const rb = document.getElementById('rail-b');
+  if (rb) rb.onclick = () => { railOuvert = !railOuvert; rendre(); };
 
   brancherInfobulle(series);
 }
@@ -770,11 +913,31 @@ function barreThemes() {
       rendre();   /* les teintes sont injectées dans le balisage */
     };
   });
+
+  /* Disposition. Même barre provisoire, même sort : elle disparaît avec
+     elle une fois l'agencement arrêté. */
+  const zd = $('#th-disp');
+  if (!zd) return;
+  zd.innerHTML = DISPOSITIONS.map(d =>
+    '<button class="th-x' + (d.id === disposition ? ' on' : '') + '" data-d="' + esc(d.id) + '">' +
+    esc(d.nom) + '<em>' + esc(d.resume) + '</em></button>').join('');
+  zd.querySelectorAll('[data-d]').forEach(b => {
+    b.onclick = () => {
+      disposition = b.dataset.d;
+      document.documentElement.setAttribute('data-dispo', disposition);
+      /* En arrivant dans le rail, on ouvre sur l'accueil : atterrir sur
+         une courbe sans avoir vu le sommaire désoriente. */
+      if (disposition === 'rail' && vue === 'mesure') vue = 'accueil';
+      barreThemes();
+      rendre();
+    };
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   DOSSIER = dossierCourant();
   document.documentElement.setAttribute('data-theme', theme);
+  document.documentElement.setAttribute('data-dispo', disposition);
   barreThemes();
   rendre();
 });
