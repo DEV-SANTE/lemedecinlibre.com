@@ -1083,6 +1083,112 @@ const THEMES = require('../commun/themes.js');
     /Provisoire/i.test(srcSuivi) && /retirer/i.test(srcSuivi));
 })();
 
+/* ==================================================================
+   10. LES DISPOSITIONS N'ESCAMOTENT RIEN
+
+   Deux agencements du même tableau de bord : « Déroulé », tout sur une
+   page, et « Rail et panneau », liste à gauche et détail à droite.
+
+   Le risque d'un rail est simple et sérieux : il découpe une page longue
+   en vues, et une vue peut être oubliée. Une information reléguée dans
+   une vue qu'aucun lien n'atteint est perdue tout en paraissant
+   présente. Sur un dossier médical, ce n'est pas un défaut d'ergonomie,
+   c'est une information soustraite au patient.
+
+   Les contrôles vérifient donc que les DIX sections sont construites une
+   seule fois, indépendamment de l'agencement, et qu'elles apparaissent
+   exactement une fois dans CHACUN des deux shells.
+
+   Une disposition n'a le droit de masquer qu'un doublon de navigation —
+   dans le rail, les pastilles de choix du paramètre, que le rail
+   remplace. Ce masquage est nommé dans la liste ci-dessous ; tout autre
+   fait échouer le contrôle.
+================================================================== */
+section('10. Dispositions — aucune section escamotée');
+
+(function () {
+  const src = lire('suivi/suivi.js');
+  const html = lire('suivi/index.html');
+
+  /* Les sections telles qu'elles sont construites. */
+  const debut = src.indexOf('const S = {};');
+  const fin = src.indexOf("$('#app').innerHTML");
+  verifier('suivi.js — les sections sont construites avant d’être disposées',
+    debut !== -1 && fin > debut);
+  const zoneS = debut === -1 ? '' : src.slice(debut, fin);
+  const cles = (zoneS.match(/S\.([a-z]+)\s*=\s*`/g) || [])
+    .map(s => s.replace(/S\.([a-z]+).*/, '$1'));
+  verifier('suivi.js — dix sections construites (' + cles.length + ')', cles.length === 10,
+    cles.length !== 10 ? 'Trouvées : ' + cles.join(', ') : null);
+
+  /* CONTRÔLE CENTRAL : la construction du contenu ignore l'agencement.
+     Si « disposition » ou « vue » apparaissait dans cette zone, une
+     section pourrait être écrite différemment selon l'arrangement — et
+     tout le reste du raisonnement s'effondrerait. */
+  const contamine = ['disposition', 'vue', 'railOuvert'].filter(t =>
+    new RegExp('\\b' + t + '\\b').test(codeSeul(zoneS)));
+  verifier('suivi.js — le contenu des sections ignore la disposition', contamine.length === 0,
+    contamine.length ? 'Références trouvées dans la construction : ' + contamine.join(', ')
+      + ' — le contenu doit être identique dans les deux agencements.' : null);
+
+  /* Shell « Déroulé » : les dix, une fois chacune. */
+  const ordre = ((src.match(/ORDRE_DEROULE\s*=\s*\[([\s\S]*?)\]/) || [])[1] || '')
+    .match(/'([a-z]+)'/g) || [];
+  const deroule = ordre.map(s => s.replace(/'/g, ''));
+  verifier('suivi.js — le déroulé affiche les dix sections',
+    deroule.length === cles.length && cles.every(k => deroule.indexOf(k) !== -1),
+    'Déroulé : ' + deroule.join(', '));
+  verifier('suivi.js — le déroulé n’affiche aucune section deux fois',
+    new Set(deroule).size === deroule.length);
+
+  /* Shell « Rail » : la section « graphique » est la vue d'une mesure,
+     les neuf autres sont réparties dans les entrées du rail. */
+  const blocVues = (src.match(/const VUES\s*=\s*\[([\s\S]*?)\n\];/) || [])[1] || '';
+  const parVue = (blocVues.match(/sections:\s*\[([^\]]*)\]/g) || [])
+    .join(' ').match(/'([a-z]+)'/g) || [];
+  const rail = parVue.map(s => s.replace(/'/g, '')).concat(['graphique']);
+  const absentes = cles.filter(k => rail.indexOf(k) === -1);
+  verifier('suivi.js — le rail atteint les dix sections', absentes.length === 0,
+    absentes.length ? 'Inatteignables depuis le rail : ' + absentes.join(', ')
+      + ' — une section sans lien est une information soustraite.' : null);
+  verifier('suivi.js — le rail n’affiche aucune section deux fois',
+    new Set(rail).size === rail.length,
+    new Set(rail).size !== rail.length ? 'Doublons : ' + rail.join(', ') : null);
+
+  const idsVues = (blocVues.match(/id:\s*'([a-z]+)'/g) || [])
+    .map(s => s.replace(/id:\s*'([a-z]+)'/, '$1'));
+  verifier('suivi.js — sept entrées de rail hors mesures (' + idsVues.length + ')',
+    idsVues.length === 7);
+  verifier('suivi.js — chaque entrée de rail est rendue dans le balisage',
+    /data-vue="/.test(src) && /data-vue\]/.test(src));
+  verifier('suivi.js — les douze mesures figurent au rail',
+    /mesure:' \+ x\.id|'mesure:' \+ x\.id/.test(src));
+
+  /* Le seul masquage autorisé, et un seul. */
+  const masquages = (html.match(/html\[data-dispo="[a-z]+"\][^{]*\{[^}]*display:\s*none[^}]*\}/g) || []);
+  const cibles = masquages.map(m => (m.match(/\]\s*([^{]*)\{/) || [])[1].trim());
+  verifier('index.html — un seul masquage par disposition (' + cibles.length + ')',
+    cibles.length === 1 && cibles[0] === '.chips',
+    cibles.length ? 'Masqués : ' + cibles.join(' | ')
+      + ' — seul un doublon de navigation peut l’être.' : null);
+
+  /* Repliable sur téléphone : c'était la réserve annoncée sur cette
+     disposition, elle doit être traitée et non oubliée. */
+  verifier('index.html — le rail se replie sur petit écran',
+    /\.rail-nav\{display:none/.test(html) && /\.rail-nav\.ouvert\{display:block/.test(html));
+  verifier('suivi.js — le repli est annoncé aux lecteurs d’écran',
+    /aria-expanded="\$\{railOuvert/.test(src));
+  verifier('suivi.js — le rail est un point de repère nommé',
+    /<nav class="rail-nav[\s\S]{0,120}aria-label=/.test(src));
+
+  /* Sur fond sombre, une teinte lumineuse exige un texte sombre. */
+  verifier('index.html — l’entrée active du rail reste lisible en thème sombre',
+    /html\[data-theme="nuit"\]\s*\.rail-x\.on/.test(html));
+
+  verifier('suivi.js — les deux dispositions sont proposées',
+    /DISPOSITIONS\s*=\s*\[[\s\S]*?id:\s*'deroule'[\s\S]*?id:\s*'rail'/.test(src));
+})();
+
 /* ================================================================== */
 console.log('');
 if (echecs === 0) {
