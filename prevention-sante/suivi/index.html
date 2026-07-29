@@ -592,6 +592,43 @@ html[data-dispo="rail"] .panneau>.bloc:first-child{margin-top:0}
 /* Sur fond sombre, du texte blanc sur une teinte lumineuse est illisible. */
 html[data-theme="nuit"] .rail-x.on{color:#06121a}
 html[data-theme="nuit"] .rail-x.on i.pt{background:#06121a}
+
+/* ---------------------------------------------------------------------
+   CLINIQUE — jetons repris de la maquette v0.app
+
+   Ce que j'importe : la palette, les rayons, la douceur des ombres, le
+   fond bleu-gris très clair et le bleu calme en couleur d'action.
+   Ce que je n'importe pas : le build Next.js, les onze dépendances, et
+   surtout @vercel/analytics — un script tiers à cookies, qui aurait
+   annulé d'un coup la propriété défendue par tout le reste du projet.
+   Une esthétique se copie ; une chaîne de dépendances se subit.
+   ------------------------------------------------------------------ */
+html[data-theme="clinique"]{
+  --bg:#f4f8fb; --card:#ffffff; --blanc:#ffffff;
+  --ink:#16324f; --ink-2:#3d5a75; --ink-3:#5c7183; --ink-4:#8ba1b3; --ink-5:#b9cbd9;
+  --pri:#2069b0; --pri-d:#1b4c7e; --pri-2:#3a86c8;
+  --pri-l:#e9f2fb; --pri-l2:#f2f7fc;
+  --line:#e3ebf2; --line-2:#eef3f7; --surf:#eef3f7;
+  --sand:#f2f7fc; --sand-line:#dfe9f2;
+  --r:12px; --r-l:16px; --r-xl:24px;
+  --sh-s:0 1px 2px rgba(22,50,79,.04);
+  --sh:0 1px 3px rgba(22,50,79,.05), 0 12px 32px rgba(22,50,79,.06);
+  --sh-l:0 2px 6px rgba(22,50,79,.05), 0 24px 60px rgba(22,50,79,.08);
+}
+html[data-theme="clinique"] .top{background:rgba(244,248,251,.9)}
+html[data-theme="clinique"] .cockpit::before{
+  background:radial-gradient(760px 300px at 4% -30%,var(--pri-l) 0%,transparent 60%)}
+html[data-theme="clinique"] .minicard{border-radius:18px}
+html[data-theme="clinique"] .grp-t{border-left-width:3px}
+html[data-theme="clinique"] .chip,
+html[data-theme="clinique"] .cmp-x,
+html[data-theme="clinique"] .th-x{border-width:1px}
+/* Les trois teintes d'avis, reprises de la maquette : douces, non
+   alarmistes. Le rouge de v0 (#d1495b) est un rose brique, pas un rouge
+   d'alerte — c'est un choix que je garde, il change le ton d'un écran. */
+html[data-theme="clinique"] .m-vert  {--mq:#0f766e;--mqbg:#eaf6f2;--mqln:#c3e3da}
+html[data-theme="clinique"] .m-orange{--mq:#b26a12;--mqbg:#fdf4e7;--mqln:#f0dcbb}
+html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2}
 </style>
 </head>
 <body>
@@ -659,10 +696,10 @@ html[data-theme="nuit"] .rail-x.on i.pt{background:#06121a}
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=6"></script>
-<script src="../commun/themes.js?v=6"></script>
-<script src="../commun/lexique.js?v=6"></script>
-<script src="suivi.js?v=6"></script>
+<script src="../plateforme/biologie.js?v=7"></script>
+<script src="../commun/themes.js?v=7"></script>
+<script src="../commun/lexique.js?v=7"></script>
+<script src="suivi.js?v=7"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>
