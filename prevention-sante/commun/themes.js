@@ -118,6 +118,28 @@ var THEMES = {
     },
 
     {
+      id: 'clinique',
+      nom: 'Clinique',
+      resume: 'Jetons de la maquette v0',
+      desc: 'Fond bleu-gris très clair, cartes blanches à grands rayons, bleu calme en couleur ' +
+            'd’action. Repris de la maquette v0.app : c’est l’esthétique la plus aboutie des six, ' +
+            'et la plus proche de ce qu’attend quelqu’un qui a déjà utilisé une application de santé. ' +
+            'Seuls les jetons sont importés — aucune dépendance, aucun script tiers, et surtout ' +
+            'aucun statut automatique.',
+      /* Six teintes prises dans la gamme bleu-turquoise-violet de la
+         maquette. Le vert, l’ambre et le rouge de sa palette d’état sont
+         volontairement écartés : ils appartiennent aux avis du médecin. */
+      palette: {
+        'Numération': '#2069b0',
+        'Métabolique': '#3a86c8',
+        'Rénal': '#2f92d6',
+        'Hormonal': '#12a594',
+        'Hépatique': '#4a70cf',
+        'Mesuré sur place': '#7a5cc4'
+      }
+    },
+
+    {
       id: 'editorial',
       nom: 'Éditorial',
       resume: 'Le texte d’abord',
