@@ -567,10 +567,10 @@ function rendre() {
       <div class="b-h">
         <div>
           <h2>Évolution dans le temps</h2>
-          <p class="b-s">Choisissez un paramètre. Les valeurs sont affichées telles que
-          transmises par le laboratoire.</p>
+          <p class="b-s">Les valeurs sont affichées telles que transmises par le
+          laboratoire, sans être retouchées ni arrondies.</p>
         </div>
-        <a class="b-lien" href="#documents">Ouvrir mes comptes rendus ${ic('i-arrow')}</a>
+        <a class="b-lien" href="#documents" data-lien-doc>Ouvrir mes comptes rendus ${ic('i-arrow')}</a>
       </div>
 
       <div class="chips">
@@ -854,6 +854,13 @@ function rendre() {
 
   const rb = document.getElementById('rail-b');
   if (rb) rb.onclick = () => { railOuvert = !railOuvert; rendre(); };
+
+  /* Dans le rail, la section des comptes rendus n'est pas dans la page :
+     l'ancre serait un lien mort. On change de vue à la place. */
+  const ld = document.querySelector('[data-lien-doc]');
+  if (ld && disposition === 'rail') {
+    ld.onclick = e => { e.preventDefault(); vue = 'documents'; rendre(); };
+  }
 
   brancherInfobulle(series);
 }
