@@ -68,6 +68,38 @@ function construireCohorte() {
       /* Réel : le médecin suit la plupart du temps, s'en écarte parfois
          dans les deux sens. C'est cet écart qu'il faut mesurer. */
       const spiro = critereSpiro ? tirage(0.86) : tirage(0.05);
+      const spiroTvo = spiro && tirage(0.21);
+
+      /* ------------------------------------------------------------
+         EXPLORATION FONCTIONNELLE COMPLÈTE — le plateau de pneumologie
+
+         C'est l'indicateur le plus important de cette page, parce qu'il
+         surveille un risque qu'aucun contrôle technique ne peut couvrir :
+         une capacité installée finit toujours par trouver des
+         indications. Le plateau existe et sert au pneumologue en soins
+         courants ; la question est de savoir si le parcours de
+         prévention commence à l'alimenter.
+
+         Trois origines, qu'il faut absolument distinguer :
+           — après une spirométrie anormale : l'indication vient du
+             résultat, c'est la séquence voulue ;
+           — sur indication clinique documentée sans spirométrie anormale
+             — suspicion de trouble restrictif, suivi d'une exposition
+             professionnelle : parfaitement légitime, mais elle doit être
+             tracée pour être distinguée du reste ;
+           — sans l'une ni l'autre : c'est la dérive, et c'est cela qu'on
+             mesure.
+
+         Viser 100 % d'explorations précédées d'une spirométrie anormale
+         serait une erreur : ça pousserait à ne plus tracer les
+         indications cliniques légitimes, donc à les rendre invisibles.
+         D'où deux indicateurs plutôt qu'un.
+      ------------------------------------------------------------ */
+      const efrApresTvo = spiroTvo && tirage(0.62);
+      const contexteResp = symptomeResp || paquetsAnneesEleve;
+      const efrAutre = !efrApresTvo && contexteResp && tirage(0.09);
+      const efrIndicTracee = efrAutre && tirage(0.58);
+      const efr = efrApresTvo || efrAutre;
       const sommeil = critereSommeil ? tirage(0.82) : tirage(0.04);
       const ecg = critereEcg ? tirage(0.88) : tirage(0.04);
       const dermato = critereDermato ? tirage(0.93) : tirage(0.03);
@@ -75,7 +107,9 @@ function construireCohorte() {
       visites.push({
         mois: mois,
         /* résultats des examens réalisés */
-        spiro: spiro, spiroTvo: spiro && tirage(0.21),
+        spiro: spiro, spiroTvo: spiroTvo,
+        efr: efr, efrApresTvo: efrApresTvo, efrIndicTracee: efrIndicTracee,
+        efrSansJustif: efr && !efrApresTvo && !efrIndicTracee,
         sommeil: sommeil, sommeilSaos: sommeil && tirage(0.34),
         ecg: ecg, ecgSansFdr: ecg && !critereEcg,
         dermato: dermato, dermatoSuspect: dermato && tirage(0.08),
@@ -146,6 +180,34 @@ function indicateurs() {
       base: compte(v => v.spiro) + ' examens réalisés'
     },
     {
+      id: 'efr_origine',
+      effectif: compte(v => v.efr), effectifMin: 20,
+      titre: 'Explorations complètes précédées d’une spirométrie anormale',
+      valeur: taux(compte(v => v.efrApresTvo), compte(v => v.efr)), unite: '%',
+      seuil: 70, sens: 'min',
+      revele: 'C’est la mesure de la séquence en deux temps. Si ce taux baisse, l’exploration complète n’est plus déclenchée par un résultat mais par la disponibilité de la cabine. Un plateau installé finit toujours par trouver des indications : c’est ce mécanisme-là qu’on surveille, pas la compétence du praticien.',
+      base: compte(v => v.efr) + ' explorations complètes, dont ' + compte(v => v.efrApresTvo) + ' après une spirométrie anormale',
+      note: 'Le solde n’est pas anormal en soi : une exploration peut être indiquée par la clinique sans spirométrie anormale. Encore faut-il que ce soit écrit — c’est l’objet de l’indicateur suivant.'
+    },
+    {
+      id: 'efr_sans_justif',
+      effectif: compte(v => v.efr), effectifMin: 20,
+      titre: 'Explorations complètes sans justification tracée',
+      valeur: taux(compte(v => v.efrSansJustif), compte(v => v.efr)), unite: '%',
+      seuil: 5, sens: 'max',
+      revele: 'Ni spirométrie anormale, ni indication clinique écrite au dossier. C’est la seule ligne qu’un contrôle vous opposera, et la seule qu’aucune explication rétrospective ne rattrape. Une indication légitime non tracée compte ici : du point de vue d’un contrôleur, elle n’existe pas.',
+      base: compte(v => v.efrSansJustif) + ' explorations sur ' + compte(v => v.efr) + ' sans justification écrite au dossier'
+    },
+    {
+      id: 'tvo_suite',
+      effectif: compte(v => v.spiroTvo), effectifMin: 20,
+      titre: 'Spirométries anormales suivies d’une exploration complète',
+      valeur: taux(compte(v => v.efrApresTvo), compte(v => v.spiroTvo)), unite: '%',
+      seuil: 50, sens: 'min',
+      revele: 'Le risque symétrique, et on l’oublie toujours : un trouble ventilatoire repéré puis laissé sans suite. Celui-là n’est pas un risque de contrôle, c’est un risque pour la personne. Un taux bas signifie qu’on a su repérer sans savoir orienter.',
+      base: compte(v => v.efrApresTvo) + ' explorations pour ' + compte(v => v.spiroTvo) + ' spirométries anormales'
+    },
+    {
       id: 'sommeil',
       titre: 'Rendement de l’enregistrement du sommeil',
       valeur: taux(compte(v => v.sommeilSaos), compte(v => v.sommeil)), unite: '%',
@@ -196,8 +258,20 @@ function indicateurs() {
   ];
 }
 
+/* GARDE D'EFFECTIF.
+   Un pourcentage calculé sur une poignée d'actes ne mesure rien : deux
+   dossiers de plus ou de moins le déplacent de vingt points. Déclencher
+   une alerte là-dessus, c'est piloter du bruit — et le pire usage d'un
+   tableau de bord est de faire changer une pratique pour une variation
+   qui n'existe pas.
+
+   Sous l'effectif minimal, l'indicateur affiche ses effectifs bruts et
+   se déclare hors seuil. C'est le même raisonnement que le seuil de onze
+   du portail entreprise, appliqué cette fois à la validité statistique
+   et non à la réidentification. */
 function statut(ind) {
   if (ind.valeur == null || ind.seuil == null) return 'neutre';
+  if (ind.effectifMin != null && (ind.effectif || 0) < ind.effectifMin) return 'attente';
   if (ind.sens === 'max') return ind.valeur > ind.seuil ? 'alerte' : 'ok';
   return ind.valeur < ind.seuil ? 'alerte' : 'ok';
 }
@@ -215,6 +289,9 @@ function serie(id) {
   return MOIS.map(m => {
     const dansMois = f => { let n = 0; COHORTE.forEach(v => { if (v.mois === m && f(v)) n++; }); return n; };
     if (id === 'spiro')   return taux(dansMois(v => v.spiroTvo), dansMois(v => v.spiro));
+    if (id === 'efr_origine')     return taux(dansMois(v => v.efrApresTvo), dansMois(v => v.efr));
+    if (id === 'efr_sans_justif') return taux(dansMois(v => v.efrSansJustif), dansMois(v => v.efr));
+    if (id === 'tvo_suite')       return taux(dansMois(v => v.efrApresTvo), dansMois(v => v.spiroTvo));
     if (id === 'sommeil') return taux(dansMois(v => v.sommeilSaos), dansMois(v => v.sommeil));
     if (id === 'ecg')     return taux(dansMois(v => v.ecgSansFdr), dansMois(v => v.ecg));
     if (id === 'devis')   return taux(dansMois(v => v.devisRefuse), dansMois(v => v.devisPropose));
@@ -278,12 +355,16 @@ function rendre() {
         return `<section class="ind ${st}">
           <div class="ind-h">
             <h2>${esc(i.titre)}</h2>
-            <span class="tag tag-${st}">${st === 'alerte' ? 'Alerte' : (st === 'ok' ? 'Dans la cible' : 'Sans seuil')}</span>
+            <span class="tag tag-${st === 'attente' ? 'neutre' : st}">${
+              st === 'alerte' ? 'Alerte'
+              : st === 'ok' ? 'Dans la cible'
+              : st === 'attente' ? 'Effectif insuffisant' : 'Sans seuil'}</span>
           </div>
           <div class="ind-v">
             <b>${esc(fmt(i.valeur, i.unite))}</b>
             ${i.seuil != null ? `<span class="seuil">seuil d’alerte :
-              ${i.sens === 'max' ? 'au-delà de' : 'en dessous de'} ${i.seuil}${i.unite === '%' ? ' %' : (i.unite === 'jours' ? ' j' : '')}</span>` : ''}
+              ${i.sens === 'max' ? 'au-delà de' : 'en dessous de'} ${i.seuil}${i.unite === '%' ? ' %' : (i.unite === 'jours' ? ' j' : '')}${
+              st === 'attente' ? ' — suspendu, effectif inférieur à ' + i.effectifMin : ''}</span>` : ''}
             ${s.some(x => x != null) ? '<span class="sparkwrap">' + microCourbe(s) + '<em>6 mois</em></span>' : ''}
           </div>
           ${i.base ? `<p class="base">${esc(i.base)}</p>` : ''}
