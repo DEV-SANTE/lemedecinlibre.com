@@ -108,10 +108,13 @@
     .nvx-env{display:none}
   }`;
 
-  const LOGO = '<svg viewBox="0 0 40 40" fill="none" aria-hidden="true">' +
-    '<rect width="40" height="40" rx="11.5" fill="#0f5f6b"/>' +
-    '<path d="M8.5 20.5h4.6l2.7-7 3.5 13.5 2.7-8.6 2 5.1h5.5" stroke="#fff" ' +
-    'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  /* La marque vient du fichier partagé. Cette copie-ci était restée au
+     bleu-vert de l'ancienne charte alors que les six pages étaient déjà
+     passées au bleu : la barre de circulation, visible sur toutes les
+     pages, affichait donc un logo d'une autre couleur que celui de la
+     page en dessous. C'est l'exemple exact de ce que la duplication
+     produit, et personne ne l'avait signalé. */
+  const LOGO = '<img src="' + B + 'commun/marque.svg" width="40" height="40" alt="">';
 
   function html() {
     const cur = courante();

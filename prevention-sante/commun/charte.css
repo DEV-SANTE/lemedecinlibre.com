@@ -91,3 +91,13 @@
   --cadre:100%;
   --mesure:72ch;
 }
+
+/* ---------------------------------------------------------------------
+   LA MARQUE
+
+   Une seule règle de composant dans ce fichier, et c'est assumé : la
+   marque est un fichier partagé (commun/marque.svg), et sa taille
+   d'affichage appartient au même endroit que lui. La disperser dans sept
+   feuilles recréerait précisément la duplication qu'on vient de retirer.
+   ------------------------------------------------------------------ */
+.marque,.mark{width:32px;height:32px;flex:0 0 32px;display:block}

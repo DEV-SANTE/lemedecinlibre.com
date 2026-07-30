@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" role="img" aria-label="Prévention Santé">
+<!-- ======================================================================
+     LA MARQUE, EN UN SEUL FICHIER
+
+     Ce dessin existait en six copies : une par page, recopiée dans le
+     balisage. Elles étaient identiques par chance et non par
+     construction — le fond de l'une avait déjà divergé lors du
+     changement de palette, et personne ne l'aurait vu.
+
+     Employée par <img src="…/commun/marque.svg">. Le fichier est servi
+     par notre propre domaine : aucune requête vers un tiers, ce qui la
+     rend utilisable sur les pages qui affichent un dossier médical.
+
+     La couleur est écrite ici et pas héritée : une image externe ne
+     reçoit pas le currentColor de la page. C'est le prix d'un fichier
+     unique, et il est faible — la marque n'a qu'une seule couleur.
+
+     Marque provisoire, à remplacer après recherche d'antériorité INPI.
+     ====================================================================== -->
+<rect width="40" height="40" rx="11.5" fill="#2069b0"/>
+<path d="M8.5 20.5h4.6l2.7-7 3.5 13.5 2.7-8.6 2 5.1h5.5" fill="none" stroke="#fff"
+      stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
