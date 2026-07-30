@@ -64,7 +64,11 @@ const PARAMETRES = BIO_PARAMETRES;
    teinte() ne reçoit qu'un nom de famille. Aucune valeur mesurée
    n'entre dans le calcul d'une couleur, ce qui est la raison d'être de
    cette indirection autant que le confort de lecture. */
-let theme = THEMES.defaut;
+/* APPARENCE FIXÉE. C'était une variable tant qu'un sélecteur permettait
+   d'en changer ; le sélecteur est retiré, donc c'est une constante. Elle
+   reste lue depuis le catalogue plutôt qu'écrite en dur : changer
+   d'apparence se fait en modifiant THEMES.defaut, et rien d'autre. */
+const theme = THEMES.defaut;
 const famille = nom => {
   const base = Biologie.famille(nom);
   return { nom: base.nom, c: THEMES.teinte(theme, base.nom) || base.c };
@@ -1348,39 +1352,24 @@ function brancherInfobulle(series) {
 }
 
 /* =====================================================================
-   BARRE DE THÈMES
+   BARRE DE DISPOSITION
 
-   Provisoire : elle sert à arbitrer une direction graphique en la
-   voyant. À retirer une fois le choix fait — et le retrait consiste à
-   supprimer cette fonction et la section correspondante du balisage,
-   rien d'autre : aucun thème ne conditionne le contenu.
+   Ce qui reste de la barre d'essai. Le sélecteur d'APPARENCE a été
+   retiré : le choix graphique est fait, l'apparence est fixée par la
+   constante « theme » plus haut. Le retrait n'a rien demandé d'autre que
+   de supprimer un bout de balisage et un bout de cette fonction —
+   c'était l'intérêt de ne jamais laisser un thème conditionner un
+   contenu : on peut en retirer le choix sans toucher à ce qui s'affiche.
 
-   Le choix n'est pas mémorisé. Une préférence d'apparence stockée dans
-   le navigateur serait la première donnée persistée par cette page en
-   dehors du dossier, et il n'y a aucune raison d'ouvrir cette porte
-   pour une maquette.
+   La disposition, elle, n'est pas encore arrêtée, donc son sélecteur
+   reste. Il partira de la même manière.
+
+   Le choix n'est pas mémorisé. Une préférence stockée dans le navigateur
+   serait la première donnée persistée par cette page en dehors du
+   dossier, et il n'y a aucune raison d'ouvrir cette porte pour une
+   maquette.
    ===================================================================== */
-function barreThemes() {
-  const zone = $('#th-b'), desc = $('#th-d');
-  if (!zone || !desc) return;
-
-  zone.innerHTML = THEMES.liste.map(t =>
-    '<button class="th-x' + (t.id === theme ? ' on' : '') + '" data-t="' + esc(t.id) + '">' +
-    esc(t.nom) + '<em>' + esc(t.resume) + '</em></button>').join('');
-
-  desc.textContent = THEMES.trouver(theme).desc;
-
-  zone.querySelectorAll('[data-t]').forEach(b => {
-    b.onclick = () => {
-      theme = b.dataset.t;
-      document.documentElement.setAttribute('data-theme', theme);
-      barreThemes();
-      rendre();   /* les teintes sont injectées dans le balisage */
-    };
-  });
-
-  /* Disposition. Même barre provisoire, même sort : elle disparaît avec
-     elle une fois l'agencement arrêté. */
+function barreDisposition() {
   const zd = $('#th-disp');
   if (!zd) return;
   zd.innerHTML = DISPOSITIONS.map(d =>
@@ -1394,7 +1383,7 @@ function barreThemes() {
          une courbe sans avoir vu le sommaire désoriente. */
       if (disposition === 'rail' && vue === 'mesure') vue = 'accueil';
       if (disposition !== 'domaines') lateral = 'apercu';
-      barreThemes();
+      barreDisposition();
       rendre();
     };
   });
@@ -1404,6 +1393,6 @@ window.addEventListener('DOMContentLoaded', () => {
   DOSSIER = dossierCourant();
   document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.setAttribute('data-dispo', disposition);
-  barreThemes();
+  barreDisposition();
   rendre();
 });

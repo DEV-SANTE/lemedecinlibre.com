@@ -395,8 +395,9 @@ details.lire>summary:hover{border-color:var(--pri);background:var(--pri-l2)}
    définit la liste des familles.
    ------------------------------------------------------------------ */
 
-/* Barre de sélection. Elle disparaîtra à la mise en service : elle
-   n'existe que pour arbitrer une direction graphique. */
+/* Barre de sélection. Il n'y reste que la disposition : le sélecteur
+   d'apparence est retiré, le choix étant fait. Elle disparaîtra
+   entièrement à la mise en service. */
 .themes{max-width:var(--cadre);margin:26px auto 0;padding:0 32px}
 .th-in{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);
   padding:18px 22px;box-shadow:var(--sh-s)}
@@ -410,7 +411,6 @@ details.lire>summary:hover{border-color:var(--pri);background:var(--pri-l2)}
 .th-x em{font-style:normal;font-size:11px;color:var(--ink-4)}
 .th-x.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
 .th-x.on em{color:rgba(255,255,255,.72)}
-.th-d{font-size:13.2px;color:var(--ink-3);line-height:1.6;margin-top:14px;max-width:88ch}
 
 /* ---------------------------------------------------------------------
    VITAMINÉ — couleurs franches, grands arrondis, fond crème.
@@ -834,12 +834,22 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
   </div>
 </header>
 
-<section class="themes" aria-label="Choix de l’apparence">
+<!-- Le sélecteur d'apparence a été retiré : le choix est fait, il n'y a
+     plus à l'arbitrer. L'apparence est désormais fixée dans le code, à
+     un seul endroit (suivi.js, la constante « theme »).
+
+     Les règles des autres apparences restent dans la feuille de style.
+     Ce n'est pas un oubli : elles ne coûtent rien à l'affichage, elles
+     ne sont jamais appliquées tant qu'aucun attribut ne les appelle, et
+     elles permettent de revenir sur le choix en changeant une ligne au
+     lieu de réécrire une feuille de style.
+
+     La barre de DISPOSITION reste, elle : elle ne choisit pas une
+     apparence mais un agencement, et l'agencement n'est pas encore
+     arrêté. Elle partira de la même façon le jour où il le sera. -->
+<section class="themes" aria-label="Disposition">
   <div class="th-in">
-    <span class="th-k">Version d’essai — apparence</span>
-    <div class="th-b" id="th-b"></div>
-    <p class="th-d" id="th-d"></p>
-    <span class="th-k" style="margin-top:18px">Disposition</span>
+    <span class="th-k">Version d’essai — disposition</span>
     <div class="th-b" id="th-disp"></div>
   </div>
 </section>
@@ -865,13 +875,13 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=14"></script>
-<script src="../commun/visuels.js?v=14"></script>
-<script src="../commun/domaines.js?v=14"></script>
-<script src="../commun/avis.js?v=14"></script>
-<script src="../commun/themes.js?v=14"></script>
-<script src="../commun/lexique.js?v=14"></script>
-<script src="suivi.js?v=14"></script>
+<script src="../plateforme/biologie.js?v=15"></script>
+<script src="../commun/visuels.js?v=15"></script>
+<script src="../commun/domaines.js?v=15"></script>
+<script src="../commun/avis.js?v=15"></script>
+<script src="../commun/themes.js?v=15"></script>
+<script src="../commun/lexique.js?v=15"></script>
+<script src="suivi.js?v=15"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>
