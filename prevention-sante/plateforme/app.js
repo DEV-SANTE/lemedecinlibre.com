@@ -553,6 +553,7 @@ function vueMedecin(id) {
       <div class="onglets">
         <button data-o="reponses" class="${ongletMedecin === 'reponses' ? 'on' : ''}">Réponses du patient</button>
         <button data-o="biologie" class="${ongletMedecin === 'biologie' ? 'on' : ''}">Biologie${Biologie.compte(dossier) ? ' · ' + Biologie.compte(dossier) : ''}</button>
+        <button data-o="domaines" class="${ongletMedecin === 'domaines' ? 'on' : ''}">Domaines${Avis.compte(dossier) ? ' · ' + Avis.compte(dossier) : ''}</button>
         <button data-o="scores" class="${ongletMedecin === 'scores' ? 'on' : ''}">Scores</button>
         <button data-o="referentiel" class="${ongletMedecin === 'referentiel' ? 'on' : ''}">Référentiel documentaire</button>
         <button data-o="decision" class="${ongletMedecin === 'decision' ? 'on' : ''}">Décision médicale</button>
@@ -561,6 +562,7 @@ function vueMedecin(id) {
       <div id="onglet-contenu">${
         ongletMedecin === 'reponses' ? blocReponses(dossier)
         : ongletMedecin === 'biologie' ? blocBiologie(dossier)
+        : ongletMedecin === 'domaines' ? blocDomaines(dossier)
         : ongletMedecin === 'scores' ? blocScores(dossier)
         : ongletMedecin === 'referentiel' ? blocReferentiel()
         : blocDecision(dossier)
@@ -578,6 +580,7 @@ function vueMedecin(id) {
   if (ongletMedecin === 'decision') brancherDecision(dossier);
   if (ongletMedecin === 'reponses') brancherMarquage(dossier);
   if (ongletMedecin === 'biologie') brancherBiologie(dossier);
+  if (ongletMedecin === 'domaines') brancherDomaines(dossier);
   if (ongletMedecin === 'scores') brancherScores(dossier);
 }
 
@@ -900,6 +903,140 @@ function bloc_bio_form(dossier, p, dateIso, k) {
     valeur à un intervalle de référence et n’en propose aucune lecture : la marque est la
     vôtre, et elle sera visible du patient avec votre nom.</p>
   </div>`;
+}
+
+/* =====================================================================
+   ONGLET DOMAINES — QUALIFIER UN DOMAINE EN UN CLIC
+
+   C'est la contrepartie de ce que le patient voit. La maquette v0
+   affichait une pastille par domaine, produite par personne ; ici elle
+   est produite ici, par vous, et elle porte votre nom.
+
+   TROIS BOUTONS, PARCE QUE TROIS ÉTAIT LE BON NOMBRE DANS LA MAQUETTE
+   « Dans les valeurs usuelles », « À surveiller », « À interpréter avec
+   votre médecin ». Les libellés sont ceux de v0, conservés au mot : ils
+   sont non alarmistes et renvoient à un échange plutôt qu'à un verdict.
+
+   AUCUNE PRÉSÉLECTION. Aucun bouton n'est coché à l'ouverture. Un
+   défaut, même prudent, serait une position prise par le logiciel — et
+   il suffirait d'un clic distrait pour la transformer en avis signé.
+
+   AUCUNE VALEUR N'EST AFFICHÉE ICI. L'écran ne montre pas les chiffres
+   du domaine : il ne faut pas que ce formulaire ressemble à un endroit
+   où l'on compare. Les valeurs sont dans l'onglet Biologie, avec les
+   marques par relevé. Ici on qualifie un domaine, ce qui est un autre
+   geste.
+   ===================================================================== */
+let domaineOuvertMed = null;
+
+function blocDomaines(dossier) {
+  const n = Avis.compte(dossier);
+  return `
+    <div class="avis-tete">
+      <p class="mq-k">Qualifier un domaine</p>
+      <p class="note">${n ? n + ' domaine' + (n > 1 ? 's' : '') + ' qualifié' + (n > 1 ? 's' : '')
+        : 'Aucun domaine qualifié pour l’instant'} sur ${DOMAINES.liste.length}.
+      Ce que vous choisissez ici s’affiche dans l’espace du patient, avec votre nom et la date.
+      Un domaine que vous ne qualifiez pas reste marqué « Non commenté » : rien n’est supposé
+      à votre place.</p>
+      <label class="mq-med">Votre nom
+        <input type="text" id="med-dom" placeholder="Dr Prénom Nom"
+               value="${esc(medecinCourant || (dossier.validation && dossier.validation.medecin) || '')}">
+      </label>
+    </div>
+
+    <div class="avis-liste">
+      ${DOMAINES.liste.map(d => {
+        const a = Avis.lire(dossier, d.id);
+        const st = a ? Avis.statut(a.statut) : null;
+        const ouvert = domaineOuvertMed === d.id;
+        return `
+        <div class="avis-l ${ouvert ? 'ouvert' : ''}" style="--dc:${d.couleur}">
+          <button class="avis-x" data-dom-med="${esc(d.id)}">
+            <span class="avis-pt"></span>
+            <span class="avis-n">${esc(d.nom)}<em>${esc(d.clair)}</em></span>
+            ${a ? `<span class="avis-st m-${esc(TEINTE_AVIS_MED[a.statut])}">${esc(st.l)}</span>`
+                : `<span class="avis-st avis-vide">Non commenté</span>`}
+          </button>
+          ${a ? `<p class="avis-sig">${a.synthese ? '« ' + esc(a.synthese) + ' » — ' : ''}${esc(a.medecin)}
+                 · le ${esc(formaterDate(a.date))}</p>` : ''}
+          ${ouvert ? bloc_avis_form(dossier, d, a) : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function bloc_avis_form(dossier, d, a) {
+  return `<div class="mq-form" data-aform="${esc(d.id)}">
+    <p class="mq-k">${esc(d.nom)} — ${esc(d.clair)}</p>
+    <div class="mq-choix">
+      ${Avis.statuts().map(st => `
+        <label class="mq-opt m-${esc(TEINTE_AVIS_MED[st.v])}">
+          <input type="radio" name="avis-${esc(d.id)}" value="${esc(st.v)}" ${a && a.statut === st.v ? 'checked' : ''}>
+          <span>${esc(st.l)}</span>
+        </label>`).join('')}
+    </div>
+    <textarea class="mq-com" rows="2"
+      placeholder="Une phrase pour le patient, facultative">${a ? esc(a.synthese) : ''}</textarea>
+    <p class="mq-err" style="display:none"></p>
+    <div class="mq-act">
+      <button class="btn btn-p b-avis-save" data-dom="${esc(d.id)}">Enregistrer</button>
+      ${a ? `<button class="btn btn-d b-avis-del" data-dom="${esc(d.id)}">Retirer l’avis</button>` : ''}
+      <button class="btn btn-g b-avis-cancel">Annuler</button>
+    </div>
+    <p class="mq-n">Aucun statut n’est présélectionné, et le logiciel ne propose rien : il ne
+    lit aucune valeur de ce domaine pour vous suggérer une réponse. La phrase que vous écrivez
+    est reprise telle quelle dans l’espace du patient.</p>
+  </div>`;
+}
+
+/* Correspondance statut -> classe de teinte. Une seule échelle de
+   couleurs dans tout le produit, celle des marques. */
+const TEINTE_AVIS_MED = { usuelles: 'vert', surveiller: 'orange', interpreter: 'rouge' };
+
+function brancherDomaines(dossier) {
+  const champ = $('#med-dom');
+  if (champ) champ.addEventListener('input', () => { medecinCourant = champ.value.trim(); });
+
+  document.querySelectorAll('[data-dom-med]').forEach(b => {
+    b.onclick = () => {
+      domaineOuvertMed = (domaineOuvertMed === b.dataset.domMed) ? null : b.dataset.domMed;
+      vueMedecin(dossier.id);
+    };
+  });
+
+  const annuler = document.querySelector('.b-avis-cancel');
+  if (annuler) annuler.onclick = () => { domaineOuvertMed = null; vueMedecin(dossier.id); };
+
+  const enreg = document.querySelector('.b-avis-save');
+  if (enreg) enreg.onclick = () => {
+    const id = enreg.dataset.dom;
+    const f = document.querySelector('[data-aform="' + id + '"]');
+    const err = f.querySelector('.mq-err');
+    const coche = f.querySelector('input[name="avis-' + id + '"]:checked');
+    const med = ($('#med-dom').value || '').trim();
+    medecinCourant = med;
+    try {
+      Avis.poser(dossier, id, coche ? coche.value : '',
+        f.querySelector('.mq-com').value, med);
+      dossier.modifie = horodatage();
+      sauver();
+      domaineOuvertMed = null;
+      vueMedecin(dossier.id);
+    } catch (e) {
+      err.textContent = e.message;
+      err.style.display = 'block';
+    }
+  };
+
+  const suppr = document.querySelector('.b-avis-del');
+  if (suppr) suppr.onclick = () => {
+    Avis.retirer(dossier, suppr.dataset.dom);
+    dossier.modifie = horodatage();
+    sauver();
+    domaineOuvertMed = null;
+    vueMedecin(dossier.id);
+  };
 }
 
 function brancherBiologie(dossier) {

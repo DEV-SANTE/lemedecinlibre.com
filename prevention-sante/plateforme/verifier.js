@@ -1461,6 +1461,148 @@ section('13. Images locales — déclarées, présentes, légères');
     /statut\s+d['’]auteur[\s\S]{0,80}?g[eé]n[eé]ratif/.test(src));
 })();
 
+/* ==================================================================
+   14. LA MAQUETTE v0 N'A PAS IMPORTÉ SON AUTOMATISME
+
+   L'esthétique de v0 est reprise telle quelle, y compris ses libellés.
+   Ce qui a changé est invisible à l'œil : dans la maquette, la pastille
+   d'un domaine était un attribut de la donnée, produite par personne et
+   toujours affichée. Ici elle est produite par un médecin, elle porte
+   son nom et sa date, et son absence s'affiche comme une absence.
+
+   C'est exactement le genre de différence qui disparaît en six mois si
+   rien ne la retient : rien, visuellement, n'empêcherait de rebrancher
+   ces pastilles sur un calcul, et personne ne le verrait. D'où les
+   contrôles ci-dessous, dont trois EXÉCUTENT le code au lieu de le
+   lire — la seule façon de vérifier qu'un refus refuse vraiment.
+================================================================== */
+section('14. Avis par domaine — origine humaine vérifiée');
+
+const A = require('../commun/avis.js');
+const DOM2 = require('../commun/domaines.js');
+
+(function () {
+  const srcAvis = lire('commun/avis.js');
+  const srcApp = lire('plateforme/app.js');
+  const srcSuivi = lire('suivi/suivi.js');
+
+  /* --- 14.1 EXÉCUTION : le refus doit refuser. --- */
+  const d = {};
+  let refuseAnonyme = false, refuseSansStatut = false, refuseStatutInconnu = false;
+  try { A.Avis.poser(d, 'foie', 'usuelles', 'x', ''); } catch (e) { refuseAnonyme = true; }
+  try { A.Avis.poser(d, 'foie', '', 'x', 'Dr X'); } catch (e) { refuseSansStatut = true; }
+  try { A.Avis.poser(d, 'foie', 'parfait', 'x', 'Dr X'); } catch (e) { refuseStatutInconnu = true; }
+  verifier('avis.js — un avis sans auteur est refusé', refuseAnonyme,
+    !refuseAnonyme ? 'Un avis anonyme serait indistinguable d’un signalement automatique.' : null);
+  verifier('avis.js — un avis sans statut est refusé', refuseSansStatut);
+  verifier('avis.js — un statut hors liste est refusé', refuseStatutInconnu);
+
+  /* --- 14.2 EXÉCUTION : un avis incomplet déjà en base n'est pas
+         restitué. Le cas se produira : un enregistrement tronqué, une
+         migration ratée. Il doit disparaître, pas s'afficher à moitié. --- */
+  const d2 = { avisDomaines: {
+    rein: { domaine: 'rein', statut: 'usuelles', synthese: 'x' },              /* sans auteur */
+    foie: { domaine: 'foie', statut: 'usuelles', medecin: 'Dr X' },            /* sans date   */
+    peau: { domaine: 'peau', medecin: 'Dr X', date: '2026-07-30' }             /* sans statut */
+  } };
+  verifier('avis.js — un avis sans auteur n’est pas restitué', A.Avis.lire(d2, 'rein') === null);
+  verifier('avis.js — un avis sans date n’est pas restitué', A.Avis.lire(d2, 'foie') === null);
+  verifier('avis.js — un avis sans statut n’est pas restitué', A.Avis.lire(d2, 'peau') === null);
+  verifier('avis.js — le compte ignore les avis incomplets', A.Avis.compte(d2) === 0);
+
+  /* --- 14.3 EXÉCUTION : un avis complet est bien restitué, signé,
+         daté. Sans ce contrôle, on pourrait tout refuser et croire le
+         verrou solide. --- */
+  const d3 = {};
+  A.Avis.poser(d3, 'foie', 'surveiller', 'À recontrôler dans trois mois.', 'Dr Camille Rousseau');
+  const ok = A.Avis.lire(d3, 'foie');
+  verifier('avis.js — un avis complet est restitué avec auteur et date',
+    !!ok && ok.medecin === 'Dr Camille Rousseau' && /^\d{4}-\d{2}-\d{2}$/.test(ok.date));
+
+  /* --- 14.4 Les libellés de la maquette sont conservés au mot. Les
+         reformuler en « anormal » ferait perdre ce qu'ils ont de juste. --- */
+  ['Dans les valeurs usuelles', 'À surveiller', 'À interpréter avec votre médecin']
+    .forEach(l => {
+      verifier('avis.js — libellé conservé : « ' + l + ' »',
+        A.AVIS_STATUTS.some(s => s.l === l));
+    });
+
+  /* --- 14.5 CÔTÉ MÉDECIN : aucune présélection. Un statut coché par
+         défaut est une position prise par le logiciel, qu'un clic
+         distrait transforme en avis signé. --- */
+  const formAvis = (srcApp.match(/function bloc_avis_form[\s\S]*?\n\}/) || [''])[0];
+  verifier('app.js — le formulaire d’avis existe', formAvis !== '');
+  verifier('app.js — aucun statut présélectionné',
+    /a && a\.statut === st\.v \? 'checked' : ''/.test(formAvis) &&
+    !/checked>/.test(formAvis.replace(/\$\{[^}]*checked[^}]*\}/g, '')),
+    'Le coché ne doit dépendre que d’un avis déjà enregistré.');
+
+  /* --- 14.6 CÔTÉ MÉDECIN : le formulaire ne lit aucune valeur. Un
+         écran où l'on choisit une pastille à côté d'un chiffre est un
+         écran de comparaison, et l'habitude s'installe vite. --- */
+  const interdits = ['.valeurs', 'Biologie.valeur', 'fmtVal', 'BIO_DATES']
+    .filter(t => formAvis.indexOf(t) !== -1);
+  verifier('app.js — le formulaire d’avis n’affiche aucune valeur mesurée',
+    interdits.length === 0,
+    interdits.length ? 'Trouvé : ' + interdits.join(', ') : null);
+  verifier('app.js — l’absence de suggestion est écrite au médecin',
+    /ne propose rien|Aucun statut n’est présélectionné/.test(srcApp));
+
+  /* --- 14.7 CÔTÉ PATIENT : la pastille vient de Avis.lire, et son
+         absence s'affiche. --- */
+  verifier('suivi.js — la pastille de domaine vient d’un avis lu',
+    /Avis\.lire\(DOSSIER, d\.id\)/.test(srcSuivi));
+  verifier('suivi.js — l’absence d’avis s’affiche « Non commenté »',
+    /Non commenté/.test(srcSuivi));
+  const carte = (srcSuivi.match(/function carteDomaine[\s\S]*?\n\}/) || [''])[0];
+  const derive = ['.valeurs', 'Biologie.valeur', '>=', '<='].filter(t => carte.indexOf(t) !== -1);
+  verifier('suivi.js — la carte de domaine ne compare aucune valeur', derive.length === 0,
+    derive.length ? 'Trouvé dans carteDomaine : ' + derive.join(', ') : null);
+
+  /* --- 14.8 Une seule échelle de teintes dans tout le produit : les
+         trois statuts réutilisent les classes des marques. --- */
+  ['plateforme/app.js', 'suivi/suivi.js'].forEach(f => {
+    verifier(f + ' — les statuts réutilisent les teintes des marques',
+      /usuelles: 'vert', surveiller: 'orange', interpreter: 'rouge'/.test(lire(f)));
+  });
+
+  /* --- 14.9 Les couleurs de domaine identifient, elles n'évaluent
+         pas : distinctes entre elles, et aucune ne reprend une teinte
+         d'état. --- */
+  const cols = DOM2.liste.map(x => x.couleur.toLowerCase());
+  verifier('domaines.js — seize teintes distinctes', new Set(cols).size === cols.length);
+  const coll = cols.filter(c => DOM2.reservees.indexOf(c) !== -1);
+  verifier('domaines.js — aucune teinte de domaine ne reprend une couleur d’état',
+    coll.length === 0, coll.length ? 'Collision : ' + coll.join(', ') : null);
+
+  /* --- 14.10 Rien de la chaîne de dépendances de v0 n'est entré. Le
+         paquet contenait @vercel/analytics : un script tiers à cookies,
+         qui aurait annulé la propriété défendue par tout le reste. --- */
+  /* Contrôle sur ce qui est CHARGÉ, pas sur ce qui est documenté : le
+     thème Clinique explique en commentaire qu'il n'importe pas
+     @vercel/analytics, et se ferait refuser par sa propre règle. Un
+     fichier qui ne peut pas nommer ce qu'il refuse finit par ne plus
+     l'expliquer, et la raison se perd. */
+  ['suivi/index.html', 'suivi/suivi.js', 'plateforme/index.html', 'plateforme/app.js',
+   'commun/domaines.js', 'commun/avis.js'].forEach(f => {
+    const src = sansCommentaires(lire(f)).replace(/<!--[\s\S]*?-->/g, ' ');
+    const tiers = ['vercel', 'analytics', 'gtag', 'googletagmanager', 'next/', 'tailwind']
+      .filter(t => src.toLowerCase().indexOf(t) !== -1);
+    verifier(f + ' — aucune dépendance de la maquette importée', tiers.length === 0,
+      tiers.length ? 'Trouvé : ' + tiers.join(', ') : null);
+  });
+
+  /* --- 14.11 L'échelle de référence dessinée de v0 n'est pas reprise :
+         elle calcule une position et rend un verdict. --- */
+  ['suivi/suivi.js', 'suivi/index.html', 'plateforme/app.js'].forEach(f => {
+    const src = codeSeul(lire(f));
+    const bad = ['refLow', 'refHigh', 'ReferenceScale', 'bandeNormalite']
+      .filter(t => src.indexOf(t) !== -1);
+    verifier(f + ' — aucune échelle de référence dessinée', bad.length === 0,
+      bad.length ? 'Trouvé : ' + bad.join(', ') : null);
+  });
+})();
+
 /* ================================================================== */
 console.log('');
 if (echecs === 0) {
