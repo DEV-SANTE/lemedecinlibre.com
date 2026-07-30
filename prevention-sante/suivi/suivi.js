@@ -552,6 +552,81 @@ if (typeof VISUELS !== 'undefined' && VISUELS.locales) {
   VISUELS.locales.forEach(v => { VIS_LOCAL[v.id] = v.sujet; });
 }
 
+function bandeauBilan() {
+  const pct = Math.round((BILAN.realises / BILAN.prevus) * 100);
+  return `
+    <section class="bilan-b">
+      <div class="bb-in">
+        <p class="bb-k">Bilan de prévention en cours</p>
+        <h2 class="bb-t">${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus</h2>
+        <p class="bb-s">Commencé le ${esc(jolieDate(BILAN.debut))}. La synthèse avec votre
+        médecin est prévue le ${esc(jolieDate(BILAN.synthesePrevue))}.</p>
+        <div class="bb-jauge" role="img"
+             aria-label="${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus">
+          <i style="width:${pct}%"></i>
+        </div>
+        <p class="bb-n">Ce compteur suit l’avancement du parcours. Il ne dit rien de vos
+        résultats : un parcours complet à ${pct} % n’est ni une bonne ni une mauvaise nouvelle.</p>
+      </div>
+    </section>`;
+}
+
+function blocEtapes() {
+  return `
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Votre parcours</h2>
+        <p class="b-s">Les grandes étapes, dans l’ordre. Les pastilles disent seulement ce qui
+        est fait ou pas : elles n’emploient jamais les couleurs qui servent aux avis de votre
+        médecin.</p>
+      </div></div>
+      <ol class="etapes">
+        ${ETAPES.map(e => `
+          <li class="et et-${esc(e.etat)}">
+            <span class="et-p">${e.etat === 'fait' ? ic('i-check') : ''}</span>
+            <b class="et-n">${esc(e.nom)}</b>
+            <span class="et-e">${esc(LIB_ETAT[e.etat])}</span>
+            <span class="et-d">${esc(jolieDate(e.quand))}</span>
+          </li>`).join('')}
+      </ol>
+    </section>`;
+}
+
+/* Points à discuter : uniquement des avis SIGNÉS du médecin, et
+   uniquement ceux qu'il a lui-même qualifiés « à surveiller » ou « à
+   interpréter ». Rien n'est sélectionné à partir d'une valeur : la liste
+   est le reflet de ses choix, filtrée sur son propre vocabulaire. */
+function blocPoints() {
+  const points = DOSSIER ? DOMAINES.liste
+    .map(d => ({ d: d, a: Avis.lire(DOSSIER, d.id) }))
+    .filter(x => x.a && (x.a.statut === 'surveiller' || x.a.statut === 'interpreter')) : [];
+
+  return `
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Points à discuter</h2>
+        <p class="b-s">Ce que votre médecin a signalé comme méritant un échange. Chaque ligne
+        porte son nom et la date. Cette liste n’est pas constituée par le logiciel : elle ne
+        contient que ce qu’il a écrit.</p>
+      </div></div>
+      ${points.length ? `
+        <div class="points">
+          ${points.map(x => `
+            <div class="pt m-${esc(TEINTE_AVIS[x.a.statut])}">
+              <div class="pt-h">
+                <span class="pt-d" style="--dc:${x.d.couleur}">${esc(x.d.nom)}</span>
+                <span class="pt-st"><i></i>${esc(Avis.statut(x.a.statut).l)}</span>
+              </div>
+              <p class="pt-c">${x.a.synthese ? esc(x.a.synthese)
+                : 'Domaine signalé, sans phrase écrite.'}</p>
+              <p class="pt-s">${esc(x.a.medecin)} · le ${esc(jolieDate(x.a.date))}</p>
+            </div>`).join('')}
+        </div>`
+      : `<p class="cmp-n">Aucun point n’a été signalé par votre médecin à ce jour. Ce n’est pas
+         une conclusion : c’est l’état de ce qui a été écrit.</p>`}
+    </section>`;
+}
+
 /* =====================================================================
    BARRE LATÉRALE DE LA VUE D'ENSEMBLE
 
