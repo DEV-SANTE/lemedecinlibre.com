@@ -661,6 +661,7 @@ function blocEtapes() {
         est fait ou pas : elles n’emploient jamais les couleurs qui servent aux avis de votre
         médecin.</p>
       </div></div>
+      <div class="etapes-c">
       <ol class="etapes">
         ${ETAPES.map(e => `
           <li class="et et-${esc(e.etat)}">
@@ -670,6 +671,7 @@ function blocEtapes() {
             <span class="et-d">${esc(jolieDate(e.quand))}</span>
           </li>`).join('')}
       </ol>
+      </div>
     </section>`;
 }
 
