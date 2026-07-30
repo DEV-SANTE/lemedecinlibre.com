@@ -142,6 +142,43 @@ var VISUELS = {
   dossierBandeau: 'images/bandeau/',
   poidsMaxBandeauKo: 150,
 
+  /* ==================================================================
+     PHOTOGRAPHIES DES MODULES
+
+     Même provenance et mêmes droits que les autres : maquette v0.app,
+     dossier public/photos, droits détenus par le Groupe Dev Santé sur
+     déclaration du 30 juillet 2026.
+
+     TROIS IMAGES, ET UNE ÉCARTÉE. La maquette contient aussi
+     hero-editorial : un groupe de personnes souriantes en forêt. Elle
+     n'est pas reprise. Ce n'est pas une image d'information, c'est une
+     image de promesse — sur une page qui affiche un dossier médical,
+     elle suggère un résultat au lieu de le montrer. Elle serait à sa
+     place sur une page commerciale, pas ici.
+
+     LA MONTRE ET SON ÉCRAN. La photographie de la montre montre un écran
+     affichant « 114 » à côté d'un cœur. Ce nombre n'a aucun rapport avec
+     les mesures affichées sur la page : c'est du décor de photographie
+     produit. D'où la taille de la vignette — 68 points à l'écran, pour
+     une image de 240 — à laquelle il devient illisible. Le laisser
+     lisible à côté d'une fréquence cardiaque réelle aurait créé une
+     confusion pour rien.
+  ================================================================== */
+  dossierModules: 'images/modules/',
+  poidsMaxModuleKo: 85,
+
+  modules: [
+    { id: 'consultation',
+      sujet: 'Deux personnes en entretien de part et d’autre d’un bureau, dans un cabinet clair.',
+      emploi: 'Bandeau du module « Rendez-vous ».' },
+    { id: 'montre-connectee',
+      sujet: 'Une montre connectée posée sur un plan clair, bracelet bleu.',
+      emploi: 'Vignette d’appareil, module « Objets connectés ».' },
+    { id: 'bague-connectee',
+      sujet: 'Une bague connectée en titane posée sur un plan clair.',
+      emploi: 'Vignette d’appareil, module « Objets connectés ».' }
+  ],
+
   bandeaux: [
     {
       id: 'hero-clinique',
