@@ -5,51 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prévention — repères généraux</title>
 <meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="../commun/charte.css">
 <style>
 /* =====================================================================
    M8 — BIBLIOTHÈQUE DE CONTENU ÉDUCATIF
    Aucune ressource externe. Aucun cookie. Aucun compte requis :
    ces contenus ne dépendent d'aucune donnée personnelle.
    ===================================================================== */
-:root{
-  --ink:#08181f; --ink-2:#284653; --ink-3:#587784; --ink-4:#89a2ad;
-  --pri:#0f5f6b; --pri-d:#0a464f; --pri-l:#e4f1f3; --pri-l2:#f1f8f9;
-  --line:#dce8eb; --line-2:#e9f1f3; --surf:#f3f8f9; --sand:#faf7f2;
-  --amber:#b45309; --amber-bg:#fdf6ec; --amber-line:#f0d9b5;
-  --r:12px; --r-l:20px;
-  --sh-s:0 1px 2px rgba(8,24,31,.045);
-  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-}
+/* Les jetons graphiques sont dans commun/charte.css, chargée
+   au-dessus de cette feuille. Ce bloc :root a été supprimé le
+   30 juillet 2026 : il en existait une copie par page, et les
+   copies avaient divergé. */
 *,*::before,*::after{box-sizing:border-box}
-body{margin:0;background:#fff;color:var(--ink);font-family:var(--f);
-  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);
+  font-size:15.3px;line-height:1.62;-webkit-font-smoothing:antialiased}
 h1,h2{margin:0;letter-spacing:-.027em;line-height:1.16}
-h1{font-size:clamp(28px,4vw,38px);font-weight:740}
-h2{font-size:20px;font-weight:700}
+h1{font-size:clamp(25px,2.6vw,31px);font-weight:640}
+h2{font-size:18px;font-weight:620}
 p{margin:0}
 .ico{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round}
 
 .bandeau{background:var(--amber-bg);border-bottom:1px solid var(--amber-line);color:#7c4a10;
-  font-size:13.3px;padding:11px 26px;text-align:center;line-height:1.5}
+  font-size:12px;padding:11px 26px;text-align:center;line-height:1.5}
 .bandeau strong{color:#5f3708}
 
 .top{border-bottom:1px solid var(--line-2);background:#fff;position:sticky;top:0;z-index:40}
 .top-in{max-width:860px;margin:0 auto;padding:0 26px;height:66px;display:flex;align-items:center;gap:13px}
 .mark{width:32px;height:32px;flex:0 0 32px}
-.brand{font-weight:730;letter-spacing:-.032em;font-size:16.5px;line-height:1.05;
+.brand{font-weight:620;letter-spacing:-.032em;font-size:14.8px;line-height:1.05;
   color:var(--ink);text-decoration:none}
-.brand small{display:block;font-size:9.5px;font-weight:640;letter-spacing:.17em;
+.brand small{display:block;font-size:11px;font-weight:580;letter-spacing:.17em;
   text-transform:uppercase;color:var(--ink-4);margin-top:3px}
-.top .lien{margin-left:auto;font-size:14px;color:var(--pri-d);text-decoration:none;font-weight:560}
+.top .lien{margin-left:auto;font-size:12.6px;color:var(--pri-d);text-decoration:none;font-weight:520}
 .top .lien:hover{text-decoration:underline}
 
 main{max-width:860px;margin:0 auto;padding:40px 26px 90px}
 .intro{margin-bottom:44px}
-.lede{font-size:18.5px;color:var(--ink-2);margin-top:18px;max-width:64ch}
+.lede{font-size:16.7px;color:var(--ink-2);margin-top:18px;max-width:64ch}
 .avis{background:var(--pri-l2);border:1px solid var(--line);border-radius:var(--r);
-  padding:17px 20px;font-size:14.8px;color:var(--ink-2);margin-top:24px;max-width:76ch}
+  padding:17px 20px;font-size:13.3px;color:var(--ink-2);margin-top:24px;max-width:76ch}
 
 .themes{display:grid;gap:20px}
 .theme{border:1px solid var(--line);border-radius:var(--r-l);padding:26px 26px 10px;
@@ -57,24 +52,24 @@ main{max-width:860px;margin:0 auto;padding:40px 26px 90px}
 .t-h{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px}
 .t-ic{width:44px;height:44px;flex:0 0 44px;border-radius:13px;background:var(--pri-l);
   color:var(--pri-d);display:grid;place-items:center}
-.t-r{font-size:15px;color:var(--ink-3);margin-top:6px;max-width:60ch}
+.t-r{font-size:13.5px;color:var(--ink-3);margin-top:6px;max-width:60ch}
 
 details{border-top:1px solid var(--line-2)}
-summary{padding:16px 44px 16px 0;font-size:16px;font-weight:600;cursor:pointer;
+summary{padding:16px 44px 16px 0;font-size:14.4px;font-weight:520;cursor:pointer;
   position:relative;list-style:none;letter-spacing:-.014em;color:var(--ink)}
 summary::-webkit-details-marker{display:none}
 summary::after{content:"";position:absolute;right:8px;top:23px;width:9px;height:9px;
   border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);
   transform:rotate(45deg);transition:transform .18s}
 details[open] summary::after{transform:rotate(-135deg);top:25px}
-details .a{padding:0 34px 20px 0;font-size:16px;color:var(--ink-2);max-width:72ch}
+details .a{padding:0 34px 20px 0;font-size:14.4px;color:var(--ink-2);max-width:72ch}
 
-.fin{margin-top:44px;background:var(--sand);border:1px solid #eee5d8;border-radius:var(--r-l);
-  padding:26px;font-size:14.8px;color:var(--ink-2);line-height:1.62}
+.fin{margin-top:44px;background:var(--sand);border:1px solid #dfe9f2;border-radius:var(--r-l);
+  padding:26px;font-size:13.3px;color:var(--ink-2);line-height:1.62}
 .fin b{color:var(--ink)}
 
 .pied{border-top:1px solid var(--line);background:var(--surf);padding:28px 26px;
-  font-size:13px;color:var(--ink-3);line-height:1.6}
+  font-size:11.7px;color:var(--ink-3);line-height:1.6}
 .pied-in{max-width:860px;margin:0 auto}
 .pied strong{color:var(--ink-2)}
 </style>
@@ -102,7 +97,7 @@ details .a{padding:0 34px 20px 0;font-size:16px;color:var(--ink-2);max-width:72c
 <header class="top">
   <div class="top-in">
     <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-      <rect width="40" height="40" rx="11.5" fill="#0f5f6b"/>
+      <rect width="40" height="40" rx="11.5" fill="#2069b0"/>
       <path d="M8.5 20.5h4.6l2.7-7 3.5 13.5 2.7-8.6 2 5.1h5.5" stroke="#fff"
             stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
