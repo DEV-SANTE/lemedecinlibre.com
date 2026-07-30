@@ -314,6 +314,43 @@ var VISUELS = {
        offre avec l'établissement de quelqu'un d'autre suggérerait une
        affiliation qui n'existe pas.
     ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------
+       DEUX PHOTOGRAPHIES DE PLUS SUR LA PAGE DES EMPLOYEURS
+
+       Cherchées sur Unsplash le 31 juillet 2026. Aucune personne, aucun
+       acte de soin : la limite posée sur cette page reste la même, et
+       elle vient de l'article R.4127-19-1 — une scène de soin, sur une
+       page qui vend un parcours, se lit comme une représentation de notre
+       équipe.
+
+       Elles servent de RESPIRATION entre deux sections denses. Une page
+       de dix arguments enchaînés se lit mal quel que soit le soin apporté
+       au texte : la bande photographique donne un point d'arrêt à l'œil,
+       et sa légende reformule l'argument de la section qui suit.
+    ------------------------------------------------------------------ */
+    {
+      id: 'photo-1700832082200-af7deeb63d9b',
+      auteur: 'Immo Wegmann',
+      pseudo: 'tinkerman',
+      reference: 'njrDE70M2VI',
+      sujet: 'Un stéthoscope et un thermomètre posés côte à côte sur un plan clair.',
+      emploi: 'Bande avant « Dix domaines explorés », page d’accueil.',
+      page: 'index.html',
+      rang: 9,
+      differe: true
+    },
+    {
+      id: 'photo-1580315362297-5be36f0de025',
+      auteur: 'Adrien Olichon',
+      pseudo: 'adrienolichon',
+      reference: '_C0u-d857BY',
+      sujet: 'Un bureau de bois clair contre un mur blanc, sans personne.',
+      emploi: 'Bande avant « Parlons de votre effectif », page d’accueil.',
+      page: 'index.html',
+      rang: 10,
+      differe: true
+    },
+
     {
       id: 'photo-1621960531176-9e4894d9adf8',
       auteur: 'Tim Mossholder',
