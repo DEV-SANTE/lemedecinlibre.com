@@ -1096,13 +1096,31 @@ const THEMES = require('../commun/themes.js');
     THEMES.liste.filter(t => t.id !== THEMES.defaut)
       .every(t => srcHtml.indexOf('data-theme="' + t.id + '"') !== -1));
 
-  /* --- 9.11 La barre qui reste — la disposition — est provisoire, et le
-         dit. L'agencement, lui, n'est pas encore arrêté. --- */
-  verifier('suivi.js — la barre de disposition est annoncée comme provisoire',
-    /barreDisposition/.test(srcSuivi) && /partira/i.test(srcSuivi));
-  verifier('suivi/index.html — le sélecteur de disposition est hors du contenu',
-    srcHtml.indexOf('id="th-disp"') !== -1 &&
-    srcHtml.indexOf('id="th-disp"') < srcHtml.indexOf('<main id="app">'));
+  /* --- 9.11 PLUS AUCUNE BARRE D'ESSAI.
+
+         Deuxième retournement, et pour la même raison que le premier :
+         la disposition est arrêtée elle aussi — « Vue d'ensemble », celle
+         qui porte les photographies. Une seule est publiée, elle est
+         fixée par une constante, et aucun bouton ne permet d'en changer.
+
+         Ce qui suit garantit qu'on ne revient pas en arrière par
+         accident : ni barre, ni bouton, et une disposition qui reste
+         écrite à un seul endroit. --- */
+  verifier('suivi/index.html — aucune barre d’essai publiée',
+    srcHtml.indexOf('id="th-disp"') === -1 && srcHtml.indexOf('id="th-b"') === -1);
+  verifier('suivi.js — aucun bouton de changement de disposition',
+    !/data-d="/.test(srcSuivi),
+    /data-d="/.test(srcSuivi) ? 'Un bouton de disposition a été réintroduit.' : null);
+  /* Lu sur la source débarrassée des commentaires, et non sur codeSeul :
+     celui-ci vide les chaînes, donc effacerait justement le nom de la
+     disposition qu'on veut vérifier. */
+  verifier('suivi.js — la disposition est une constante',
+    /const disposition = 'domaines';/.test(sansCommentaires(srcSuivi)));
+  /* Et la disposition publiée est bien celle qui montre les
+     photographies : c'est le seul point de ce contrôle qui porte sur le
+     dessin plutôt que sur la mécanique. */
+  verifier('suivi.js — la disposition publiée est la vue d’ensemble illustrée',
+    /\$\('#app'\)\.innerHTML = shellDomaines\(/.test(srcSuivi));
 })();
 
 /* ==================================================================
