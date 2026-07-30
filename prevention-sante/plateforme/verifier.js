@@ -1091,9 +1091,14 @@ const THEMES = require('../commun/themes.js');
     'Une apparence écrite en dur se retrouverait à deux endroits.');
   /* Les règles des autres apparences restent dans la feuille de style :
      elles ne s'appliquent jamais sans attribut, et elles permettent de
-     revenir sur le choix en changeant une ligne. */
+     revenir sur le choix en changeant une ligne.
+
+     « Sobre » est exclu de ce décompte, et pas par commodité : c'est la
+     palette de base, celle qui vit dans :root sans attribut. Elle n'a
+     donc pas de bloc html[data-theme="sobre"], et elle reste appliquée
+     dès qu'aucune autre ne l'est. */
   verifier('suivi/index.html — les autres apparences restent disponibles',
-    THEMES.liste.filter(t => t.id !== THEMES.defaut)
+    THEMES.liste.filter(t => t.id !== THEMES.defaut && t.id !== 'sobre')
       .every(t => srcHtml.indexOf('data-theme="' + t.id + '"') !== -1));
 
   /* --- 9.11 PLUS AUCUNE BARRE D'ESSAI.
