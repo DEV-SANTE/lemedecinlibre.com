@@ -1162,6 +1162,46 @@ section('10. Dispositions — aucune section escamotée');
     .match(/'([a-z]+)'/g) || [];
   const grille = sousGrille.map(x => x.replace(/'/g, ''))
     .concat(['cockpit', 'lire', 'vignettes', 'graphique']);
+
+  /* BARRE LATÉRALE : aucune entrée morte. Chaque entrée mène soit à une
+     section réelle, soit à un domaine réel, soit à un écran « à venir »
+     qui dit ce qu'il contiendra. Une entrée qui ne mène nulle part est
+     le défaut le plus courant des barres latérales — et celui qu'on
+     cesse de voir dès qu'on s'y est habitué. */
+  const blocLat = (src.match(/const LATERAL\s*=\s*\[([\s\S]*?)\n\];/) || [])[1] || '';
+  const entrees = (blocLat.match(/id:\s*'([^']+)'/g) || [])
+    .map(x => x.replace(/id:\s*'([^']+)'/, '$1'));
+  verifier('suivi.js — barre latérale fournie (' + entrees.length + ' entrées)',
+    entrees.length >= 15);
+
+  const DOMLAT = require('../commun/domaines.js');
+  const blocAv = (src.match(/const A_VENIR\s*=\s*\{([\s\S]*?)\n\};/) || [])[1] || '';
+  const mortes = entrees.filter(e => {
+    if (e === 'apercu') return false;
+    if (e.indexOf('section:') === 0) return cles.indexOf(e.slice(8)) === -1;
+    if (e.indexOf('dom:') === 0) return !DOMLAT.trouver(e.slice(4));
+    if (e.indexOf('avenir:') === 0) return blocAv.indexOf(e.slice(7) + ':') === -1;
+    return true;
+  });
+  verifier('suivi.js — aucune entrée de barre latérale ne mène nulle part', mortes.length === 0,
+    mortes.length ? 'Entrées mortes : ' + mortes.join(', ') : null);
+
+  /* Un « bientôt disponible » sans raison écrite reste trois ans. Chaque
+     module à venir doit dire ce qu'il contiendra ET ce qui manque. */
+  const clesAv = (blocAv.match(/\n  ([a-z]+):\s*\{/g) || []).map(x => x.trim().replace(':', '').replace('{', '').trim());
+  verifier('suivi.js — modules à venir déclarés (' + clesAv.length + ')', clesAv.length >= 5);
+  const sansRaison = clesAv.filter(k => {
+    const m = new RegExp(k + ":[\\s\\S]{0,900}?manque:").exec(blocAv);
+    return !m;
+  });
+  verifier('suivi.js — chaque module à venir dit ce qui manque', sansRaison.length === 0,
+    sansRaison.length ? 'Sans raison écrite : ' + sansRaison.join(', ') : null);
+  verifier('suivi.js — les modules à venir sont annoncés comme non actifs',
+    /pas pour laisser croire que c’est en service/.test(src));
+  /* Les « insights » automatiques de la maquette sont nommés comme
+     écartés, pas oubliés. */
+  verifier('suivi.js — le refus des interprétations automatiques des objets connectés est écrit',
+    /bonne récupération/.test(src) && /ne sera pas\s*\n?\s*repris|s’interdira de calculer/.test(src));
   const perdues = cles.filter(k => grille.indexOf(k) === -1);
   verifier('suivi.js — la disposition Domaines atteint les dix sections', perdues.length === 0,
     perdues.length ? 'Inatteignables depuis la grille : ' + perdues.join(', ') : null);
