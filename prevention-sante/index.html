@@ -280,16 +280,31 @@ figure{margin:0}
 .callout .ico{color:var(--pri-d);flex:0 0 24px;margin-top:2px}
 
 /* ---------- faq ---------- */
-.faq{border-top:1px solid var(--line)}
-.faq details{border-bottom:1px solid var(--line)}
-.faq summary{padding:23px 48px 23px 0;font-size:15.3px;font-weight:580;cursor:pointer;
-  position:relative;list-style:none;letter-spacing:-.018em}
-.faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"";position:absolute;right:9px;top:30px;width:10px;height:10px;
-  border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);
-  transform:rotate(45deg);transition:transform .18s}
-.faq details[open] summary::after{transform:rotate(-135deg);top:32px}
-.faq .a{padding:0 48px 25px 0;font-size:14.4px;color:var(--ink-2);max-width:76ch}
+/* ---------------------------------------------------------------------
+   QUESTIONS DES DIRECTIONS — CARTES VISIBLES, PLUS UN ACCORDÉON
+
+   Ces six réponses étaient repliées dans un accordéon. Elles sont
+   pourtant ce qu'un DRH vient chercher : la confidentialité, la
+   différence avec la médecine du travail, qui paie quoi. Un contenu qui
+   décide d'un achat ne doit pas demander un clic pour être lu — surtout
+   la première, « aurons-nous accès aux résultats », dont la réponse est
+   « non, jamais » et qu'il valait mieux ne pas cacher.
+
+   L'accordéon avait un avantage, une page plus courte, et un
+   inconvénient, personne ne clique. En cartes, la page s'allonge d'un
+   écran et se lit sans geste. Les mots qui portent la réponse sont en
+   gras : on peut ne lire que ceux-là.
+   ------------------------------------------------------------------ */
+.qr{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.qr-c{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);
+  padding:22px 24px 24px;box-shadow:var(--sh-s)}
+.qr-k{font-size:10.6px;font-weight:620;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--pri);margin-bottom:9px}
+.qr-q{font-size:15px;font-weight:600;letter-spacing:-.02em;color:var(--ink);line-height:1.32}
+.qr-a{font-size:13.6px;color:var(--ink-2);line-height:1.66;margin-top:10px;max-width:60ch}
+.qr-a b{color:var(--ink);font-weight:600}
+
+/* Les règles de l'accordéon ont été retirées avec lui. */
 
 /* ---------- form ---------- */
 form{display:grid;gap:16px}
@@ -936,49 +951,37 @@ footer a{color:#c3dae1}
       <p class="eyebrow">Questions fréquentes</p>
       <h2 class="h2">Ce que les directions nous demandent.</h2>
     </div>
-    <div class="faq">
-      <details>
-        <summary>Aurons-nous accès aux résultats de nos collaborateurs ?</summary>
-        <p class="a">Non, jamais. Vous recevez un bilan collectif anonymisé : taux de
-        participation et grands indicateurs agrégés, construits de façon à interdire toute
-        réidentification. Aucun résultat, diagnostic, motif de consultation ni nom de
-        participant ne vous est communiqué.</p>
-      </details>
-      <details>
-        <summary>Quelle différence avec la médecine du travail ?</summary>
-        <p class="a">Le suivi en santé au travail répond à une obligation légale, porte sur
-        l'aptitude et relève d'un service dédié. Notre parcours est distinct, volontaire, et
-        porte sur la prévention personnelle. Il ne s'y substitue pas et ne dispense d'aucune
-        obligation.</p>
-      </details>
-      <details>
-        <summary>Que se passe-t-il si un examen coûteux est nécessaire ?</summary>
-        <p class="a">Les examens médicalement indiqués sont pris en charge dans les
-        conditions habituelles de l'Assurance maladie et de la complémentaire santé, au
-        tarif conventionnel et sans dépassement d'honoraires. Les analyses non prises en
-        charge sont facultatives, proposées uniquement si le médecin les estime utiles, et
-        font l'objet d'un devis signé avant réalisation.</p>
-      </details>
-      <details>
-        <summary>Un collaborateur peut-il choisir où sont faits ses examens ?</summary>
-        <p class="a">Oui. Le choix du centre et du laboratoire lui appartient, il est
-        présenté à chaque étape du parcours et il est effectif. Le référencement des
-        partenaires est non exclusif.</p>
-      </details>
-      <details>
-        <summary>Combien de temps cela prend-il pour un collaborateur ?</summary>
-        <p class="a">Le questionnaire se remplit en une quinzaine de minutes avant la visite.
-        La visite elle-même dépend de ce que le médecin retient : les examens réalisables sur
-        place le sont dans la même venue quand c'est possible, ce qui évite les déplacements
-        multiples.</p>
-      </details>
-      <details>
-        <summary>Comment se déroule la mise en place ?</summary>
-        <p class="a">Une convention définit le périmètre, l'effectif concerné et les
-        modalités. Nous fournissons les supports de communication interne, les collaborateurs
-        prennent rendez-vous directement, et un point d'étape régulier permet de suivre la
-        participation.</p>
-      </details>
+    <div class="qr">
+      <article class="qr-c">
+        <p class="qr-k">Confidentialité</p>
+        <h3 class="qr-q">Aurons-nous accès aux résultats de nos collaborateurs ?</h3>
+        <p class="qr-a"><b>Non, jamais.</b> Vous recevez un bilan collectif anonymisé : taux de participation et grands indicateurs agrégés, construits de façon à interdire toute réidentification. Aucun résultat, diagnostic, motif de consultation ni nom de participant ne vous est communiqué.</p>
+      </article>
+      <article class="qr-c">
+        <p class="qr-k">Médecine du travail</p>
+        <h3 class="qr-q">Quelle différence avec la médecine du travail ?</h3>
+        <p class="qr-a">Le suivi en santé au travail répond à une obligation légale, porte sur l’aptitude et relève d’un service dédié. Notre parcours est distinct, volontaire, et porte sur la prévention personnelle. <b>Il ne s’y substitue pas et ne dispense d’aucune obligation.</b></p>
+      </article>
+      <article class="qr-c">
+        <p class="qr-k">Coût des examens</p>
+        <h3 class="qr-q">Que se passe-t-il si un examen coûteux est nécessaire ?</h3>
+        <p class="qr-a">Les examens médicalement indiqués sont pris en charge dans les conditions habituelles de l’Assurance maladie et de la complémentaire santé, au tarif conventionnel et sans dépassement d’honoraires. Les analyses non prises en charge sont facultatives et font l’objet d’un <b>devis signé avant réalisation</b>.</p>
+      </article>
+      <article class="qr-c">
+        <p class="qr-k">Liberté de choix</p>
+        <h3 class="qr-q">Un collaborateur peut-il choisir où sont faits ses examens ?</h3>
+        <p class="qr-a"><b>Oui.</b> Le choix du centre et du laboratoire lui appartient, il est présenté à chaque étape du parcours et il est effectif. Le référencement des partenaires est non exclusif.</p>
+      </article>
+      <article class="qr-c">
+        <p class="qr-k">Temps mobilisé</p>
+        <h3 class="qr-q">Combien de temps cela prend-il pour un collaborateur ?</h3>
+        <p class="qr-a">Le questionnaire se remplit en une quinzaine de minutes avant la visite. La visite dépend de ce que le médecin retient : les examens réalisables sur place le sont <b>dans la même venue</b> quand c’est possible, ce qui évite les déplacements multiples.</p>
+      </article>
+      <article class="qr-c">
+        <p class="qr-k">Mise en place</p>
+        <h3 class="qr-q">Comment se déroule la mise en place ?</h3>
+        <p class="qr-a">Une convention définit le périmètre, l’effectif concerné et les modalités. Nous fournissons les supports de communication interne, les collaborateurs prennent rendez-vous directement, et un point d’étape régulier permet de suivre la participation.</p>
+      </article>
     </div>
   </div>
 </section>
