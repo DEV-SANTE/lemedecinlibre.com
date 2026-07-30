@@ -57,12 +57,19 @@ var VISUELS = {
        - image locale    -> partout, déclarée ici, fichier présent,
          sous budget de poids.
 
-     PROVENANCE. Illustrations produites avec v0.app, reprises de la
-     maquette fournie par le donneur d'ordre. Droits détenus par le
-     Groupe Dev Santé, sur déclaration du 30 juillet 2026. Cette phrase
-     n'est pas une formalité : elle date et nomme la personne qui
-     affirme détenir les droits, ce qui est le minimum si la question
-     est posée un jour.
+     PROVENANCE. Photographies reprises de la maquette v0.app fournie
+     par le donneur d'ordre — dossier public/photos, celui que la
+     maquette utilise réellement pour ses cartes de domaine. Droits
+     détenus par le Groupe Dev Santé, sur déclaration du 30 juillet
+     2026. Cette phrase n'est pas une formalité : elle date et nomme la
+     personne qui affirme détenir les droits, ce qui est le minimum si
+     la question est posée un jour.
+
+     UNE ERREUR À NE PAS REFAIRE. Le zip contient DEUX jeux d'images :
+     public/domains (illustrations 3D) et public/photos (photographies).
+     Seul le second est utilisé par les cartes de domaine. J'ai d'abord
+     extrait le mauvais dossier, ce qui a produit des cartes illustrées
+     là où la maquette montre des photographies.
 
      Une réserve à connaître, sans conséquence sur l'usage : le statut
      d'auteur d'une image produite par un modèle génératif n'est pas
@@ -70,38 +77,57 @@ var VISUELS = {
      utiliser ; cela limiterait votre capacité à en interdire la reprise
      par un tiers.
 
-     POIDS. Les originaux pesaient 7,3 Mo pour seize fichiers, sur une
-     page qui les affiche tous. Recadrés au format de la carte et
-     réencodés, ils pèsent 398 Ko au total. Sur un téléphone en 4G, la
-     différence n'est pas cosmétique.
+     POIDS. Les originaux pesaient 26,8 Mo pour seize fichiers, sur une
+     page qui les affiche tous. Recadrés à 720 x 450 — la carte fait
+     environ 300 points de large, donc le double pour un écran dense —
+     et réencodés, ils pèsent 716 Ko au total. Sur un téléphone en 4G,
+     la différence n'est pas cosmétique.
 
-     SUJETS. Illustrations d'organes et d'objets, jamais de personne.
-     La réserve de l'article R.4127-19-1 ne s'applique donc pas. En
-     revanche le registre est doux, presque enfantin sur certaines —
-     la lune du sommeil a un visage souriant. Sur un écran où quelqu'un
-     lit qu'un examen doit être recontrôlé, c'est un choix éditorial
-     assumé, pas un détail : à revoir si le ton paraît minimiser.
+     Le budget par fichier est passé de 60 à 85 Ko : une photographie
+     compresse nettement moins bien qu'un aplat de couleur, et descendre
+     plus bas se voit. Le chargement reste différé, donc seules les
+     cartes visibles sont téléchargées.
+
+     SUJETS, ET UNE LIMITE À TENIR. Ce sont des photographies de scènes
+     de vie : un homme qui court, une femme qui dort, des légumes, un
+     verre d'eau. Plusieurs montrent des personnes identifiables, et
+     celle du domaine « peau » montre une soignante examinant un patient
+     au dermatoscope.
+
+     Ces images sont ici sur une page privée, derrière un compte, dans
+     l'espace personnel du patient. L'article R.4127-19-1 encadre la
+     communication VERS LE PUBLIC : une photographie décorative dans un
+     dossier consulté par son titulaire n'en relève pas. La réserve que
+     j'avais opposée aux visages sur la page employeurs ne s'applique
+     donc pas ici.
+
+     En revanche elle s'appliquerait telle quelle si l'une de ces images
+     passait un jour sur index.html : une soignante en situation de soin,
+     sur une page qui vend un parcours, se lit comme une représentation
+     de l'équipe. C'est pour cela que le vérificateur sépare les deux
+     régimes, et que ces seize fichiers sont déclarés pour les pages de
+     l'espace patient.
   ================================================================== */
   dossierLocal: 'images/domaines/',
-  poidsMaxKo: 60,
+  poidsMaxKo: 85,
 
   locales: [
-    { id: 'cardiovasculaire',   sujet: 'Illustration stylisée d’un cœur et de ses vaisseaux.' },
-    { id: 'metabolisme',        sujet: 'Illustration stylisée évoquant la gestion du sucre et de l’énergie.' },
-    { id: 'hematologie',        sujet: 'Illustration stylisée de cellules sanguines.' },
-    { id: 'foie',               sujet: 'Illustration stylisée d’un foie.' },
-    { id: 'rein',               sujet: 'Illustration stylisée d’un rein.' },
-    { id: 'thyroide',           sujet: 'Illustration stylisée de la glande thyroïde.' },
-    { id: 'nutrition',          sujet: 'Illustration stylisée d’aliments et de vitamines.' },
-    { id: 'condition-physique', sujet: 'Illustration stylisée évoquant l’activité physique.' },
-    { id: 'respiration',        sujet: 'Illustration stylisée de poumons.' },
-    { id: 'sommeil',            sujet: 'Illustration stylisée d’un croissant de lune sur un oreiller.' },
-    { id: 'inflammation',       sujet: 'Illustration stylisée évoquant une réaction inflammatoire.' },
-    { id: 'osseuse',            sujet: 'Illustration stylisée d’un os.' },
-    { id: 'vision',             sujet: 'Illustration stylisée d’un œil.' },
-    { id: 'audition',           sujet: 'Illustration stylisée d’une oreille.' },
-    { id: 'peau',               sujet: 'Illustration stylisée d’un grain de beauté examiné.' },
-    { id: 'depistage',          sujet: 'Illustration stylisée d’une loupe au-dessus de cellules.' }
+    { id: 'cardiovasculaire',   sujet: 'Un homme court sur un sentier en bord de mer au lever du jour.' },
+    { id: 'metabolisme',        sujet: 'Un bol de céréales et de fruits frais sur une table claire.' },
+    { id: 'hematologie',        sujet: 'Des tubes de prélèvement remplis, alignés dans un support de laboratoire.' },
+    { id: 'foie',               sujet: 'Des légumes verts et de l’huile sur une planche, devant une fenêtre.' },
+    { id: 'rein',               sujet: 'De l’eau versée dans un verre, en gros plan.' },
+    { id: 'thyroide',           sujet: 'Une femme, main posée à la base du cou, dans une lumière douce.' },
+    { id: 'nutrition',          sujet: 'Un étal de fruits et légumes colorés vus de dessus.' },
+    { id: 'condition-physique', sujet: 'Une personne en tenue de sport marchant en extérieur.' },
+    { id: 'respiration',        sujet: 'Une femme respire, debout dans une forêt.' },
+    { id: 'sommeil',            sujet: 'Une femme dort dans une chambre claire.' },
+    { id: 'inflammation',       sujet: 'Une table dressée avec des aliments frais.' },
+    { id: 'osseuse',            sujet: 'Des produits laitiers et des fruits secs sur un plan de travail.' },
+    { id: 'vision',             sujet: 'Un examen de la vue, gros plan sur un équipement d’optique.' },
+    { id: 'audition',           sujet: 'Un gros plan sur une oreille, lumière douce.' },
+    { id: 'peau',               sujet: 'Une soignante examine la peau d’un patient au dermatoscope.' },
+    { id: 'depistage',          sujet: 'Un environnement de consultation, matériel posé sur un plan de travail.' }
   ],
 
   photos: [
