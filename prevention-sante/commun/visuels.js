@@ -111,6 +111,46 @@ var VISUELS = {
   dossierLocal: 'images/domaines/',
   poidsMaxKo: 85,
 
+  /* ==================================================================
+     PHOTOGRAPHIE DE FOND DU BANDEAU DE BILAN
+
+     Déclarée à part des seize illustrations de domaine, pour une raison
+     de fond : celles-là sont indexées sur un identifiant de domaine et
+     doivent le couvrir en totalité, celle-ci n'est rattachée à aucun
+     domaine. Les mélanger obligerait à relâcher le contrôle « chaque
+     domaine a son illustration », qui est justement celui qui empêche
+     une carte de s'afficher vide.
+
+     Même provenance et mêmes droits que les autres : maquette v0.app,
+     dossier public/photos, droits détenus par le Groupe Dev Santé sur
+     déclaration du 30 juillet 2026.
+
+     UN VOILE, PAS UN EFFET. Le texte du bandeau est blanc. Sur une
+     photographie claire — ici un couloir très lumineux — du blanc sur
+     du blanc ne se lit pas. Le voile bleu dégradé n'est donc pas une
+     décoration : c'est lui qui tient le contraste, et le vérificateur
+     contrôle qu'il part de la couleur pleine du thème et qu'il ne
+     descend jamais en dessous d'un tiers d'opacité, même du côté où la
+     photographie doit rester visible.
+
+     TEXTE ALTERNATIF VIDE, VOLONTAIREMENT. Le sujet est décrit ici pour
+     la provenance, mais l'image est publiée avec alt vide : elle
+     n'apporte aucune information. Annoncer « un couloir de clinique
+     lumineux » au milieu d'un récapitulatif de bilan ajouterait du bruit
+     à qui écoute la page, sans rien lui apprendre.
+  ================================================================== */
+  dossierBandeau: 'images/bandeau/',
+  poidsMaxBandeauKo: 150,
+
+  bandeaux: [
+    {
+      id: 'hero-clinique',
+      sujet: 'Un couloir de centre de santé très lumineux, baie vitrée sur un jardin, aucun visage.',
+      emploi: 'Fond du bandeau de bilan, dans l’espace patient.',
+      voile: true
+    }
+  ],
+
   locales: [
     { id: 'cardiovasculaire',   sujet: 'Un homme court sur un sentier en bord de mer au lever du jour.' },
     { id: 'metabolisme',        sujet: 'Un bol de céréales et de fruits frais sur une table claire.' },
