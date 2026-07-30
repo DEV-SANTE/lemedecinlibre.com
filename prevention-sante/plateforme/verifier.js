@@ -1066,21 +1066,43 @@ const THEMES = require('../commun/themes.js');
     /mqm-tag[\s\S]{0,320}LIB_COULEUR\[[^\]]+\]\.charAt\(0\)/.test(srcSuivi),
     'La marque ne doit pas reposer sur la seule couleur.');
 
-  /* --- 9.10 La page charge le module, et la barre est bien hors du
-         contenu reconstruit à chaque rendu. --- */
+  /* --- 9.10 La page charge le module, et L'APPARENCE EST FIXÉE.
+
+         Ces deux contrôles disaient l'inverse jusqu'au 30 juillet 2026 :
+         ils vérifiaient que le sélecteur d'apparence était présent. Il a
+         été retiré, le choix graphique étant arrêté. Un contrôle qui
+         exige la présence de ce qui vient d'être supprimé n'a aucune
+         valeur — il fallait donc le retourner, pas le désactiver. Ce
+         qu'il garantit désormais : personne ne remet un sélecteur
+         d'apparence par accident, et l'apparence continue d'être lue dans
+         le catalogue au lieu d'être écrite en dur dans le rendu. --- */
   const srcHtml = lire('suivi/index.html');
   verifier('suivi/index.html — le module de thèmes est chargé',
     /commun\/themes\.js/.test(srcHtml));
-  verifier('suivi/index.html — la barre de choix est hors du contenu',
-    srcHtml.indexOf('id="th-b"') !== -1 &&
-    srcHtml.indexOf('id="th-b"') < srcHtml.indexOf('<main id="app">'));
-  verifier('suivi/index.html — les cinq apparences ont leurs règles',
+  verifier('suivi/index.html — aucun sélecteur d’apparence publié',
+    srcHtml.indexOf('id="th-b"') === -1,
+    srcHtml.indexOf('id="th-b"') !== -1
+      ? 'Le choix graphique est fait : le sélecteur ne doit pas revenir.' : null);
+  verifier('suivi.js — aucun bouton de changement d’apparence',
+    !/data-t="/.test(srcSuivi),
+    /data-t="/.test(srcSuivi) ? 'Un bouton d’apparence a été réintroduit.' : null);
+  verifier('suivi.js — l’apparence est une constante, lue dans le catalogue',
+    /const theme = THEMES\.defaut;/.test(codeSeul(srcSuivi)),
+    'Une apparence écrite en dur se retrouverait à deux endroits.');
+  /* Les règles des autres apparences restent dans la feuille de style :
+     elles ne s'appliquent jamais sans attribut, et elles permettent de
+     revenir sur le choix en changeant une ligne. */
+  verifier('suivi/index.html — les autres apparences restent disponibles',
     THEMES.liste.filter(t => t.id !== THEMES.defaut)
       .every(t => srcHtml.indexOf('data-theme="' + t.id + '"') !== -1));
 
-  /* --- 9.11 La barre est provisoire, et le dit. --- */
-  verifier('suivi.js — la barre de thèmes est annoncée comme provisoire',
-    /Provisoire/i.test(srcSuivi) && /retirer/i.test(srcSuivi));
+  /* --- 9.11 La barre qui reste — la disposition — est provisoire, et le
+         dit. L'agencement, lui, n'est pas encore arrêté. --- */
+  verifier('suivi.js — la barre de disposition est annoncée comme provisoire',
+    /barreDisposition/.test(srcSuivi) && /partira/i.test(srcSuivi));
+  verifier('suivi/index.html — le sélecteur de disposition est hors du contenu',
+    srcHtml.indexOf('id="th-disp"') !== -1 &&
+    srcHtml.indexOf('id="th-disp"') < srcHtml.indexOf('<main id="app">'));
 })();
 
 /* ==================================================================
