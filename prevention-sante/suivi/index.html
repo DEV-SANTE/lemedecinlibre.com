@@ -684,11 +684,68 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
 .dt-syn{font-size:15px;color:var(--ink);line-height:1.6;margin-top:9px}
 .dt-sig{font-family:var(--mono);font-size:11.8px;color:var(--ink-4);margin-top:9px}
 .dt-avis.dc-neutre .dt-past{color:var(--ink-3)}
+
+/* ---------- vue d'ensemble : bandeau, étapes, points ----------
+   Le bandeau de v0 affichait « complété à 82 % » en très gros. Un
+   pourcentage nu sur une page de santé se lit comme une note. On affiche
+   donc le compte, et le pourcentage ne sert qu'à remplir la barre.
+
+   Les pastilles d'étape n'emploient que le bleu et le gris. Reprendre le
+   vert de « validé » aurait donné deux sens à une même couleur, juste à
+   côté du vert de « dans les valeurs usuelles » : c'est la seule licence
+   que je n'ai pas prise avec la maquette.
+   ------------------------------------------------------------------ */
+.bilan-b{background:linear-gradient(135deg,var(--pri) 0%,var(--pri-2) 100%);
+  border-radius:var(--r-xl);padding:30px 32px;margin-bottom:22px;color:#fff}
+.bb-k{font-size:11px;font-weight:720;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.72)}
+.bb-t{font-size:clamp(22px,3vw,30px);font-weight:740;letter-spacing:-.03em;margin-top:11px;
+  color:#fff}
+.bb-s{font-size:15px;color:rgba(255,255,255,.86);margin-top:9px;max-width:64ch}
+.bb-jauge{height:8px;border-radius:999px;background:rgba(255,255,255,.24);margin-top:20px;
+  overflow:hidden}
+.bb-jauge>i{display:block;height:100%;background:#fff;border-radius:999px}
+.bb-n{font-size:12.8px;color:rgba(255,255,255,.72);margin-top:12px;max-width:72ch;line-height:1.55}
+
+.etapes{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:0}
+.et{position:relative;padding:0 14px 0 0}
+.et::before{content:"";position:absolute;left:11px;right:0;top:11px;height:2px;
+  background:var(--line);border-radius:2px}
+.et:last-child::before{display:none}
+.et-p{position:relative;z-index:2;display:grid;place-items:center;width:24px;height:24px;
+  border-radius:50%;background:var(--card);border:2px solid var(--ink-5);box-sizing:border-box;
+  margin-bottom:13px;color:#fff}
+.et-p .ico{width:13px;height:13px;flex:0 0 13px;stroke-width:3}
+.et-fait .et-p{background:var(--pri);border-color:var(--pri)}
+.et-encours .et-p{border-color:var(--pri);border-style:dashed}
+.et-n{display:block;font-size:14.2px;font-weight:650;letter-spacing:-.015em;line-height:1.3}
+.et-e{display:block;font-size:11.5px;font-weight:660;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-4);margin-top:6px}
+.et-fait .et-e{color:var(--pri-d)}
+.et-d{display:block;font-size:11.5px;color:var(--ink-5);font-family:var(--mono);margin-top:4px}
+@media(max-width:760px){
+  .etapes{grid-template-columns:1fr;gap:14px}
+  .et{padding:0 0 0 34px}
+  .et::before{left:11px;right:auto;top:24px;bottom:-14px;width:2px;height:auto}
+  .et-p{position:absolute;left:0;top:0;margin:0}
+}
+
+.points{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.pt{padding:16px 18px;border-radius:var(--r);background:var(--mqbg);
+  border:1px solid var(--mqln)}
+.pt-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.pt-d{font-size:11px;font-weight:720;letter-spacing:.1em;text-transform:uppercase;color:var(--dc)}
+.pt-st{display:inline-flex;align-items:center;gap:6px;font-size:11.8px;font-weight:660;
+  color:var(--mq);margin-left:auto}
+.pt-st>i{width:6px;height:6px;border-radius:50%;flex:0 0 6px;background:var(--mq)}
+.pt-c{font-size:15px;color:var(--ink);line-height:1.6}
+.pt-s{font-family:var(--mono);font-size:11.6px;color:var(--ink-4);margin-top:10px}
 </style>
 </head>
 <body>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6.5L9.2 17.3 4 12.1"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.6"/></symbol>
@@ -751,13 +808,13 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=8"></script>
-<script src="../commun/visuels.js?v=8"></script>
-<script src="../commun/domaines.js?v=8"></script>
-<script src="../commun/avis.js?v=8"></script>
-<script src="../commun/themes.js?v=8"></script>
-<script src="../commun/lexique.js?v=8"></script>
-<script src="suivi.js?v=8"></script>
+<script src="../plateforme/biologie.js?v=9"></script>
+<script src="../commun/visuels.js?v=9"></script>
+<script src="../commun/domaines.js?v=9"></script>
+<script src="../commun/avis.js?v=9"></script>
+<script src="../commun/themes.js?v=9"></script>
+<script src="../commun/lexique.js?v=9"></script>
+<script src="suivi.js?v=9"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>

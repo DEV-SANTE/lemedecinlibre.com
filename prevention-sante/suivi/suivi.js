@@ -422,8 +422,47 @@ let compare = null;   /* id du second paramètre, même unité seulement */
 const DISPOSITIONS = [
   { id: 'deroule',  nom: 'Déroulé', resume: 'Tout sur une page' },
   { id: 'rail',     nom: 'Rail et panneau', resume: 'Liste à gauche, détail à droite' },
-  { id: 'domaines', nom: 'Domaines', resume: 'Seize cartes illustrées' }
+  { id: 'domaines', nom: 'Vue d’ensemble', resume: 'Bilan, parcours, seize domaines' }
 ];
+
+/* =====================================================================
+   VUE D'ENSEMBLE — LES DONNÉES D'AVANCEMENT
+
+   Reprises de la maquette v0, avec une correction de formulation. La
+   maquette affichait « Votre bilan est complété à 82 % » en très gros.
+   Un pourcentage nu, sur une page de santé, se lit comme une note : on
+   ne sait pas 82 % de quoi, et le chiffre reste en tête. On affiche donc
+   ce qu'il compte — quatorze examens réalisés sur dix-sept prévus — et
+   le pourcentage n'apparaît que comme repère visuel de la barre.
+
+   CE QUI EST COMPTÉ ICI N'EST PAS UNE INTERPRÉTATION. Compter des
+   examens réalisés, des comptes rendus reçus et des avis posés par le
+   médecin, c'est de l'administratif : aucune valeur mesurée n'entre dans
+   ces nombres. La distinction tient tant que personne n'ajoute un
+   compteur du genre « 3 valeurs hors normes », qui serait une
+   comparaison déguisée en statistique.
+   ===================================================================== */
+const BILAN = {
+  realises: 14, prevus: 17, resultats: 11,
+  prochainRdv: '2026-09-22', lieuRdv: 'Centre de santé B (fictif)',
+  debut: '2026-07-15', synthesePrevue: '2026-09-22'
+};
+
+/* Étapes du parcours. Leur statut est ADMINISTRATIF — fait, pas fait,
+   programmé — et jamais clinique. D'où une règle de couleur que la
+   maquette ne tenait pas : ces pastilles n'utilisent que le bleu et le
+   gris. Reprendre le vert de « validé » aurait donné deux sens à une
+   même couleur, à côté du vert de « dans les valeurs usuelles ». */
+const ETAPES = [
+  { nom: 'Questionnaire initial', etat: 'fait',      quand: '2026-06-28' },
+  { nom: 'Prélèvement biologique', etat: 'fait',     quand: '2026-07-02' },
+  { nom: 'Consultation', etat: 'fait',               quand: '2026-07-15' },
+  { nom: 'Exploration du souffle', etat: 'fait',     quand: '2026-07-15' },
+  { nom: 'Examens complémentaires', etat: 'encours', quand: '2026-08-20' },
+  { nom: 'Synthèse médicale', etat: 'prevu',         quand: '2026-09-22' },
+  { nom: 'Conduite à tenir', etat: 'prevu',          quand: '2026-09-22' }
+];
+const LIB_ETAT = { fait: 'Réalisé', encours: 'Programmé', prevu: 'À programmer' };
 
 /* Domaine ouvert dans la disposition « Domaines ». null = la grille. */
 let domaineOuvert = null;
@@ -520,10 +559,88 @@ if (typeof VISUELS !== 'undefined' && VISUELS.locales) {
 const SOUS_GRILLE = ['parcours', 'actes', 'couverture', 'documents',
                      'glossaire', 'limites'];
 
+function bandeauBilan() {
+  const pct = Math.round((BILAN.realises / BILAN.prevus) * 100);
+  return `
+    <section class="bilan-b">
+      <div class="bb-in">
+        <p class="bb-k">Bilan de prévention en cours</p>
+        <h2 class="bb-t">${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus</h2>
+        <p class="bb-s">Commencé le ${esc(jolieDate(BILAN.debut))}. La synthèse avec votre
+        médecin est prévue le ${esc(jolieDate(BILAN.synthesePrevue))}.</p>
+        <div class="bb-jauge" role="img"
+             aria-label="${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus">
+          <i style="width:${pct}%"></i>
+        </div>
+        <p class="bb-n">Ce compteur suit l’avancement du parcours. Il ne dit rien de vos
+        résultats : un parcours complet à ${pct} % n’est ni une bonne ni une mauvaise nouvelle.</p>
+      </div>
+    </section>`;
+}
+
+function blocEtapes() {
+  return `
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Votre parcours</h2>
+        <p class="b-s">Les grandes étapes, dans l’ordre. Les pastilles disent seulement ce qui
+        est fait ou pas : elles n’emploient jamais les couleurs qui servent aux avis de votre
+        médecin.</p>
+      </div></div>
+      <ol class="etapes">
+        ${ETAPES.map((e, i) => `
+          <li class="et et-${esc(e.etat)}">
+            <span class="et-p">${e.etat === 'fait' ? ic('i-check') : ''}</span>
+            <b class="et-n">${esc(e.nom)}</b>
+            <span class="et-e">${esc(LIB_ETAT[e.etat])}</span>
+            <span class="et-d">${esc(jolieDate(e.quand))}</span>
+          </li>`).join('')}
+      </ol>
+    </section>`;
+}
+
+/* Points à discuter : uniquement des avis SIGNÉS du médecin, et
+   uniquement ceux qu'il a lui-même qualifiés « à surveiller » ou « à
+   interpréter ». Rien n'est sélectionné à partir d'une valeur : la liste
+   est le reflet de ses choix, filtrée sur son propre vocabulaire. */
+function blocPoints() {
+  const points = DOSSIER ? DOMAINES.liste
+    .map(d => ({ d: d, a: Avis.lire(DOSSIER, d.id) }))
+    .filter(x => x.a && (x.a.statut === 'surveiller' || x.a.statut === 'interpreter')) : [];
+
+  return `
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Points à discuter</h2>
+        <p class="b-s">Ce que votre médecin a signalé comme méritant un échange. Chaque ligne
+        porte son nom et la date. Cette liste n’est pas constituée par le logiciel : elle ne
+        contient que ce qu’il a écrit.</p>
+      </div></div>
+      ${points.length ? `
+        <div class="points">
+          ${points.map(x => `
+            <div class="pt m-${esc(TEINTE_AVIS[x.a.statut])}">
+              <div class="pt-h">
+                <span class="pt-d" style="--dc:${x.d.couleur}">${esc(x.d.nom)}</span>
+                <span class="pt-st"><i></i>${esc(Avis.statut(x.a.statut).l)}</span>
+              </div>
+              <p class="pt-c">${x.a.synthese ? esc(x.a.synthese)
+                : 'Domaine signalé, sans phrase écrite.'}</p>
+              <p class="pt-s">${esc(x.a.medecin)} · le ${esc(jolieDate(x.a.date))}</p>
+            </div>`).join('')}
+        </div>`
+      : `<p class="cmp-n">Aucun point n’a été signalé par votre médecin à ce jour. Ce n’est pas
+         une conclusion : c’est l’état de ce qui a été écrit.</p>`}
+    </section>`;
+}
+
 function shellDomaines(S, groupes, p) {
   if (!domaineOuvert) {
     return `
       ${S.cockpit}
+      ${bandeauBilan()}
+      ${blocEtapes()}
+      ${blocPoints()}
       <section class="bloc">
         <div class="b-h"><div>
           <h2>Vos domaines de santé</h2>
