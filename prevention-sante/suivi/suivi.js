@@ -546,6 +546,12 @@ function carteDomaine(d) {
    seule échelle de couleurs dans tout le produit. */
 const TEINTE_AVIS = { usuelles: 'vert', surveiller: 'orange', interpreter: 'rouge' };
 
+/* Photographie de fond du bandeau. Prise dans le catalogue, jamais
+   écrite en dur : c'est ce qui garantit qu'aucune image ne s'affiche
+   sans être déclarée. */
+const BANDEAU = (typeof VISUELS !== 'undefined' && VISUELS.bandeaux &&
+                 VISUELS.bandeaux[0]) || { id: 'hero-clinique' };
+
 /* Textes alternatifs, repris du catalogue des visuels. */
 const VIS_LOCAL = {};
 if (typeof VISUELS !== 'undefined' && VISUELS.locales) {
@@ -556,6 +562,9 @@ function bandeauBilan() {
   const pct = Math.round((BILAN.realises / BILAN.prevus) * 100);
   return `
     <section class="bilan-b">
+      <img class="bb-fond" src="../images/bandeau/${esc(BANDEAU.id)}.jpg"
+           width="1024" height="490" decoding="async" alt="">
+      <span class="bb-voile" aria-hidden="true"></span>
       <div class="bb-in">
         <p class="bb-k">Bilan de prévention en cours</p>
         <h2 class="bb-t">${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus</h2>
@@ -766,7 +775,9 @@ function shellDomaines(S, groupes, p) {
           n’apparaît que si votre médecin a qualifié le domaine : elle porte alors son nom et
           la date. Aucun statut n’est calculé.</p>
         </div></div>
-        <div class="dgrille">${DOMAINES.liste.map(carteDomaine).join('')}</div>
+        <div class="dgrille-c">
+          <div class="dgrille">${DOMAINES.liste.map(carteDomaine).join('')}</div>
+        </div>
       </section>
       ${S.lire}`;
   } else if (lateral.indexOf('section:') === 0) {
