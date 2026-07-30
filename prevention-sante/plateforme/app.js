@@ -695,8 +695,23 @@ function blocReponses(dossier) {
       .filter(Boolean);
 
     if (!lignes.length) return '';
+    /* CE QUE LA PERSONNE A LU AVANT DE RÉPONDRE.
+
+       Les mêmes paragraphes que dans l'espace patient, repliés. Ce n'est
+       pas de la décoration : une réponse s'interprète différemment selon
+       la question telle qu'elle a été posée et le contexte donné autour.
+       Le médecin voit donc exactement ce que la personne avait sous les
+       yeux — même texte, même photographie, même source de fichier. */
+    const lu = (m.paragraphes || []).length ? `
+      <details class="qlu">
+        <summary>Ce que la personne a lu avant de répondre</summary>
+        ${m.photo ? `<img class="qlu-img" src="../images/${esc(m.photo.dossier)}/${esc(m.photo.id)}.jpg"
+             width="720" height="450" loading="lazy" decoding="async" alt="">` : ''}
+        ${m.paragraphes.map(t => `<p class="qlu-p">${esc(t)}</p>`).join('')}
+      </details>` : '';
     return `<section class="bloc">
       <h2>${esc(m.titre)}</h2>
+      ${lu}
       <table class="kv">${lignes.join('')}</table>
     </section>`;
   }).join('');
@@ -953,7 +968,8 @@ function blocDomaines(dossier) {
         return `
         <div class="avis-l ${ouvert ? 'ouvert' : ''}" style="--dc:${d.couleur}">
           <button class="avis-x" data-dom-med="${esc(d.id)}">
-            <span class="avis-pt"></span>
+            <img class="avis-img" src="../images/domaines/${esc(d.id)}.jpg"
+                 width="800" height="500" loading="lazy" decoding="async" alt="">
             <span class="avis-n">${esc(d.nom)}<em>${esc(d.clair)}</em></span>
             ${a ? `<span class="avis-st m-${esc(TEINTE_AVIS_MED[a.statut])}">${esc(st.l)}</span>`
                 : `<span class="avis-st avis-vide">Non commenté</span>`}

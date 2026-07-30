@@ -303,3 +303,28 @@ tr.marque-medecin th{box-shadow:inset 3px 0 0 var(--mq)}
 .avis-st.avis-vide{background:var(--surf);color:var(--ink-4);border-color:var(--line-2)}
 .avis-sig{font-size:11.6px;color:var(--ink-3);line-height:1.55;padding:0 16px 13px 38px}
 .avis-l .mq-form{margin:0 16px 16px;border-top:1px solid var(--line-2);padding-top:15px}
+
+/* ---------------------------------------------------------------------
+   PHOTOGRAPHIES CÔTÉ MÉDECIN
+
+   Les mêmes fichiers que dans l'espace patient, aux mêmes endroits : la
+   photographie du domaine dans la liste à qualifier, celle de la section
+   dans le repli « ce que la personne a lu ». Le médecin et son patient
+   regardent la même chose, ce qui évite les conversations où chacun
+   décrit un écran que l'autre n'a pas vu.
+
+   Toutes locales : cette interface affiche un dossier, aucune requête ne
+   part vers un tiers.
+   ------------------------------------------------------------------ */
+.avis-img{width:52px;height:34px;flex:0 0 52px;border-radius:7px;object-fit:cover;
+  background:var(--surf);display:block}
+.qlu{margin:0 0 16px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surf);padding:11px 14px}
+.qlu>summary{cursor:pointer;font-size:12.4px;font-weight:560;color:var(--pri-d);
+  list-style:none}
+.qlu>summary::-webkit-details-marker{display:none}
+.qlu>summary::before{content:"▸ ";color:var(--ink-4)}
+.qlu[open]>summary::before{content:"▾ "}
+.qlu-img{width:100%;max-width:420px;height:120px;object-fit:cover;border-radius:9px;
+  display:block;margin:12px 0 0;background:var(--blanc)}
+.qlu-p{font-size:13px;color:var(--ink-2);line-height:1.62;margin-top:10px;max-width:72ch}

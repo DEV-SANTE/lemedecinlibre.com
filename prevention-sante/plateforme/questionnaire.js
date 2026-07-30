@@ -1,4 +1,29 @@
 /* =====================================================================
+   LISIBILITÉ DU QUESTIONNAIRE (30 juillet 2026)
+
+   Chaque section porte deux ajouts destinés à la personne qui répond, et
+   à personne d'autre :
+
+     photo       — la photographie du domaine concerné, prise dans le
+                   catalogue local (droits détenus). Elle donne un repère
+                   visuel : on sait de quoi va parler la page avant de
+                   lire la première question.
+     paragraphes — deux paragraphes en langage courant, qui disent
+                   pourquoi ces questions sont posées et ce qu'on fera
+                   des réponses.
+
+   Ces textes sont les MÊMES POUR TOUT LE MONDE et ne dépendent d'aucune
+   réponse déjà donnée : ils décrivent la section, jamais la personne. Un
+   paragraphe qui changerait selon une réponse serait une interprétation
+   déguisée, et le vérificateur le refuse.
+
+   Deux sections n'ont volontairement pas de photographie : « Moral et
+   anxiété » et « Vos attentes ». Illustrer la souffrance psychique, c'est
+   la mettre en scène ; et une page qui demande à quelqu'un ce qu'il
+   attend n'a pas besoin d'une image pour être claire.
+   ===================================================================== */
+
+/* =====================================================================
    QUESTIONNAIRE DE PRÉVENTION — DÉFINITION
    Version 0.1 — données de test uniquement
 
@@ -60,6 +85,11 @@ const QUESTIONNAIRE = {
     {
       id: 'identite',
       titre: 'Identité',
+      photo: { id: 'consultation', dossier: 'modules' },
+      paragraphes: [
+        'Cette première page ne sert qu’à savoir qui vous êtes et à retrouver votre dossier le jour de la visite. Aucune de ces informations n’est utilisée pour autre chose.',
+        'Sur cet environnement de test, n’inscrivez qu’une identité inventée. Rien de ce que vous saisissez ici n’est hébergé chez un hébergeur certifié pour les données de santé.'
+      ],
       intro: 'Dossier de test. N’utilisez que des identités fictives : aucune donnée réelle ne doit être saisie sur cet environnement.',
       questions: [
         { id: 'nom', type: 'text', label: 'Nom (fictif)', required: true },
@@ -75,6 +105,11 @@ const QUESTIONNAIRE = {
     {
       id: 'socle',
       titre: 'Socle',
+      photo: { id: 'condition-physique', dossier: 'domaines' },
+      paragraphes: [
+        'Ces questions sont posées à tout le monde, quel que soit l’âge et quel que soit le motif de la visite. Elles donnent au médecin le contexte sans lequel aucun résultat ne se lit : votre poids, votre tension, ce que vous consommez, ce que vous faites bouger, et ce qui existe dans votre famille.',
+        'Répondez au mieux, sans chercher la précision au gramme. Un ordre de grandeur juste vaut mieux qu’un chiffre exact inventé, et le médecin reprendra tout cela avec vous.'
+      ],
       intro: 'Ces informations sont recueillies pour tous. Elles sont transmises telles quelles au médecin.',
       questions: [
         { id: 'taille', type: 'number', label: 'Taille (cm)', min: 100, max: 250,
@@ -199,6 +234,11 @@ const QUESTIONNAIRE = {
     {
       id: 'respiratoire',
       titre: 'Respiration',
+      photo: { id: 'respiration', dossier: 'domaines' },
+      paragraphes: [
+        'Le souffle se dégrade lentement, sur des années, et on s’y adapte sans s’en apercevoir : on prend l’ascenseur, on marche moins vite, on porte moins. C’est pour cela qu’on pose la question au lieu d’attendre qu’elle soit posée.',
+        'Les cinq premières questions sont celles d’un questionnaire de repérage publié, reproduites mot pour mot. Elles ne donnent aucun score ici : elles sont transmises telles quelles au médecin, qui décidera avec vous si une mesure du souffle est utile.'
+      ],
       intro: 'Les cinq premières questions reproduisent mot pour mot un questionnaire publié de repérage. Les suivantes complètent le tableau clinique.',
       questions: [
         /* ------------------------------------------------------------
@@ -262,6 +302,11 @@ const QUESTIONNAIRE = {
     {
       id: 'sommeil',
       titre: 'Sommeil',
+      photo: { id: 'sommeil', dossier: 'domaines' },
+      paragraphes: [
+        'Un sommeil trop court ou trop haché finit par se voir ailleurs : la tension, le poids, l’humeur, la vigilance au volant. Ces questions cherchent moins la performance que la gêne réelle dans la journée.',
+        'Si vous ne savez pas répondre parce que vous dormez seul et que personne ne vous a jamais dit si vous ronflez, dites-le simplement au médecin. C’est une information en soi.'
+      ],
       intro: 'Ces questions portent sur votre sommeil et sur la somnolence en journée.',
       questions: [
         { id: 'som_ronflement', type: 'radio', label: 'Ronflez-vous fortement, au point d’être entendu à travers une porte ?', options: OUI_NON, instrument: 'STOP-BANG' },
@@ -295,6 +340,11 @@ const QUESTIONNAIRE = {
     {
       id: 'cutane',
       titre: 'Peau',
+      photo: { id: 'peau', dossier: 'domaines' },
+      paragraphes: [
+        'La peau est le seul organe qu’on peut examiner entièrement à l’œil nu. Ce qui compte n’est pas le nombre de grains de beauté, mais le fait qu’un seul d’entre eux ait changé.',
+        'Les coups de soleil de l’enfance comptent encore aujourd’hui : c’est pour cela qu’on vous demande de remonter loin, même si cela paraît sans rapport.'
+      ],
       intro: 'La lecture des images et l’examen de la peau sont réalisés par un dermatologue. Aucune analyse automatique n’est faite.',
       questions: [
         { id: 'cut_lesion_nouvelle', type: 'radio', label: 'Avez-vous remarqué une tache ou un grain de beauté nouveau, ou qui a changé, au cours des douze derniers mois ?', options: OUI_NON },
@@ -339,6 +389,11 @@ const QUESTIONNAIRE = {
     {
       id: 'cardio',
       titre: 'Cœur et vaisseaux',
+      photo: { id: 'cardiovasculaire', dossier: 'domaines' },
+      paragraphes: [
+        'Le risque cardiovasculaire ne se lit jamais sur un seul chiffre. Il se construit avec l’âge, la tension, le tabac, les graisses du sang et ce qui est arrivé à vos parents — et c’est pour cela qu’aucune de ces questions ne suffit à elle seule.',
+        'Les antécédents familiaux qui pèsent sont ceux qui sont arrivés tôt : un accident cardiaque avant cinquante-cinq ans chez un homme de la famille, avant soixante-cinq chez une femme. Une grand-mère qui a fait un infarctus à quatre-vingt-douze ans ne dit rien de vous.'
+      ],
       questions: [
         { id: 'cv_hta_connue', type: 'radio', label: 'Une hypertension artérielle vous a-t-elle déjà été annoncée ?', options: OUI_NON },
         { id: 'cv_diabete', type: 'radio', label: 'Un diabète vous a-t-il déjà été annoncé ?', options: OUI_NON },
@@ -360,6 +415,11 @@ const QUESTIONNAIRE = {
     {
       id: 'vision',
       titre: 'Vision',
+      photo: { id: 'vision', dossier: 'domaines' },
+      paragraphes: [
+        'La vue baisse par les deux yeux à la fois, et le cerveau compense l’un par l’autre : on peut perdre beaucoup d’un côté sans le remarquer. Fermer un œil puis l’autre suffit souvent à s’en apercevoir.',
+        'La pression à l’intérieur de l’œil est un sujet distinct de la netteté de la vision : elle peut abîmer le nerf optique sans que la vue centrale change, et longtemps.'
+      ],
       questions: [
         { id: 'vis_dernier_examen', type: 'radio', label: 'À quand remonte votre dernier examen des yeux ?',
           options: [
@@ -381,6 +441,11 @@ const QUESTIONNAIRE = {
     {
       id: 'audition',
       titre: 'Audition',
+      photo: { id: 'audition', dossier: 'domaines' },
+      paragraphes: [
+        'La perte d’audition s’installe si progressivement que ce sont presque toujours les proches qui la remarquent d’abord — le volume de la télévision, les répétitions dans les conversations.',
+        'L’exposition au bruit, professionnelle ou de loisir, laisse des traces qui ne se réparent pas. La signaler ne sert pas à juger : elle explique un audiogramme.'
+      ],
       intro: 'Ces questions portent sur la gêne ressentie au quotidien.',
       questions: [
         { id: 'aud_expo_pro', type: 'radio', label: 'Êtes-vous ou avez-vous été exposé à un bruit important au travail ?', options: OUI_NON },
@@ -410,6 +475,10 @@ const QUESTIONNAIRE = {
     {
       id: 'mental',
       titre: 'Moral et anxiété',
+      paragraphes: [
+        'Ces questions sont les plus difficiles à poser par écrit, et probablement les plus utiles. Elles n’évaluent pas votre caractère : elles décrivent les deux dernières semaines, telles qu’elles ont été.',
+        'Vous pouvez ne pas répondre. Vous pouvez aussi répondre et demander à n’en parler qu’oralement : dites-le au médecin, il le respectera. Si quelque chose est difficile maintenant, dites-le-lui sans attendre la fin du questionnaire.'
+      ],
       intro: 'Ces questions sont posées à tout le monde, dans le même ordre et en totalité. Une consultation médicale dédiée est prévue quelle que soit la réponse. Si vous ne souhaitez pas répondre, laissez vide et parlez-en au médecin.',
       questions: [
         /* PHQ-9 — domaine public, aucune autorisation requise.
@@ -447,6 +516,11 @@ const QUESTIONNAIRE = {
     {
       id: 'depistages',
       titre: 'Dépistages',
+      photo: { id: 'depistage', dossier: 'domaines' },
+      paragraphes: [
+        'Le dépistage consiste à chercher quelque chose chez quelqu’un qui n’a aucun symptôme. Il n’est organisé que pour quelques cancers, ceux pour lesquels trouver plus tôt change réellement la suite.',
+        'Ces questions servent à savoir où vous en êtes, pas à vous rappeler à l’ordre. Un dépistage n’est pas une obligation : c’est une décision qui vous appartient, et elle se prend en connaissant aussi ses inconvénients.'
+      ],
       intro: 'Ces questions dépendent uniquement de votre âge et de votre sexe.',
       questions: [
         { id: 'dep_colorectal', type: 'radio', label: 'Avez-vous réalisé un test de dépistage du cancer colorectal ?',
@@ -489,6 +563,11 @@ const QUESTIONNAIRE = {
     {
       id: 'biologie',
       titre: 'Analyses et préparation',
+      photo: { id: 'hematologie', dossier: 'domaines' },
+      paragraphes: [
+        'La prise de sang n’est pas décidée à l’avance : ce sont vos réponses et l’examen du médecin qui déterminent ce qui sera demandé. Ces questions préparent ce moment.',
+        'À jeun ou non, cela dépend des analyses : ce sera écrit sur votre ordonnance. Être à jeun sans que ce soit demandé n’améliore rien, ne pas l’être quand c’est demandé oblige à revenir.'
+      ],
       questions: [
         { id: 'bio_dernier_bilan', type: 'radio', label: 'À quand remonte votre dernière prise de sang ?',
           options: [
@@ -510,6 +589,10 @@ const QUESTIONNAIRE = {
     {
       id: 'attentes',
       titre: 'Vos attentes',
+      paragraphes: [
+        'Cette dernière page est celle qui est le plus souvent lue en consultation, parce qu’elle dit ce que vous, vous attendez de cette visite.',
+        'Écrivez-y ce qui vous inquiète, même si cela vous paraît anodin ou hors sujet. Une phrase de votre main vaut mieux que trois questions bien posées.'
+      ],
       questions: [
         { id: 'att_motif', type: 'textarea', label: 'Qu’attendez-vous de cette visite ?' },
         { id: 'att_inquietude', type: 'textarea', label: 'Y a-t-il quelque chose qui vous inquiète en particulier ?' },

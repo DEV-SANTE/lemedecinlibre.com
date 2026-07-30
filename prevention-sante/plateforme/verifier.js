@@ -701,7 +701,19 @@ const VISUELS = require('../commun/visuels.js');
 VISUELS.pagesPubliques.forEach(page => {
   const declarees = VISUELS.photos.filter(p => p.page === page);
   const src = lire(page);
-  const balises = src.match(/<img\b[^>]*>/gi) || [];
+  /* On ne compte que les images DISTANTES : depuis que la marque est un
+     fichier partagé (commun/marque.svg), la page porte aussi des images
+     locales, qui ne sont pas des photographies et n'ont rien à déclarer.
+     Le contrôle qui suit vérifie séparément qu'aucune autre image locale
+     ne s'est glissée là. */
+  const toutes = src.match(/<img\b[^>]*>/gi) || [];
+  const balises = toutes.filter(b => /src\s*=\s*["']https?:/i.test(b));
+  const locales = toutes.filter(b => !/src\s*=\s*["']https?:/i.test(b));
+  const localesHorsMarque = locales.filter(b => !/commun\/marque\.svg/.test(b));
+  verifier(page + ' — les seules images locales sont la marque partagée (' +
+    locales.length + ')', localesHorsMarque.length === 0,
+    localesHorsMarque.length ? 'Images locales non déclarées : ' +
+      localesHorsMarque.join(' | ') : null);
 
   /* Ces deux contrôles valent pour TOUTE page publique qui charge une
      image distante, et non pour la seule page d'accueil : une promesse
@@ -1690,6 +1702,126 @@ section('13. Images locales — déclarées, présentes, légères');
    copie qui subsiste : celle de la page de suivi, gardée en ligne parce
    que sa feuille de style contient six apparences.
    ================================================================== */
+/* ==================================================================
+   18. LISIBILITÉ DU QUESTIONNAIRE, SANS INDIVIDUALISATION
+
+   Le questionnaire porte maintenant, pour chaque section, une
+   photographie et deux paragraphes qui expliquent pourquoi ces questions
+   sont posées. C'est un progrès pour la personne qui répond, et c'est
+   aussi le point du produit où l'individualisation serait la plus facile
+   à introduire sans le vouloir : il suffirait qu'un paragraphe change
+   selon une réponse déjà donnée pour que la page se mette à commenter
+   quelqu'un.
+
+   D'où ces contrôles, dont un porte sur la SIGNATURE de la fonction
+   d'affichage : elle ne reçoit pas le dossier, donc elle ne peut pas
+   consulter une réponse. Une règle qu'on ne peut pas enfreindre par
+   distraction vaut mieux qu'une règle écrite.
+   ================================================================== */
+section('18. Questionnaire — lisible, illustré, non individualisé');
+
+(function () {
+  global.window = global.window || {};
+  const srcQ = lire('plateforme/questionnaire.js');
+  eval(srcQ);
+  const mods = (global.window.QUESTIONNAIRE || {}).modules || [];
+  verifier('questionnaire.js — les sections sont lisibles (' + mods.length + ')',
+    mods.length >= 10);
+
+  /* --- 18.1 Chaque section porte ses deux paragraphes. --- */
+  const sansPara = mods.filter(m => !m.paragraphes || m.paragraphes.length < 2);
+  verifier('questionnaire.js — chaque section explique pourquoi elle existe',
+    sansPara.length === 0,
+    sansPara.length ? 'Sans paragraphes : ' + sansPara.map(m => m.id).join(', ') : null);
+  const courts = mods.filter(m => (m.paragraphes || []).some(t => t.length < 90));
+  verifier('questionnaire.js — les paragraphes disent quelque chose',
+    courts.length === 0,
+    courts.length ? 'Trop courts : ' + courts.map(m => m.id).join(', ') : null);
+
+  /* --- 18.2 Ces textes décrivent la section, jamais la personne. --- */
+  const suspects = [];
+  mods.forEach(m => {
+    const t = (m.paragraphes || []).join(' ');
+    [/votre taux/i, /vos r[eé]sultats montrent/i, /vous [êe]tes [àa] risque/i,
+     /d['’]apr[èe]s vos r[eé]ponses/i, /votre score/i, /anormal/i]
+      .forEach(rx => { if (rx.test(t)) suspects.push(m.id + ' (' + rx.source + ')'); });
+  });
+  verifier('questionnaire.js — aucun paragraphe ne commente la personne',
+    suspects.length === 0, suspects.length ? 'À réécrire : ' + suspects.join(', ') : null);
+
+  /* --- 18.3 LE CONTRÔLE STRUCTUREL : la fonction qui affiche le bandeau
+         ne reçoit pas le dossier. Elle ne peut donc rien adapter. --- */
+  const pat = lire('espace/patient.js');
+  verifier('patient.js — le bandeau de section ne reçoit pas le dossier',
+    /function banniereSection\(m\)\s*\{/.test(pat) &&
+    !/function banniereSection\([^)]*d[,)]/.test(pat),
+    'Si cette fonction recevait le dossier, un paragraphe pourrait dépendre d’une réponse.');
+  verifier('patient.js — les paragraphes sont affichés',
+    /m\.paragraphes/.test(pat) && /class="qpara"/.test(pat));
+  verifier('patient.js — la photographie de section vient du questionnaire',
+    /m\.photo\.dossier/.test(pat) && /m\.photo\.id/.test(pat));
+
+  /* --- 18.4 Les photographies visées existent, et sont locales : cette
+         page affiche un dossier, aucune requête vers un tiers. --- */
+  const manquantes = [];
+  mods.forEach(m => {
+    if (!m.photo) return;
+    const rel = 'images/' + m.photo.dossier + '/' + m.photo.id + '.jpg';
+    if (!existe(rel)) manquantes.push(rel);
+  });
+  verifier('questionnaire.js — les photographies de section existent (' +
+    mods.filter(m => m.photo).length + ')', manquantes.length === 0,
+    manquantes.length ? 'Fichiers absents : ' + manquantes.join(', ') : null);
+  verifier('patient.js — aucune image distante dans l’espace patient',
+    !/https?:\/\/[a-z0-9.-]*(unsplash|googleapis|cloudflare)/i.test(pat));
+  /* Deux sections sans photographie, et la raison écrite : illustrer la
+     souffrance psychique, c'est la mettre en scène. */
+  verifier('questionnaire.js — l’absence de photographie est justifiée',
+    /Moral et anxi[eé]t[eé]/.test(srcQ) && /mettre en sc[èe]ne/.test(srcQ));
+
+  /* --- 18.5 LA MARQUE. Une seule, dans un seul fichier. --- */
+  verifier('la marque partagée existe', existe('commun/marque.svg'));
+  const copies = ['index.html', 'espace/index.html', 'contenus/index.html',
+                  'entreprise/index.html', 'pilotage/index.html', 'suivi/index.html',
+                  'commun/navigation.js']
+    .filter(f => existe(f) && /M8\.5 20\.5h4\.6/.test(lire(f)));
+  verifier('aucune copie du logo dans une page', copies.length === 0,
+    copies.length ? 'Copies restantes : ' + copies.join(', ') +
+      ' — celle de navigation.js était restée au bleu-vert de l’ancienne charte.' : null);
+  const emploient = ['index.html', 'espace/index.html', 'contenus/index.html',
+                     'entreprise/index.html', 'pilotage/index.html', 'commun/navigation.js']
+    .filter(f => existe(f) && /commun\/marque\.svg/.test(lire(f)));
+  verifier('la marque partagée est employée par les six pages (' + emploient.length + ')',
+    emploient.length === 6);
+  verifier('charte.css — la taille de la marque vit avec elle',
+    /\.marque,\.mark\{/.test(lire('commun/charte.css')));
+  /* Le logo de l'interface médecin n'était pas une copie : c'était un
+     DESSIN DIFFÉRENT — autre rayon, autre tracé, autre épaisseur. Le
+     médecin et son patient ne voyaient donc pas le même. */
+  verifier('plateforme/index.html — la marque partagée, et non un dessin à part',
+    /commun\/marque\.svg/.test(lire('plateforme/index.html')) &&
+    !/M9 20\.5h4\.4/.test(lire('plateforme/index.html')));
+
+  /* --- 18.6 CÔTÉ MÉDECIN : les mêmes photographies, aux mêmes endroits.
+         Et surtout : le médecin voit le texte que la personne a lu avant
+         de répondre. Une réponse ne s'interprète pas sans la question
+         telle qu'elle a été posée. --- */
+  const app = lire('plateforme/app.js');
+  verifier('app.js — la photographie du domaine figure dans la liste à qualifier',
+    /class="avis-img"/.test(app) && /images\/domaines\/\$\{esc\(d\.id\)\}\.jpg/.test(app));
+  verifier('app.js — le médecin voit ce que la personne a lu',
+    /Ce que la personne a lu avant de répondre/.test(app) && /m\.paragraphes/.test(app));
+  verifier('app.js — ce repli emploie la photographie de la section',
+    /class="qlu-img"/.test(app) && /m\.photo\.dossier/.test(app));
+  verifier('app.js — aucune image distante côté médecin',
+    !/https?:\/\/[a-z0-9.-]*(unsplash|googleapis|cloudflare)/i.test(app));
+  /* Les deux interfaces lisent les mêmes fichiers : si l'une changeait de
+     dossier d'images, la comparaison n'aurait plus de sens. */
+  const memesFichiers = /images\/domaines\//.test(app) &&
+    /images\/domaines\//.test(lire('suivi/suivi.js'));
+  verifier('médecin et patient lisent le même dossier d’images', memesFichiers);
+})();
+
 section('17. Charte partagée — une seule définition des couleurs');
 
 (function () {
