@@ -753,7 +753,11 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
 @media(max-width:760px){.dt-in{grid-template-columns:1fr}}
 .dt-img{width:100%;max-width:720px;height:auto;border-radius:16px;display:block;background:var(--surf)}  /* largeur du fichier source : au-delà, on agrandit et ça se voit */
 .dtete h1{font-size:clamp(24px,3.4vw,32px)}
-.dt-clair{font-size:14.4px;font-weight:520;color:var(--dc);margin-top:6px}
+.dt-clair{font-size:14.4px;font-weight:520;color:var(--pri);margin-top:6px}
+/* Ce que la spécialité regarde, en clair. Plafonné à la mesure de
+   lecture comme toute prose de la page. */
+.dt-exp{font-size:13.4px;color:var(--ink-2);line-height:1.62;margin-top:11px;
+  max-width:var(--mesure)}
 .dt-avis{margin-top:16px;padding:15px 17px;border-radius:var(--r);
   background:var(--mqbg,var(--surf));border:1px solid var(--mqln,var(--line))}
 .dt-past{display:inline-flex;align-items:center;gap:7px;font-size:11.6px;font-weight:620;
@@ -1123,17 +1127,17 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=23"></script>
-<script src="../commun/visuels.js?v=23"></script>
+<script src="../plateforme/biologie.js?v=24"></script>
+<script src="../commun/visuels.js?v=24"></script>
 <!-- Tout le contenu inventé vit dans ce seul fichier : le jour du
      passage sur l'hébergement certifié, on supprime le fichier et
      cette ligne. -->
-<script src="../commun/demonstration.js?v=23"></script>
-<script src="../commun/domaines.js?v=23"></script>
-<script src="../commun/avis.js?v=23"></script>
-<script src="../commun/themes.js?v=23"></script>
-<script src="../commun/lexique.js?v=23"></script>
-<script src="suivi.js?v=23"></script>
+<script src="../commun/demonstration.js?v=24"></script>
+<script src="../commun/domaines.js?v=24"></script>
+<script src="../commun/avis.js?v=24"></script>
+<script src="../commun/themes.js?v=24"></script>
+<script src="../commun/lexique.js?v=24"></script>
+<script src="suivi.js?v=24"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>

@@ -740,18 +740,30 @@ function blocPoints() {
    est le défaut le plus courant des barres latérales, et le plus difficile
    à repérer une fois qu'on s'y est habitué.
    ===================================================================== */
+/* Nom d'un domaine, lu dans la source unique. Une entrée de menu qui
+   pointerait vers un domaine supprimé se verrait tout de suite. */
+function nomDom(id) {
+  const d = DOMAINES.trouver(id);
+  return d ? d.nom : '(domaine inconnu : ' + id + ')';
+}
+
 const LATERAL = [
   { titre: 'Mon bilan', items: [
     { id: 'apercu',            nom: 'Vue d’ensemble',        ic: 'i-grid' },
     { id: 'section:parcours',  nom: 'Mon parcours',          ic: 'i-route' }
   ]},
+  /* Les entrées de domaine n'ont pas de libellé écrit ici : « nomDom »
+     va le chercher dans commun/domaines.js. C'est ce qui garantit que le
+     menu et la page qu'il ouvre portent le même nom — le menu disait
+     « Dermatologie » et la page « Peau », et personne ne pouvait savoir
+     lequel des deux était le bon. */
   { titre: 'Résultats', items: [
     { id: 'section:vignettes', nom: 'Mes mesures',           ic: 'i-tube' },
-    { id: 'dom:cardiovasculaire', nom: 'Cardiologie',        ic: 'i-heart' },
-    { id: 'dom:respiration',   nom: 'Pneumologie',           ic: 'i-lungs' },
-    { id: 'dom:sommeil',       nom: 'Sommeil',               ic: 'i-moon' },
-    { id: 'dom:peau',          nom: 'Dermatologie',          ic: 'i-face' },
-    { id: 'dom:vision',        nom: 'Ophtalmologie',         ic: 'i-eye' },
+    { id: 'dom:cardiovasculaire', nom: nomDom('cardiovasculaire'), ic: 'i-heart' },
+    { id: 'dom:respiration',   nom: nomDom('respiration'),   ic: 'i-lungs' },
+    { id: 'dom:sommeil',       nom: nomDom('sommeil'),       ic: 'i-moon' },
+    { id: 'dom:peau',          nom: nomDom('peau'),          ic: 'i-face' },
+    { id: 'dom:vision',        nom: nomDom('vision'),        ic: 'i-eye' },
     { id: 'avenir:imagerie',   nom: 'Imagerie',              ic: 'i-image' },
     { id: 'avenir:complementaires', nom: 'Examens complémentaires', ic: 'i-scan' }
   ]},
@@ -1210,6 +1222,7 @@ function panneauDomaine(S, id) {
         <div>
           <h1>${esc(d.nom)}</h1>
           <p class="dt-clair">${esc(d.clair)}</p>
+          ${d.explique ? `<p class="dt-exp">${esc(d.explique)}</p>` : ''}
           ${a ? `
           <div class="dt-avis m-${esc(TEINTE_AVIS[a.statut])}">
             <span class="dt-past"><i></i>${esc(st.l)}</span>
