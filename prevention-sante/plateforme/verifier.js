@@ -1423,8 +1423,12 @@ section('13. Images locales — déclarées, présentes, légères');
     manquants.length ? 'Absents : ' + manquants.join(', ') : null);
   verifier('images — chacune sous ' + VISUELS.poidsMaxKo + ' Ko', lourds.length === 0,
     lourds.length ? 'Trop lourdes : ' + lourds.join(', ') : null);
-  verifier('images — poids total raisonnable (' + Math.round(total) + ' Ko)', total < 700,
-    total >= 700 ? 'La page affiche les seize cartes d’un coup : le total compte.' : null);
+  /* Seize photographies pèsent plus que seize aplats de couleur. Le
+     plafond monte de 700 à 950 Ko, avec la contrepartie que le
+     chargement reste différé : à l'ouverture, seules les cartes visibles
+     sont téléchargées. */
+  verifier('images — poids total raisonnable (' + Math.round(total) + ' Ko)', total < 950,
+    total >= 950 ? 'La grille affiche seize cartes : le total compte, même en chargement différé.' : null);
 
   /* --- 13.2 Chaque déclaration a un sujet écrit : c'est ce qui
          alimentera le texte alternatif, donc la seule description
@@ -1455,8 +1459,16 @@ section('13. Images locales — déclarées, présentes, légères');
          cela, la question « d'où viennent ces images » n'a pas de
          réponse écrite le jour où elle est posée. --- */
   const src = lire('commun/visuels.js');
-  verifier('visuels.js — provenance des illustrations écrite',
-    /v0\.app/.test(src) && /Droits détenus par/.test(src) && /d[ée]claration du/.test(src));
+  verifier('visuels.js — provenance des photographies écrite',
+    /v0\.app/.test(src) && /Droits\s+d[ée]tenus\s+par/.test(src) && /d[ée]claration du/.test(src));
+  /* Le bon dossier du zip est nommé : deux jeux d'images cohabitent, et
+     j'ai commencé par extraire le mauvais. C'est écrit pour que
+     personne ne recommence. */
+  verifier('visuels.js — le bon dossier du zip est identifié',
+    /public\/photos/.test(src) && /public\/domains/.test(src));
+  /* La limite qui vaut pour ces photographies : privé oui, public non. */
+  verifier('visuels.js — la limite page privée / page publique est écrite',
+    /communication VERS LE PUBLIC/i.test(src) && /index\.html/.test(src));
   verifier('visuels.js — la réserve sur les images génératives est notée',
     /statut\s+d['’]auteur[\s\S]{0,80}?g[eé]n[eé]ratif/.test(src));
 })();
