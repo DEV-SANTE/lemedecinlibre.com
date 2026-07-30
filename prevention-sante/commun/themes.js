@@ -157,8 +157,16 @@ var THEMES = {
     }
   ],
 
-  /* Thème affiché au chargement. */
-  defaut: 'sobre',
+  /* Apparence publiée. « Clinique » reprend les jetons de la maquette
+     v0.app : fond bleu-gris très clair, cartes blanches, bleu calme en
+     couleur d'action. C'est ce choix qui rapproche le plus la page de la
+     maquette, bien avant les détails de mise en page : une palette se
+     voit d'un coup d'œil.
+
+     « Sobre » reste la palette de base du fichier de style — c'est elle
+     qui vit dans :root — et redevient consultable en changeant cette
+     seule ligne. */
+  defaut: 'clinique',
 
   trouver: function (id) {
     for (var i = 0; i < this.liste.length; i++) {
