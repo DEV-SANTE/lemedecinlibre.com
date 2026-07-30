@@ -37,8 +37,26 @@ var VISUELS = {
      fait échouer la vérification. Liste volontairement minimale. */
   hotes: ['images.unsplash.com'],
 
-  /* La seule page autorisée à charger une image DISTANTE. */
-  pagePublique: 'index.html',
+  /* LES PAGES AUTORISÉES À CHARGER UNE IMAGE DISTANTE.
+
+     Le critère n'est pas « la page est jolie à illustrer », c'est : cette
+     page affiche-t-elle des données de santé, et faut-il un compte pour
+     la lire ? Une image distante ne dépose pas de cookie, mais elle
+     révèle une adresse IP à un tiers. Sur une page de dossier, cette
+     seule requête indique à ce tiers qu'une personne consulte des
+     données de santé. Sur une page ouverte à tous, elle indique qu'un
+     visiteur a lu une page ouverte à tous.
+
+     Deux pages remplissent le critère :
+       index.html          — l'accueil, destiné aux employeurs ;
+       contenus/index.html — les repères de prévention, qui écrivent
+                             eux-mêmes qu'aucun compte n'est nécessaire et
+                             qu'aucune donnée n'est lue pour les afficher.
+
+     Toute autre page reste interdite aux images distantes, et le
+     vérificateur le contrôle page par page. Ajouter une page à cette
+     liste doit être un geste explicite, pas un oubli. */
+  pagesPubliques: ['index.html', 'contenus/index.html'],
 
   /* ==================================================================
      IMAGES LOCALES — ET POURQUOI LA RÈGLE N'EST PAS LA MÊME
@@ -211,10 +229,11 @@ var VISUELS = {
     {
       id: 'photo-1746173097964-b8580922a7df',
       auteur: 'ZEIN ZAIN',
-      compte: 'inal_03',
+      pseudo: 'inal_03',
       reference: 'illOl9R0AEY',
       sujet: 'Une salle d’attente lumineuse, sièges alignés le long d’une baie vitrée.',
       emploi: 'Bande photographique sous le hero.',
+      page: 'index.html',
       rang: 1,
       /* Seule image visible sans défiler : chargement immédiat, pas
          différé, sinon elle apparaît après le premier écran. */
@@ -223,41 +242,112 @@ var VISUELS = {
     {
       id: 'photo-1766299892549-b56b257d1ddd',
       auteur: 'Brian Wangenheim',
-      compte: 'brianwangenheim',
+      pseudo: 'brianwangenheim',
       reference: 'K7Qh7RFtUuo',
       sujet: 'Des instruments de diagnostic fixés au mur d’une salle de consultation.',
       emploi: 'Triptyque « Déroulement », premier volet : la consultation.',
+      page: 'index.html',
       rang: 2,
       differe: true
     },
     {
       id: 'photo-1579154341184-22069e4614d2',
       auteur: 'National Cancer Institute',
-      compte: 'nci',
+      pseudo: 'nci',
       reference: 'egT3xtDu9DQ',
       sujet: 'Des tubes de prélèvement en verre alignés sur un support.',
       emploi: 'Triptyque « Déroulement », deuxième volet : le prélèvement.',
+      page: 'index.html',
       rang: 3,
       differe: true
     },
     {
       id: 'photo-1707651020138-b2ac647cb885',
       auteur: 'Vadim Bogulov',
-      compte: 'franku84',
+      pseudo: 'franku84',
       reference: 'PRaSe_XWX38',
       sujet: 'Un automate d’analyse de laboratoire, façade blanche et écran de contrôle.',
       emploi: 'Triptyque « Déroulement », troisième volet : l’analyse.',
+      page: 'index.html',
       rang: 4,
       differe: true
     },
     {
       id: 'photo-1740933084056-078fac872bff',
       auteur: 'Colin White',
-      compte: 'ctw71',
+      pseudo: 'ctw71',
       reference: 'PvNXRpRfbwo',
       sujet: 'Une salle de réunion vide, table longue et grandes fenêtres.',
       emploi: 'Section « Pour les employeurs », sous la carte du réseau.',
+      page: 'index.html',
       rang: 5,
+      differe: true
+    },
+
+    /* ------------------------------------------------------------------
+       TROIS PHOTOGRAPHIES POUR LA PAGE « REPÈRES »
+
+       Choisies en cherchant sur Unsplash le 30 juillet 2026, sous licence
+       Unsplash : usage commercial autorisé, sans attribution obligatoire.
+       Elles sont attribuées quand même, ici, parce qu'une provenance
+       écrite vaut mieux qu'une provenance qu'on croit se rappeler.
+
+       DEUX CATÉGORIES ÉCARTÉES pendant la recherche, et pour des raisons
+       différentes.
+
+       Les photographies portant la mention Unsplash+ ou signées Getty
+       Images : elles ne relèvent pas de la licence Unsplash mais d'un
+       abonnement payant. Elles sont servies par plus.unsplash.com, qui
+       n'est pas dans la liste des hôtes autorisés — l'exclusion est donc
+       mécanique et non laissée à ma vigilance.
+
+       Les scènes de consultation, très nombreuses dans les résultats :
+       un médecin en blouse face à un patient, sur une page publique du
+       site qui vend un parcours, se lit comme une représentation de notre
+       équipe et de notre service. C'est ce que l'article R.4127-19-1 du
+       code de la santé publique encadre. Les trois retenues ne montrent
+       aucune personne et aucun acte de soin : un sentier, une chambre,
+       un chapeau.
+
+       Écartés aussi : les bâtiments d'hôpitaux identifiables — plusieurs
+       résultats montraient l'enseigne d'un hôpital réel. Illustrer notre
+       offre avec l'établissement de quelqu'un d'autre suggérerait une
+       affiliation qui n'existe pas.
+    ------------------------------------------------------------------ */
+    {
+      id: 'photo-1621960531176-9e4894d9adf8',
+      auteur: 'Tim Mossholder',
+      pseudo: 'timmossholder',
+      reference: '9UjEyzA6pP4',
+      sujet: 'Un sentier de terre entre des arbres verts, en pleine journée.',
+      emploi: 'Thème « Activité physique », page Repères.',
+      page: 'contenus/index.html',
+      theme: 'Activité physique',
+      rang: 6,
+      differe: true
+    },
+    {
+      id: 'photo-1612152605347-f93296cb657d',
+      auteur: 'Isaac Martin',
+      pseudo: 'isaacmartin',
+      reference: 'wH2aFGo-Rt0',
+      sujet: 'Un lit fait, linge blanc, dans une chambre claire.',
+      emploi: 'Thème « Sommeil », page Repères.',
+      page: 'contenus/index.html',
+      theme: 'Sommeil',
+      rang: 7,
+      differe: true
+    },
+    {
+      id: 'photo-1707399220651-5d15865ce117',
+      auteur: 'Joseph Corl',
+      pseudo: 'jcorl',
+      reference: 'KizzyDUdnuA',
+      sujet: 'Un chapeau de paille suspendu, à l’ombre.',
+      emploi: 'Thème « Peau et soleil », page Repères.',
+      page: 'contenus/index.html',
+      theme: 'Peau et soleil',
+      rang: 8,
       differe: true
     }
   ]
