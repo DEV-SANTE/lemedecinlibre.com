@@ -1569,6 +1569,69 @@ section('13. Images locales — déclarées, présentes, légères');
    parce qu'elle n'apprend rien, et le voile qui la recouvre part de la
    couleur pleine du thème et ne descend jamais sous un tiers d'opacité.
    ================================================================== */
+/* ==================================================================
+   13 ter. LES PICTOGRAMMES DEMANDÉS EXISTENT, ET LE VERT D'AVANCEMENT
+   NE SE FAIT PAS PASSER POUR UN AVIS
+
+   Deux contrôles nés d'un même constat : ce qui ne provoque pas d'erreur
+   ne se voit pas.
+
+   Un <use href="#i-flask"> qui pointe vers un symbole absent ne casse
+   rien et n'écrit rien dans la console : il dessine un vide. Cinq
+   pictogrammes manquaient ainsi depuis l'origine dans la frise des
+   visites, à côté de leurs libellés — personne ne l'avait vu.
+
+   Le vert des étapes réalisées, lui, dit qu'un acte a eu lieu. C'est une
+   information administrative. S'il devenait la même teinte que le vert
+   « dans les valeurs usuelles » du médecin, la page se mettrait à
+   suggérer qu'une étape faite est une étape rassurante.
+   ================================================================== */
+section('13 ter. Pictogrammes présents, vert d’avancement distinct');
+
+(function () {
+  const html = lire('suivi/index.html');
+  const js = lire('suivi/suivi.js');
+
+  /* --- Chaque pictogramme demandé par le code existe dans le sprite. --- */
+  const demandes = [...new Set((js.match(/'(i-[a-z-]+)'/g) || [])
+    .map(t => t.replace(/'/g, '')))];
+  const presents = (html.match(/<symbol id="(i-[a-z-]+)"/g) || [])
+    .map(t => t.replace(/.*id="/, '').replace('"', ''));
+  const absents = demandes.filter(d => presents.indexOf(d) === -1);
+  verifier('index.html — les ' + demandes.length + ' pictogrammes demandés existent',
+    absents.length === 0,
+    absents.length ? 'Absents du sprite : ' + absents.join(', ') +
+      ' — un symbole manquant dessine un vide, sans erreur.' : null);
+  /* Et l'inverse : un symbole que plus personne ne demande est du poids
+     mort dans une page chargée à chaque visite. */
+  const inutiles = presents.filter(p => demandes.indexOf(p) === -1);
+  verifier('index.html — aucun pictogramme inutilisé (' + presents.length + ')',
+    inutiles.length === 0, inutiles.length ? 'Jamais demandés : ' + inutiles.join(', ') : null);
+
+  /* --- Le vert d'avancement existe, et n'est aucune des trois teintes
+         réservées aux avis du médecin. --- */
+  const m = html.match(/--fait:\s*(#[0-9a-fA-F]{6})/);
+  verifier('index.html — le vert d’avancement est déclaré une seule fois', !!m);
+  if (m) {
+    const vert = m[1].toLowerCase();
+    verifier('index.html — le vert d’avancement n’est pas une teinte d’avis',
+      THEMES.reservees.map(c => c.toLowerCase()).indexOf(vert) === -1,
+      'Une étape faite ne doit pas porter la couleur d’un avis médical.');
+    /* Il doit rester franc : c'était la demande, et un vert éteint est
+       exactement ce qu'on vient de corriger. On mesure la saturation. */
+    const r = parseInt(vert.slice(1, 3), 16), g = parseInt(vert.slice(3, 5), 16),
+          b = parseInt(vert.slice(5, 7), 16);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    const sat = mx === 0 ? 0 : (mx - mn) / mx;
+    verifier('index.html — le vert d’avancement est franc (saturation ' +
+      Math.round(sat * 100) + ' %)', sat >= 0.6 && g === mx,
+      'Un vert désaturé se lit comme un gris-vert éteint.');
+  }
+  /* Les étapes faites utilisent bien cette variable, et pas le bleu. */
+  verifier('index.html — les étapes réalisées portent le vert d’avancement',
+    /\.et-fait \.et-p\{background:var\(--fait\)/.test(html));
+})();
+
 section('13 bis. Bandeau photographique — déclaré, léger, lisible');
 
 (function () {
