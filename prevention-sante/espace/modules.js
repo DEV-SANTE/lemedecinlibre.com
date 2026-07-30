@@ -477,8 +477,8 @@ function bloc_courbe(ctx, h) {
     <svg viewBox="0 0 ${L} ${H}" style="width:100%;height:auto;display:block;margin-top:12px"
          role="img" aria-label="Évolution chronologique de ${ctx.esc(h.parametre)}">
       <polyline points="${pts.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ')}"
-                fill="none" stroke="#0f5f6b" stroke-width="2" stroke-linecap="round"/>
-      ${pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="#0f5f6b"/>`).join('')}
+                fill="none" stroke="#2069b0" stroke-width="2" stroke-linecap="round"/>
+      ${pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="#2069b0"/>`).join('')}
     </svg>
     <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--ink-3)">
       ${vals.map(v => `<span>${ctx.esc(new Date(v.date).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }))}
