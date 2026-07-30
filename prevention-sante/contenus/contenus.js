@@ -27,6 +27,62 @@
 
 'use strict';
 
+/* PHOTOGRAPHIES DES THÈMES.
+
+   Trois thèmes portent une photographie. Elle n'est pas décorative au
+   sens où on l'entend d'habitude : sur une page de dix pavés de texte
+   dépliants, elle donne un point d'entrée à l'œil et évite l'effet
+   « mur de conseils ».
+
+   Les adresses ne sont pas écrites ici : elles viennent du catalogue
+   commun/visuels.js, où chaque photographie a un auteur, un sujet et une
+   page d'emploi déclarés. Une image ajoutée en dur dans ce fichier ferait
+   échouer la vérification, ce qui est le but.
+
+   Trois thèmes seulement, et non les dix. Pour les sept autres, aucune
+   image neutre ne s'imposait : illustrer « Alcool », « Tabac » ou
+   « Moral et anxiété » revient vite à mettre en scène le problème ou la
+   personne qui l'a, ce qui n'apprend rien et peut blesser. Une absence
+   d'image est préférable à une image qui juge. */
+const PHOTOS_THEMES = (function () {
+  const m = {};
+  if (typeof VISUELS !== 'undefined' && VISUELS.photos) {
+    VISUELS.photos.forEach(function (ph) {
+      if (ph.theme) m[ph.theme] = ph;
+    });
+  }
+  return m;
+})();
+
+/* Crédits. La licence Unsplash n'exige pas l'attribution ; le projet se
+   l'impose, et la ligne est produite à partir du catalogue pour qu'elle ne
+   puisse pas décrire autre chose que ce qui est réellement affiché. */
+function creditsPhotos() {
+  const l = [];
+  if (typeof VISUELS !== 'undefined' && VISUELS.photos) {
+    VISUELS.photos.forEach(function (ph) {
+      if (ph.page === 'contenus/index.html') {
+        l.push(esc(ph.auteur) + ' (' + esc(ph.pseudo) + ')');
+      }
+    });
+  }
+  if (!l.length) return '';
+  return '<p class="credits">Photographies : ' + l.join(', ') +
+    ', sous licence Unsplash. Elles sont servies par un hôte tiers, qui voit ' +
+    'donc votre adresse IP — c’est la raison pour laquelle il n’y en a aucune ' +
+    'sur les pages qui affichent un dossier.</p>';
+}
+
+function photoTheme(theme) {
+  const ph = PHOTOS_THEMES[theme];
+  if (!ph) return '';
+  const url = 'https://images.unsplash.com/' + ph.id +
+              '?auto=format&fit=crop&w=900&q=70';
+  return '<img class="t-photo" src="' + url + '" width="900" height="470" ' +
+         'loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+         'alt="' + esc(ph.sujet) + '">';
+}
+
 const CONTENUS = [
   {
     theme: 'Tabac', icone: 'i-lungs',
@@ -173,6 +229,7 @@ function rendre() {
     <div class="themes">
       ${CONTENUS.map((c, i) => `
         <section class="theme">
+          ${photoTheme(c.theme)}
           <div class="t-h">
             <div class="t-ic"><svg class="ico"><use href="#${esc(c.icone)}"/></svg></div>
             <div>
@@ -196,6 +253,7 @@ function rendre() {
       annoncée. Ces contenus restent donc volontairement identiques pour tous.</p>
       <p style="margin-top:13px">Contenus à relire par un médecin référent avant mise en
       service.</p>
+      ${creditsPhotos()}
     </div>`;
 }
 

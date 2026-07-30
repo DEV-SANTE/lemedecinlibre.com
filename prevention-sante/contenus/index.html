@@ -9,8 +9,27 @@
 <style>
 /* =====================================================================
    M8 — BIBLIOTHÈQUE DE CONTENU ÉDUCATIF
-   Aucune ressource externe. Aucun cookie. Aucun compte requis :
-   ces contenus ne dépendent d'aucune donnée personnelle.
+
+   CE QUI A CHANGÉ LE 30 JUILLET 2026. Cet en-tête annonçait « aucune
+   ressource externe ». Ce n'est plus vrai : trois thèmes portent une
+   photographie servie par un hôte d'images. Corriger la phrase fait
+   partie du travail — une page qui promet l'absence de tiers alors
+   qu'elle en charge trois est plus dommageable que la fuite elle-même,
+   parce qu'elle empêche de la voir.
+
+   État réel :
+     - aucun script tiers, aucune police distante, aucun cookie ;
+     - trois photographies distantes, déclarées dans commun/visuels.js,
+       chargées en différé et sans renvoi de page (no-referrer) ;
+     - l'hôte de ces images voit l'adresse IP du visiteur. C'est écrit
+       en clair au bas de la page, dans les crédits ;
+     - aucun compte requis, aucune donnée personnelle lue : ces contenus
+       sont les mêmes pour tout le monde, ce qui reste la propriété la
+       plus importante de cette page.
+
+   La raison pour laquelle des images distantes sont admises ici et
+   nulle part ailleurs : cette page n'affiche aucune donnée de santé.
+   Voir la note de commun/visuels.js sur les pages publiques.
    ===================================================================== */
 /* Les jetons graphiques sont dans commun/charte.css, chargée
    au-dessus de cette feuille. Ce bloc :root a été supprimé le
@@ -47,6 +66,13 @@ main{max-width:860px;margin:0 auto;padding:40px 26px 90px}
   padding:17px 20px;font-size:13.3px;color:var(--ink-2);margin-top:24px;max-width:76ch}
 
 .themes{display:grid;gap:20px}
+/* Photographie de thème. Bandeau large et bas : elle accompagne le
+   titre, elle ne prend pas la place du texte. */
+.credits{font-size:11.6px;color:var(--ink-4);line-height:1.55;margin-top:13px;
+  max-width:var(--mesure)}
+.t-photo{width:100%;height:132px;object-fit:cover;display:block;
+  border-radius:var(--r) var(--r) 0 0;margin:-1px -1px 18px;
+  max-width:calc(100% + 2px);background:var(--surf)}
 .theme{border:1px solid var(--line);border-radius:var(--r-l);padding:26px 26px 10px;
   box-shadow:var(--sh-s)}
 .t-h{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px}
@@ -117,6 +143,9 @@ details .a{padding:0 34px 20px 0;font-size:14.4px;color:var(--ink-2);max-width:7
   </div>
 </footer>
 
+<!-- Le catalogue des photographies, chargé avant : les adresses des
+     images ne sont écrites nulle part ailleurs. -->
+<script src="../commun/visuels.js"></script>
 <script src="contenus.js"></script>
 <script src="../commun/navigation.js"></script>
 </body>
