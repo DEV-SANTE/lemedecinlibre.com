@@ -464,8 +464,11 @@ const ETAPES = [
 ];
 const LIB_ETAT = { fait: 'Réalisé', encours: 'Programmé', prevu: 'À programmer' };
 
-/* Domaine ouvert dans la disposition « Domaines ». null = la grille. */
-let domaineOuvert = null;
+/* Entrée sélectionnée dans la barre latérale de la vue d'ensemble.
+   Valeurs possibles : 'apercu', 'section:<clé>', 'dom:<id>',
+   'avenir:<clé>'. Un seul sélecteur pour toute la navigation latérale :
+   deux états concurrents finissent toujours par se désynchroniser. */
+let lateral = 'apercu';
 let disposition = 'deroule';
 
 /* Vue affichée dans le panneau. « mesure » suit le paramètre choisi. */
@@ -549,94 +552,134 @@ if (typeof VISUELS !== 'undefined' && VISUELS.locales) {
   VISUELS.locales.forEach(v => { VIS_LOCAL[v.id] = v.sujet; });
 }
 
-/* Sections placées sous la grille. Elles ne sont pas dans une carte de
-   domaine : le parcours, les dépistages, les comptes rendus, le
-   glossaire et les limites concernent la personne entière, pas un
-   organe. Sans elles, la disposition « Domaines » ferait disparaître de
-   l'écran cinq blocs d'information — exactement ce que le contrôle des
-   agencements est censé empêcher. « vignettes » et « graphique » sont
-   atteints à l'intérieur d'un domaine, pas ici. */
-const SOUS_GRILLE = ['parcours', 'actes', 'couverture', 'documents',
-                     'glossaire', 'limites'];
+/* =====================================================================
+   BARRE LATÉRALE DE LA VUE D'ENSEMBLE
 
-function bandeauBilan() {
-  const pct = Math.round((BILAN.realises / BILAN.prevus) * 100);
+   La maquette v0 en avait une, avec quinze entrées réparties en quatre
+   groupes. Fait notable, et vérifié dans son code : NEUF de ces quinze
+   entrées mènent à un écran « module à venir ». Sa barre latérale
+   annonce donc un produit plus large que ce qu'elle contient — ce qui est
+   normal pour une maquette, à condition de ne pas le reproduire sans le
+   savoir.
+
+   Ici, cinq entrées seulement sont à venir, et elles le disent. Les
+   autres mènent à quelque chose de réel, parce que les spécialités de la
+   maquette correspondent à des domaines que nous avons déjà :
+   Cardiologie est le domaine cardiovasculaire, Pneumologie la
+   respiration, Dermatologie la peau, Ophtalmologie la vision. Plutôt que
+   de créer neuf pages vides, on nomme ce qui existe.
+
+   AUCUNE ENTRÉE MORTE. Le vérificateur exige que chaque entrée mène soit
+   à une section réelle, soit à un domaine réel, soit à un écran « à
+   venir » qui dit ce qu'il contiendra. Une entrée qui ne mène nulle part
+   est le défaut le plus courant des barres latérales, et le plus difficile
+   à repérer une fois qu'on s'y est habitué.
+   ===================================================================== */
+const LATERAL = [
+  { titre: 'Mon bilan', items: [
+    { id: 'apercu',            nom: 'Vue d’ensemble' },
+    { id: 'section:parcours',  nom: 'Mon parcours' }
+  ]},
+  { titre: 'Résultats', items: [
+    { id: 'section:vignettes', nom: 'Mes mesures' },
+    { id: 'dom:cardiovasculaire', nom: 'Cardiologie' },
+    { id: 'dom:respiration',   nom: 'Pneumologie' },
+    { id: 'dom:sommeil',       nom: 'Sommeil' },
+    { id: 'dom:peau',          nom: 'Dermatologie' },
+    { id: 'dom:vision',        nom: 'Ophtalmologie' },
+    { id: 'avenir:imagerie',   nom: 'Imagerie' },
+    { id: 'avenir:complementaires', nom: 'Examens complémentaires' }
+  ]},
+  { titre: 'Suivi', items: [
+    { id: 'section:couverture', nom: 'Vaccinations, dépistages' },
+    { id: 'section:documents',  nom: 'Mes comptes rendus' },
+    { id: 'section:actes',      nom: 'Chaque acte expliqué' },
+    { id: 'avenir:rdv',         nom: 'Rendez-vous' },
+    { id: 'avenir:objets',      nom: 'Objets connectés' },
+    { id: 'avenir:messagerie',  nom: 'Messagerie sécurisée' }
+  ]},
+  { titre: 'Repères', items: [
+    { id: 'section:glossaire',  nom: 'Les mots employés' },
+    { id: 'section:limites',    nom: 'Ce que la page ne fait pas' }
+  ]}
+];
+
+/* Les cinq modules à venir. Chacun dit ce qu'il contiendra ET ce qui
+   manque pour le faire : un « bientôt disponible » sans raison finit par
+   rester trois ans. */
+const A_VENIR = {
+  imagerie: { nom: 'Imagerie',
+    quoi: 'Les comptes rendus et les images des examens d’imagerie, avec leur historique.',
+    manque: 'Un stockage certifié pour les fichiers d’imagerie, qui sont volumineux et ne ' +
+            'peuvent pas vivre sur l’hébergement actuel.' },
+  complementaires: { nom: 'Examens complémentaires',
+    quoi: 'Les examens décidés au cas par cas hors du parcours de base, avec leur indication.',
+    manque: 'La liste des actes réalisables par centre, qui varie selon le plateau disponible.' },
+  rdv: { nom: 'Rendez-vous',
+    quoi: 'La prise de rendez-vous et le choix du centre, avec les créneaux réels.',
+    manque: 'Le raccordement à l’agenda des centres. Le module de rendez-vous existe déjà ' +
+            'dans l’espace patient : cette entrée y renverra.' },
+  objets: { nom: 'Objets connectés',
+    quoi: 'Les données de votre montre, de votre balance ou de votre tensiomètre, ' +
+          'rassemblées avec le reste de votre suivi.',
+    manque: 'Une note de cadrage : base légale, durée de conservation, transferts hors Union ' +
+            'européenne des interfaces constructeurs, et surtout ce que la plateforme ' +
+            's’interdira de calculer sur ces mesures. La maquette affichait des phrases du ' +
+            'type « signe d’une bonne récupération » : c’est exactement ce qui ne sera pas ' +
+            'repris.' },
+  messagerie: { nom: 'Messagerie sécurisée',
+    quoi: 'Un échange écrit avec l’équipe médicale, conservé dans le dossier.',
+    manque: 'Un hébergement certifié et un service de messagerie de santé conforme. Une ' +
+            'messagerie improvisée sur cette base serait une fuite organisée.' }
+};
+
+function blocAVenir(cle) {
+  const m = A_VENIR[cle];
+  if (!m) return '';
   return `
-    <section class="bilan-b">
-      <div class="bb-in">
-        <p class="bb-k">Bilan de prévention en cours</p>
-        <h2 class="bb-t">${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus</h2>
-        <p class="bb-s">Commencé le ${esc(jolieDate(BILAN.debut))}. La synthèse avec votre
-        médecin est prévue le ${esc(jolieDate(BILAN.synthesePrevue))}.</p>
-        <div class="bb-jauge" role="img"
-             aria-label="${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus">
-          <i style="width:${pct}%"></i>
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>${esc(m.nom)}</h2>
+        <p class="b-s">Module à venir. Cette entrée figure dans la navigation pour que vous
+        sachiez ce qui est prévu, pas pour laisser croire que c’est en service.</p>
+      </div></div>
+      <div class="avenir">
+        <div class="ex-r">
+          <span class="ex-k">Ce que ce module contiendra</span>
+          <p class="ex-t">${esc(m.quoi)}</p>
         </div>
-        <p class="bb-n">Ce compteur suit l’avancement du parcours. Il ne dit rien de vos
-        résultats : un parcours complet à ${pct} % n’est ni une bonne ni une mauvaise nouvelle.</p>
+        <div class="ex-r sombre">
+          <span class="ex-k">Ce qui manque pour le faire</span>
+          <p class="ex-t">${esc(m.manque)}</p>
+        </div>
       </div>
     </section>`;
 }
 
-function blocEtapes() {
-  return `
-    <section class="bloc">
-      <div class="b-h"><div>
-        <h2>Votre parcours</h2>
-        <p class="b-s">Les grandes étapes, dans l’ordre. Les pastilles disent seulement ce qui
-        est fait ou pas : elles n’emploient jamais les couleurs qui servent aux avis de votre
-        médecin.</p>
-      </div></div>
-      <ol class="etapes">
-        ${ETAPES.map((e, i) => `
-          <li class="et et-${esc(e.etat)}">
-            <span class="et-p">${e.etat === 'fait' ? ic('i-check') : ''}</span>
-            <b class="et-n">${esc(e.nom)}</b>
-            <span class="et-e">${esc(LIB_ETAT[e.etat])}</span>
-            <span class="et-d">${esc(jolieDate(e.quand))}</span>
-          </li>`).join('')}
-      </ol>
-    </section>`;
-}
-
-/* Points à discuter : uniquement des avis SIGNÉS du médecin, et
-   uniquement ceux qu'il a lui-même qualifiés « à surveiller » ou « à
-   interpréter ». Rien n'est sélectionné à partir d'une valeur : la liste
-   est le reflet de ses choix, filtrée sur son propre vocabulaire. */
-function blocPoints() {
-  const points = DOSSIER ? DOMAINES.liste
-    .map(d => ({ d: d, a: Avis.lire(DOSSIER, d.id) }))
-    .filter(x => x.a && (x.a.statut === 'surveiller' || x.a.statut === 'interpreter')) : [];
-
-  return `
-    <section class="bloc">
-      <div class="b-h"><div>
-        <h2>Points à discuter</h2>
-        <p class="b-s">Ce que votre médecin a signalé comme méritant un échange. Chaque ligne
-        porte son nom et la date. Cette liste n’est pas constituée par le logiciel : elle ne
-        contient que ce qu’il a écrit.</p>
-      </div></div>
-      ${points.length ? `
-        <div class="points">
-          ${points.map(x => `
-            <div class="pt m-${esc(TEINTE_AVIS[x.a.statut])}">
-              <div class="pt-h">
-                <span class="pt-d" style="--dc:${x.d.couleur}">${esc(x.d.nom)}</span>
-                <span class="pt-st"><i></i>${esc(Avis.statut(x.a.statut).l)}</span>
-              </div>
-              <p class="pt-c">${x.a.synthese ? esc(x.a.synthese)
-                : 'Domaine signalé, sans phrase écrite.'}</p>
-              <p class="pt-s">${esc(x.a.medecin)} · le ${esc(jolieDate(x.a.date))}</p>
-            </div>`).join('')}
-        </div>`
-      : `<p class="cmp-n">Aucun point n’a été signalé par votre médecin à ce jour. Ce n’est pas
-         une conclusion : c’est l’état de ce qui a été écrit.</p>`}
-    </section>`;
-}
+/* Sections atteintes par la barre latérale. Sert au vérificateur autant
+   qu'à la lecture : c'est la liste de ce qui reste accessible. */
+const SOUS_GRILLE = ['parcours', 'actes', 'couverture', 'documents',
+                     'glossaire', 'limites'];
 
 function shellDomaines(S, groupes, p) {
-  if (!domaineOuvert) {
-    return `
+  const item = (id, nom, actif) =>
+    '<button class="rail-x' + (actif ? ' on' : '') + '" data-lat="' + esc(id) + '">' +
+    esc(nom) + '</button>';
+
+  const barre = `
+    <aside class="rail">
+      <button class="rail-b" id="rail-b" aria-expanded="${railOuvert ? 'true' : 'false'}">
+        ${ic('i-clipboard')}<span>${esc(titreLateral())}</span><i class="chev"></i>
+      </button>
+      <nav class="rail-nav${railOuvert ? ' ouvert' : ''}" aria-label="Mes pages">
+        ${LATERAL.map(g => '<p class="rail-t">' + esc(g.titre) + '</p>' +
+          g.items.map(x => item(x.id, x.nom, lateral === x.id)).join('')).join('')}
+      </nav>
+    </aside>`;
+
+  let panneau;
+  if (lateral === 'apercu') {
+    panneau = `
       ${S.cockpit}
       ${bandeauBilan()}
       ${blocEtapes()}
@@ -650,20 +693,47 @@ function shellDomaines(S, groupes, p) {
         </div></div>
         <div class="dgrille">${DOMAINES.liste.map(carteDomaine).join('')}</div>
       </section>
-      ${S.lire}
-      ${SOUS_GRILLE.map(k => S[k]).join('\n')}`;
+      ${S.lire}`;
+  } else if (lateral.indexOf('section:') === 0) {
+    panneau = S[lateral.slice(8)] || '';
+  } else if (lateral.indexOf('avenir:') === 0) {
+    panneau = blocAVenir(lateral.slice(7));
+  } else if (lateral.indexOf('dom:') === 0) {
+    panneau = panneauDomaine(S, lateral.slice(4));
+  } else {
+    panneau = S.cockpit;
   }
 
-  const d = DOMAINES.trouver(domaineOuvert);
+  return '<div class="shell">' + barre + '<div class="panneau">' + panneau + '</div></div>';
+}
+
+function titreLateral() {
+  for (let i = 0; i < LATERAL.length; i++) {
+    for (let j = 0; j < LATERAL[i].items.length; j++) {
+      if (LATERAL[i].items[j].id === lateral) return LATERAL[i].items[j].nom;
+    }
+  }
+  if (lateral.indexOf('dom:') === 0) {
+    const d = DOMAINES.trouver(lateral.slice(4));
+    if (d) return d.nom;
+  }
+  return 'Vue d’ensemble';
+}
+
+/* Détail d'un domaine : bandeau illustré, avis du médecin s'il existe,
+   puis les mesures du domaine et le graphique de celle qui est choisie. */
+function panneauDomaine(S, id) {
+  const d = DOMAINES.trouver(id);
+  if (!d) return S.cockpit;
   const a = DOSSIER ? Avis.lire(DOSSIER, d.id) : null;
   const st = a ? Avis.statut(a.statut) : null;
-  const params = d.parametres.map(id => PARAMETRES.filter(x => x.id === id)[0]).filter(Boolean);
+  const params = d.parametres.map(x => PARAMETRES.filter(y => y.id === x)[0]).filter(Boolean);
 
   return `
     <div class="dtete" style="--dc:${d.couleur}">
-      <button class="dretour" data-dom-retour="1">${ic('i-arrow')}Tous les domaines</button>
+      <button class="dretour" data-lat="apercu">${ic('i-arrow')}Vue d’ensemble</button>
       <div class="dt-in">
-        <img class="dt-img" src="../images/domaines/${esc(d.id)}.jpg" width="800" height="500"
+        <img class="dt-img" src="../images/domaines/${esc(d.id)}.jpg" width="720" height="450"
              decoding="async" alt="${esc(VIS_LOCAL[d.id] || ('Illustration : ' + d.nom))}">
         <div>
           <h1>${esc(d.nom)}</h1>
@@ -1123,23 +1193,35 @@ function rendre() {
     };
   });
 
-  /* Cartes de domaine : ouvrir, revenir. Le paramètre affiché en grand
-     est le premier du domaine, sauf si l'un d'eux est déjà choisi. */
+  /* Ouvrir un domaine : depuis une carte ou depuis la barre latérale,
+     c'est le même chemin. Le paramètre affiché en grand est le premier
+     du domaine, sauf si l'un d'eux est déjà choisi. */
+  const ouvrirDomaine = id => {
+    const d = DOMAINES.trouver(id);
+    if (d && d.parametres.length && d.parametres.indexOf(choisi) === -1) {
+      choisi = d.parametres[0];
+      compare = null;
+    }
+  };
+
   document.querySelectorAll('[data-dom]').forEach(b => {
     b.onclick = () => {
-      domaineOuvert = b.dataset.dom;
-      const d = DOMAINES.trouver(domaineOuvert);
-      if (d && d.parametres.length && d.parametres.indexOf(choisi) === -1) {
-        choisi = d.parametres[0];
-        compare = null;
-      }
+      ouvrirDomaine(b.dataset.dom);
+      lateral = 'dom:' + b.dataset.dom;
+      railOuvert = false;
       rendre();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
   });
-  document.querySelectorAll('[data-dom-retour]').forEach(b => {
-    b.onclick = () => { domaineOuvert = null; rendre();
-      window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+  document.querySelectorAll('[data-lat]').forEach(b => {
+    b.onclick = () => {
+      lateral = b.dataset.lat;
+      if (lateral.indexOf('dom:') === 0) ouvrirDomaine(lateral.slice(4));
+      railOuvert = false;
+      rendre();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
   });
 
   const rb = document.getElementById('rail-b');
@@ -1225,7 +1307,7 @@ function barreThemes() {
       /* En arrivant dans le rail, on ouvre sur l'accueil : atterrir sur
          une courbe sans avoir vu le sommaire désoriente. */
       if (disposition === 'rail' && vue === 'mesure') vue = 'accueil';
-      if (disposition !== 'domaines') domaineOuvert = null;
+      if (disposition !== 'domaines') lateral = 'apercu';
       barreThemes();
       rendre();
     };
