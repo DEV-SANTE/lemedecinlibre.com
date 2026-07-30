@@ -1365,6 +1365,86 @@ section('12. Plateau de pneumologie — surveillance de la dérive');
     nominatif.length ? 'Trouvé : ' + nominatif.join(', ') : null);
 })();
 
+/* ==================================================================
+   13. IMAGES LOCALES — DEUX RÉGIMES, UNE SEULE RAISON
+
+   La règle défendue jusqu'ici n'a jamais porté sur les images, elle
+   portait sur les TIERS. Une image servie par notre propre domaine ne
+   fait parler personne d'autre que nous : aucune adresse IP ne part
+   ailleurs, aucun tiers n'apprend qu'une personne consulte un dossier
+   médical. Les images locales sont donc admises partout, y compris sur
+   les pages de santé, et c'est exactement ce qui rendait
+   l'auto-hébergement préférable au lien vers un hôte externe.
+
+   Les contrôles ci-dessous remplacent la confiance par des faits : le
+   fichier existe, il est déclaré, il tient dans un budget de poids, et
+   le dossier ne contient rien qui ne soit déclaré. Ce dernier point est
+   le plus utile à terme : c'est ainsi qu'une image arrivée « juste pour
+   essayer » ne reste pas six mois en production sans que personne sache
+   d'où elle vient.
+================================================================== */
+section('13. Images locales — déclarées, présentes, légères');
+
+(function () {
+  const dossier = VISUELS.dossierLocal;
+  verifier('visuels.js — le dossier des images locales est déclaré',
+    typeof dossier === 'string' && dossier.length > 0);
+  verifier('visuels.js — seize illustrations de domaine déclarées (' +
+    (VISUELS.locales || []).length + ')', (VISUELS.locales || []).length === 16);
+
+  /* --- 13.1 Chaque déclaration correspond à un fichier réellement
+         présent, sous budget. Une carte qui pointe vers un fichier
+         absent s'affiche vide, sans erreur visible. --- */
+  let total = 0, manquants = [], lourds = [];
+  (VISUELS.locales || []).forEach(v => {
+    const rel = dossier + v.id + '.jpg';
+    if (!existe(rel)) { manquants.push(v.id); return; }
+    const ko = fs.statSync(path.join(RACINE, rel)).size / 1024;
+    total += ko;
+    if (ko > VISUELS.poidsMaxKo) lourds.push(v.id + ' (' + Math.round(ko) + ' Ko)');
+  });
+  verifier('images — les seize fichiers sont présents', manquants.length === 0,
+    manquants.length ? 'Absents : ' + manquants.join(', ') : null);
+  verifier('images — chacune sous ' + VISUELS.poidsMaxKo + ' Ko', lourds.length === 0,
+    lourds.length ? 'Trop lourdes : ' + lourds.join(', ') : null);
+  verifier('images — poids total raisonnable (' + Math.round(total) + ' Ko)', total < 700,
+    total >= 700 ? 'La page affiche les seize cartes d’un coup : le total compte.' : null);
+
+  /* --- 13.2 Chaque déclaration a un sujet écrit : c'est ce qui
+         alimentera le texte alternatif, donc la seule description
+         disponible pour qui n'affiche pas les images. --- */
+  const sansSujet = (VISUELS.locales || []).filter(v => !v.sujet || v.sujet.length < 20);
+  verifier('visuels.js — chaque illustration a un sujet décrit', sansSujet.length === 0,
+    sansSujet.length ? 'Sans sujet : ' + sansSujet.map(v => v.id).join(', ') : null);
+
+  /* --- 13.3 Rien d'indéclaré dans le dossier. --- */
+  if (existe(dossier)) {
+    const surPlace = fs.readdirSync(path.join(RACINE, dossier))
+      .filter(f => /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(f));
+    const declares = (VISUELS.locales || []).map(v => v.id + '.jpg');
+    const intrus = surPlace.filter(f => declares.indexOf(f) === -1);
+    verifier('images — aucun fichier non déclaré dans le dossier (' + surPlace.length + ')',
+      intrus.length === 0, intrus.length ? 'Non déclarés : ' + intrus.join(', ') : null);
+  }
+
+  /* --- 13.4 Un domaine sans illustration afficherait une carte
+         bancale : la couverture doit être totale. --- */
+  const DOM = require('../commun/domaines.js');
+  const sansImage = DOM.liste.filter(d =>
+    !(VISUELS.locales || []).some(v => v.id === d.id));
+  verifier('images — chaque domaine a son illustration', sansImage.length === 0,
+    sansImage.length ? 'Domaines sans image : ' + sansImage.map(d => d.id).join(', ') : null);
+
+  /* --- 13.5 La provenance et les droits sont datés et nommés. Sans
+         cela, la question « d'où viennent ces images » n'a pas de
+         réponse écrite le jour où elle est posée. --- */
+  const src = lire('commun/visuels.js');
+  verifier('visuels.js — provenance des illustrations écrite',
+    /v0\.app/.test(src) && /Droits détenus par/.test(src) && /d[ée]claration du/.test(src));
+  verifier('visuels.js — la réserve sur les images génératives est notée',
+    /statut\s+d['’]auteur[\s\S]{0,80}?g[eé]n[eé]ratif/.test(src));
+})();
+
 /* ================================================================== */
 console.log('');
 if (echecs === 0) {
