@@ -1752,13 +1752,35 @@ function brancherInfobulle(series) {
    ===================================================================== */
 
 window.addEventListener('DOMContentLoaded', () => {
-  /* Aucun dossier enregistré dans ce navigateur — c'est le cas à chaque
-     première ouverture, donc pendant une présentation. On prend alors le
-     dossier de démonstration, entièrement fictif, décrit dans
-     commun/demonstration.js. Un dossier réel, s'il existe, a la
-     priorité : la démonstration ne peut pas écraser des données. */
-  DOSSIER = dossierCourant();
+  /* CHOIX DU DOSSIER AFFICHÉ.
+
+     Par défaut : le dossier enregistré dans ce navigateur s'il existe,
+     sinon le dossier de démonstration, entièrement fictif, décrit dans
+     commun/demonstration.js. Cet ordre n'est pas négociable — la
+     démonstration ne doit jamais masquer un dossier saisi par quelqu'un.
+
+     L'ennui, pour une présentation : un navigateur qui a déjà servi aux
+     essais contient un dossier à moitié rempli, et c'est lui qui
+     s'affiche. D'où « ?demo=1 », qui impose le jeu d'exemples sans rien
+     effacer : le dossier enregistré est simplement ignoré le temps de
+     cette page. C'est un paramètre d'adresse, donc visible, donc
+     impossible à confondre avec un affichage normal. */
+  const forcerDemo = /[?&]demo=1(&|$)/.test(location.search);
+  DOSSIER = forcerDemo ? null : dossierCourant();
   if (!DOSSIER && typeof DEMO !== 'undefined') DOSSIER = DEMO.dossierDemo;
+
+  /* Si ce sont les exemples qui s'affichent, le bandeau le dit. Un jeu de
+     démonstration crédible sans mention est le seul risque sérieux de ce
+     fichier : quelqu'un pourrait croire lire un dossier. */
+  if (DOSSIER && DOSSIER.demo) {
+    const bd = document.querySelector('.bandeau');
+    if (bd) {
+      const p = document.createElement('span');
+      p.textContent = ' Jeu de démonstration affiché : ces résultats, ces comptes rendus et ' +
+        'ces avis de médecin sont inventés de bout en bout.';
+      bd.appendChild(p);
+    }
+  }
   document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.setAttribute('data-dispo', disposition);
   rendre();
