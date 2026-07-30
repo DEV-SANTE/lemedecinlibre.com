@@ -1155,6 +1155,22 @@ section('10. Dispositions — aucune section escamotée');
     new Set(rail).size === rail.length,
     new Set(rail).size !== rail.length ? 'Doublons : ' + rail.join(', ') : null);
 
+  /* Shell « Domaines » : la grille conduit à tout le reste. Un
+     agencement qui ferait disparaître le parcours ou les dépistages
+     serait une information soustraite, pas une mise en page. */
+  const sousGrille = ((src.match(/SOUS_GRILLE\s*=\s*\[([\s\S]*?)\]/) || [])[1] || '')
+    .match(/'([a-z]+)'/g) || [];
+  const grille = sousGrille.map(x => x.replace(/'/g, ''))
+    .concat(['cockpit', 'lire', 'vignettes', 'graphique']);
+  const perdues = cles.filter(k => grille.indexOf(k) === -1);
+  verifier('suivi.js — la disposition Domaines atteint les dix sections', perdues.length === 0,
+    perdues.length ? 'Inatteignables depuis la grille : ' + perdues.join(', ') : null);
+  verifier('suivi.js — la grille n’affiche aucune section deux fois',
+    new Set(grille).size === grille.length,
+    new Set(grille).size !== grille.length ? 'Doublons : ' + grille.join(', ') : null);
+  verifier('suivi.js — trois agencements proposés',
+    /id:\s*'domaines'/.test(src) && /shellDomaines/.test(src));
+
   const idsVues = (blocVues.match(/id:\s*'([a-z]+)'/g) || [])
     .map(s => s.replace(/id:\s*'([a-z]+)'/, '$1'));
   verifier('suivi.js — sept entrées de rail hors mesures (' + idsVues.length + ')',
