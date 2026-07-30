@@ -247,10 +247,7 @@ figure{margin:0}
 @media(max-width:620px){.mods{grid-template-columns:1fr}}
 
 /* ---------- carte couverture ---------- */
-.mapwrap{background:#fff;border:1px solid var(--line);border-radius:var(--r-xl);
-  padding:30px;box-shadow:var(--sh);text-align:center}
-.mapwrap svg{width:100%;max-width:330px;height:auto;margin:0 auto;display:block}
-.mapwrap .cap{font-size:11.7px;color:var(--ink-4);margin-top:16px;line-height:1.5}
+/* Les règles de la carte ont été retirées avec elle. */
 
 /* ---------- nots ---------- */
 .nots{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -284,6 +281,21 @@ figure{margin:0}
   border-bottom:1px solid var(--line-2)}
 .flow dl>dt:last-of-type,.flow dl>dd:last-of-type{border-bottom:none}
 @media(max-width:940px){.flows{grid-template-columns:1fr}}
+/* Les trois situations d'accueil, à la place de la carte. */
+.lieux{background:#fff;border:1px solid var(--line);border-radius:var(--r-l);
+  padding:24px 26px 22px;box-shadow:var(--sh-s)}
+.lieux-k{font-size:10.6px;font-weight:620;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--pri);margin-bottom:16px}
+.lieu{display:flex;gap:14px;padding:15px 0;border-top:1px solid var(--line-2)}
+.lieu:first-of-type{border-top:none;padding-top:0}
+.lieu-ic{width:36px;height:36px;flex:0 0 36px;border-radius:11px;background:var(--pri-l);
+  color:var(--pri-d);display:grid;place-items:center}
+.lieu-ic .ico{width:18px;height:18px}
+.lieu b{display:block;font-size:14px;font-weight:600;letter-spacing:-.015em;color:var(--ink)}
+.lieu span{display:block;font-size:13.1px;color:var(--ink-2);line-height:1.6;margin-top:4px}
+.lieux .cap{margin-top:17px;padding-top:16px;border-top:1px solid var(--line-2);
+  font-size:12.1px;color:var(--ink-4);line-height:1.6}
+
 .callout{display:flex;gap:16px;background:var(--pri-l);border:1px solid #bcd7ef;
   border-radius:var(--r-l);padding:24px 26px;font-size:14.1px;line-height:1.6}
 .callout .ico{color:var(--pri-d);flex:0 0 24px;margin-top:2px}
@@ -784,27 +796,55 @@ footer a{color:#cadcec}
     </div>
 
     <div>
-      <div class="mapwrap">
-        <svg viewBox="0 0 300 300" role="img" aria-label="Schéma indicatif d'un réseau de centres répartis sur le territoire français">
-          <path d="M150 18 L196 30 L232 62 L246 96 L238 128 L252 150 L246 178 L258 200
-                   L236 226 L214 240 L196 268 L166 282 L134 276 L104 258 L78 262 L58 240
-                   L44 208 L54 178 L40 152 L52 122 L44 92 L68 62 L104 34 Z"
-                fill="#e9f2fb" stroke="#2069b0" stroke-width="1.6" stroke-linejoin="round" opacity=".9"/>
-          <g fill="#2069b0">
-            <circle cx="168" cy="92" r="8"/>
-            <circle cx="168" cy="92" r="15" fill="#2069b0" opacity=".16"/>
-            <circle cx="108" cy="70" r="5"/><circle cx="216" cy="76" r="5"/>
-            <circle cx="86" cy="140" r="5"/><circle cx="146" cy="150" r="5"/>
-            <circle cx="222" cy="152" r="5"/><circle cx="196" cy="204" r="5"/>
-            <circle cx="112" cy="212" r="5"/><circle cx="224" cy="232" r="5"/>
-          </g>
-          <g stroke="#2069b0" stroke-width="1" opacity=".28" stroke-dasharray="3 4">
-            <path d="M168 92 L108 70M168 92 L216 76M168 92 L86 140M168 92 L146 150
-                     M168 92 L222 152M168 92 L196 204M168 92 L112 212M168 92 L224 232" fill="none"/>
-          </g>
-        </svg>
-        <p class="cap">Schéma indicatif. Le réseau est en construction et le référencement
-        est ouvert : la liste des centres partenaires est communiquée lors de la mise en place.</p>
+      <!-- ==================================================================
+           CE QUI REMPLACE LA CARTE, ET POURQUOI IL N'Y A PLUS DE CARTE
+
+           Il y avait ici une silhouette de la France avec neuf points reliés
+           à un dixième, plus gros. Deux problèmes, dont un que j'ai d'abord
+           essayé de réparer plutôt que de reconnaître.
+
+           Le dessin. La silhouette était un polygone approximatif : pas de
+           Bretagne, pas de Corse, un littoral en dents de scie. J'ai tenté
+           deux fois de la redessiner, en courbes puis en segments posés sur
+           des points de côte réels. Les deux fois, le résultat ressemblait
+           davantage à une pomme de terre qu'à la France. Une carte de France
+           qu'on ne reconnaît pas, sur une page qui promet une couverture
+           nationale, dit surtout qu'on ne sait pas dessiner le pays : mieux
+           vaut pas de carte.
+
+           Le fond. Les neuf points étaient reliés en étoile à un centre plus
+           gros. C'est l'image d'un circuit fermé avec une tête de réseau,
+           affichée à côté d'un titre qui dit l'inverse. Et neuf points sur
+           une carte, alors que le réseau est en construction, laissent croire
+           à un maillage qui n'existe pas encore.
+
+           À la place : les trois situations d'accueil, qui sont l'argument
+           réel de cette section, et la mention honnête de l'état du réseau.
+      ================================================================== -->
+      <div class="lieux">
+        <p class="lieux-k">Où vos collaborateurs sont reçus</p>
+        <div class="lieu">
+          <span class="lieu-ic"><svg class="ico"><use href="#i-pin"/></svg></span>
+          <div><b>En centre de santé, en ville</b>
+          <span>Consultation et prélèvement au même endroit, dans la même venue quand le
+          plateau du centre le permet.</span></div>
+        </div>
+        <div class="lieu">
+          <span class="lieu-ic"><svg class="ico"><use href="#i-branch"/></svg></span>
+          <div><b>En gare</b>
+          <span>Pour les sites où le trajet est le premier obstacle : le rendez-vous se prend
+          sur le chemin du travail, sans déplacement à organiser.</span></div>
+        </div>
+        <div class="lieu">
+          <span class="lieu-ic"><svg class="ico"><use href="#i-calendar"/></svg></span>
+          <div><b>Avant ou après le travail</b>
+          <span>Créneaux tôt le matin et en fin de journée, pour que la visite ne se paie pas
+          en heures d’absence.</span></div>
+        </div>
+        <p class="cap">Le réseau est en construction et le référencement est ouvert : la
+        liste des centres partenaires, avec leur plateau technique et leurs horaires, est
+        communiquée lors de la mise en place. Nous n’affichons pas de carte tant que le
+        maillage n’est pas celui que nous promettrions.</p>
       </div>
 
       <div class="ph ph-side">
