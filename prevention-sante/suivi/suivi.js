@@ -574,26 +574,82 @@ if (typeof VISUELS !== 'undefined' && VISUELS.locales) {
   VISUELS.locales.forEach(v => { VIS_LOCAL[v.id] = v.sujet; });
 }
 
+/* BANDEAU DE BILAN — deux colonnes, et court.
+
+   Il était trop haut : une barre de progression sur toute la largeur,
+   puis deux lignes de mise en garde, empilées sous le titre. La maquette
+   met tout de front — texte à gauche, cadran à droite — et tient en un
+   peu plus de cent points de haut. C'est refait ainsi.
+
+   Une différence assumée avec la maquette : elle affiche « 82 % » en gros
+   dans le cadran. Un pourcentage nu sur une page de santé se lit comme
+   une note, et on ne sait pas 82 % de quoi. Le cadran affiche donc la
+   fraction — 14/17 — qui dit la même chose sans se faire passer pour un
+   résultat. L'arc, lui, reste proportionnel.
+
+   La mise en garde n'est pas supprimée, elle est ramenée à une phrase et
+   collée au texte : un compteur d'avancement n'est pas un compteur de
+   bonne santé, et ça doit rester écrit là où le compteur s'affiche. */
 function bandeauBilan() {
   const pct = Math.round((BILAN.realises / BILAN.prevus) * 100);
+  const lu = BILAN.realises + ' examens réalisés sur ' + BILAN.prevus + ' prévus';
   return `
     <section class="bilan-b">
       <img class="bb-fond" src="../images/bandeau/${esc(BANDEAU.id)}.jpg"
            width="1024" height="490" decoding="async" alt="">
       <span class="bb-voile" aria-hidden="true"></span>
       <div class="bb-in">
-        <p class="bb-k">Bilan de prévention en cours</p>
-        <h2 class="bb-t">${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus</h2>
-        <p class="bb-s">Commencé le ${esc(jolieDate(BILAN.debut))}. La synthèse avec votre
-        médecin est prévue le ${esc(jolieDate(BILAN.synthesePrevue))}.</p>
-        <div class="bb-jauge" role="img"
-             aria-label="${BILAN.realises} examens réalisés sur ${BILAN.prevus} prévus">
-          <i style="width:${pct}%"></i>
+        <div class="bb-txt">
+          <p class="bb-k">Bilan de prévention en cours</p>
+          <h2 class="bb-t">${esc(lu)}</h2>
+          <p class="bb-s">Commencé le ${esc(jolieDate(BILAN.debut))}. La synthèse avec votre
+          médecin est prévue le ${esc(jolieDate(BILAN.synthesePrevue))}. Ce compteur suit
+          l’avancement du parcours, pas vos résultats.</p>
         </div>
-        <p class="bb-n">Ce compteur suit l’avancement du parcours. Il ne dit rien de vos
-        résultats : un parcours complet à ${pct} % n’est ni une bonne ni une mauvaise nouvelle.</p>
+        <div class="bb-cadran" role="img" aria-label="${esc(lu)}"
+             style="--part:${pct}%">
+          <span class="bb-cadran-in">${BILAN.realises}<em>/${BILAN.prevus}</em></span>
+        </div>
       </div>
     </section>`;
+}
+
+/* LES QUATRE CHIFFRES DE LA MAQUETTE.
+
+   Ils remplacent mes quatre tuiles (rendez-vous, questionnaire,
+   documents, antériorité), qui n'existent pas dans la maquette.
+
+   « Points à discuter » est le seul des quatre qui demande une
+   précaution. Ce n'est pas le logiciel qui décide de ce qui mérite un
+   échange : le chiffre compte les domaines pour lesquels un médecin a
+   écrit et signé un avis « à surveiller » ou « à interpréter ». Il
+   dénombre des phrases de médecin, il n'évalue aucune valeur. */
+function blocStats() {
+  const aDiscuter = DOSSIER ? DOMAINES.liste
+    .map(d => Avis.lire(DOSSIER, d.id))
+    .filter(a => a && (a.statut === 'surveiller' || a.statut === 'interpreter')).length : 0;
+
+  const cases = [
+    { i: 'i-clipboard', v: BILAN.realises + '/' + BILAN.prevus, k: 'Examens réalisés',
+      d: 'sur ce bilan' },
+    { i: 'i-flask', v: String(BILAN.resultats), k: 'Résultats disponibles',
+      d: (BILAN.prevus - BILAN.resultats) + ' encore attendus' },
+    { i: 'i-chat', v: String(aDiscuter), k: 'Points à discuter',
+      d: 'signalés par votre médecin' },
+    { i: 'i-calendar', v: jolieDate(BILAN.synthesePrevue), k: 'Prochain rendez-vous',
+      d: 'synthèse médicale' }
+  ];
+
+  return `
+    <div class="c-tiles">
+      ${cases.map(c => `
+        <div class="tile">
+          <div class="t-ic">${ic(c.i)}</div>
+          <b class="t-v">${esc(c.v)}</b>
+          <span class="t-k">${esc(c.k)}</span>
+          <span class="t-d">${esc(c.d)}</span>
+        </div>`).join('')}
+    </div>`;
 }
 
 function blocEtapes() {
@@ -782,6 +838,7 @@ function shellDomaines(S, groupes, p) {
     panneau = `
       ${S.cockpit}
       ${bandeauBilan()}
+      ${blocStats()}
       ${blocEtapes()}
       ${blocPoints()}
       <section class="bloc">
@@ -954,16 +1011,32 @@ function rendre() {
      d'agencement ne doit rien changer de ce que la personne apprend.
      Le vérificateur contrôle qu'aucune section n'est absente d'un shell. */
   const S = {};
+  /* EN-TÊTE. Posé sur le fond de page, sans carte et sans encadrement :
+     c'est ce que fait la maquette, et c'est ce qui permet au bandeau bleu
+     d'être la première chose qu'on voit sous le nom. */
   S.cockpit = `
-    <!-- ===== cockpit ===== -->
-    <div class="cockpit">
-      <div class="c-hello">
-        <p class="c-eyebrow">Mon suivi</p>
-        <h1>Bonjour Camille.</h1>
-        <p class="c-sub">Cinq visites depuis avril 2022, douze paramètres suivis. Tout ce qui
-        suit vous appartient et n’est visible que de vous et du médecin qui vous suit.</p>
-      </div>
+    <!-- ===== en-tête ===== -->
+    <header class="entete">
+      <p class="c-eyebrow">Mon suivi</p>
+      <h1>Bonjour Camille.</h1>
+      <p class="c-sub">Cinq visites depuis avril 2022, douze paramètres suivis. Tout ce qui
+      suit vous appartient et n’est visible que de vous et du médecin qui vous suit.</p>
+    </header>
+  `;
 
+  /* LA FRISE DES VISITES rejoint la section « Mon parcours ».
+     Elle n'existe pas dans la maquette, et elle occupait le haut de la
+     vue d'ensemble. Elle n'est pas supprimée pour autant : elle raconte
+     quelque chose que la liste datée ne montre pas, la répartition des
+     visites dans le temps. Elle est donc déplacée, pas jetée — et pas
+     dans une clé de section à elle, qui serait une section de plus à
+     rendre atteignable pour rien. */
+  const friseVisites = `
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Mes visites, année par année</h2>
+        <p class="b-s">Cinq passages depuis 2022, avec ce qui a été fait à chacun.</p>
+      </div></div>
       <div class="ruban">
         <div class="r-line"></div>
         ${VISITES.map((v, i) => `
@@ -979,22 +1052,7 @@ function rendre() {
             <span class="r-l">${esc(v.lieu)}</span>
           </div>`).join('')}
       </div>
-
-      <div class="c-tiles">
-        <div class="tile"><div class="t-ic">${ic('i-calendar')}</div>
-          <span class="t-k">Prochain rendez-vous</span><b class="t-v">Mardi 7h30</b>
-          <span class="t-d">Centre de santé B (fictif)</span></div>
-        <div class="tile"><div class="t-ic">${ic('i-clipboard')}</div>
-          <span class="t-k">Questionnaire</span><b class="t-v">Transmis</b>
-          <span class="t-d">le 20 juillet 2026</span></div>
-        <div class="tile"><div class="t-ic">${ic('i-file')}</div>
-          <span class="t-k">Mes documents</span><b class="t-v">${DOCUMENTS.length}</b>
-          <span class="t-d">sur quatre années</span></div>
-        <div class="tile"><div class="t-ic">${ic('i-history')}</div>
-          <span class="t-k">Antériorité</span><b class="t-v">4 ans</b>
-          <span class="t-d">depuis avril 2022</span></div>
-      </div>
-    </div>
+    </section>
   `;
   S.lire = `
     <!-- ===== comment lire cette page ===== -->
@@ -1123,7 +1181,8 @@ function rendre() {
     </section>
   `;
   S.parcours = `
-    <!-- ===== frise ===== -->
+    ${friseVisites}
+    <!-- ===== parcours daté ===== -->
     <section class="bloc">
       <div class="b-h"><div>
         <h2>Mon parcours</h2>

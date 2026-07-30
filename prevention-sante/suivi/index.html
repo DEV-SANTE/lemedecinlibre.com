@@ -22,6 +22,14 @@
   --pri-l:#e4f1f3; --pri-l2:#f1f8f9;
   --line:#dce8eb; --line-2:#e9f1f3; --surf:#f3f8f9; --sand:#faf7f2;
   --amber:#b45309; --amber-bg:#fdf6ec; --amber-line:#f0d9b5;
+  /* VERT D'AVANCEMENT. Les étapes réalisées étaient marquées avec --pri,
+     un bleu-vert sombre qui se lit comme un vert éteint. Celui-ci est
+     franc. Il ne dit rien d'un résultat : il dit qu'une étape a eu lieu,
+     ce qui est une information administrative et non clinique.
+     Il reste distinct des trois teintes réservées aux avis du médecin
+     (#0f766e, #b45309, #a52222), et il ne sert jamais à qualifier une
+     valeur — le vérificateur contrôle les deux. */
+  --fait:#16a34a; --fait-l:#dcfce7; --fait-ln:#86e0aa;
   --r:12px; --r-l:20px; --r-xl:28px;
   --sh-s:0 1px 2px rgba(8,24,31,.045);
   --sh:0 1px 2px rgba(8,24,31,.05), 0 12px 36px rgba(8,24,31,.06);
@@ -84,6 +92,9 @@ button{font:inherit}
 main{max-width:var(--cadre);margin:0 auto;padding:34px 32px 90px}
 
 /* ---------- cockpit ---------- */
+/* L'en-tête est du texte posé sur la page, pas une carte : c'est ce qui
+   permet au bandeau bleu de venir juste sous le nom. */
+.entete{margin:0 0 18px}
 .cockpit{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);
   padding:34px;box-shadow:var(--sh);margin-bottom:22px;position:relative;overflow:hidden}
 .cockpit::before{content:"";position:absolute;inset:0;pointer-events:none;
@@ -92,17 +103,22 @@ main{max-width:var(--cadre);margin:0 auto;padding:34px 32px 90px}
 .c-eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:11px;font-weight:620;
   letter-spacing:.16em;text-transform:uppercase;color:var(--pri);margin-bottom:14px}
 .c-eyebrow::before{content:"";width:20px;height:1.5px;background:var(--pri);border-radius:2px}
-.c-sub{font-size:15.8px;color:var(--ink-2);margin-top:14px;max-width:62ch}
-.c-tiles{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
-  background:var(--line);border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden}
+.c-sub{font-size:14.6px;color:var(--ink-2);margin-top:8px;max-width:62ch}
+/* Quatre cartes distinctes, comme la maquette : le chiffre d'abord, le
+   libellé ensuite. Elles étaient soudées en un seul bloc découpé par des
+   filets d'un point. */
+.c-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;
+  margin-bottom:22px}
 @media(max-width:860px){.c-tiles{grid-template-columns:1fr 1fr}}
-.tile{background:var(--card);padding:20px 20px 22px}
-.t-ic{width:36px;height:36px;border-radius:11px;background:var(--pri-l);color:var(--pri-d);
-  display:grid;place-items:center;margin-bottom:14px}
-.t-k{display:block;font-size:11px;font-weight:620;letter-spacing:.09em;
-  text-transform:uppercase;color:var(--ink-4)}
-.t-v{display:block;font-size:20.5px;font-weight:640;letter-spacing:-.03em;margin:7px 0 3px}
-.t-d{display:block;font-size:12.4px;color:var(--ink-3)}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:15px 16px 16px;box-shadow:var(--sh-s)}
+.t-ic{width:32px;height:32px;border-radius:9px;background:var(--pri-l);color:var(--pri-d);
+  display:grid;place-items:center;margin-bottom:11px}
+.t-ic .ico{width:17px;height:17px;flex:0 0 17px}
+.t-v{display:block;font-size:19px;font-weight:640;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums}
+.t-k{display:block;font-size:12.8px;font-weight:560;color:var(--ink-2);margin-top:3px}
+.t-d{display:block;font-size:11.8px;color:var(--ink-4);margin-top:1px}
 
 /* ---------- blocs ---------- */
 .bloc{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);
@@ -716,7 +732,7 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
    ------------------------------------------------------------------ */
 .bilan-b{position:relative;overflow:hidden;isolation:isolate;
   background:linear-gradient(135deg,var(--pri) 0%,var(--pri-2) 100%);
-  border-radius:var(--r-xl);padding:30px 32px;margin-bottom:22px;color:#fff}
+  border-radius:var(--r-l);padding:20px 24px;margin-bottom:16px;color:#fff}
 .bb-fond{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   object-position:center 42%;z-index:-2;pointer-events:none}
 /* Voile de lisibilité : opaque à gauche (le texte), dégagé à droite
@@ -725,33 +741,53 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
 .bb-voile{position:absolute;inset:0;z-index:-1;pointer-events:none;
   background:linear-gradient(100deg,var(--pri) 0%,var(--pri) 40%,
     rgba(6,26,33,.60) 74%,rgba(6,26,33,.32) 100%)}
-.bb-in{position:relative}
-.bb-k{font-size:11px;font-weight:620;letter-spacing:.16em;text-transform:uppercase;
+.bb-in{position:relative;display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.bb-txt{flex:1 1 380px;min-width:0}
+/* Cadran d'avancement. L'arc est proportionnel, le centre porte la
+   fraction et non un pourcentage : « 14/17 » se comprend, « 82 % » se lit
+   comme une note. */
+.bb-cadran{flex:0 0 auto;width:62px;height:62px;border-radius:50%;display:grid;
+  place-items:center;margin-left:auto;
+  background:conic-gradient(#fff var(--part),rgba(255,255,255,.26) 0)}
+.bb-cadran-in{width:48px;height:48px;border-radius:50%;background:var(--pri);
+  display:grid;place-items:center;font-family:var(--mono);font-size:12.6px;
+  font-weight:600;letter-spacing:-.02em}
+.bb-cadran-in em{font-style:normal;color:rgba(255,255,255,.66)}
+.bb-k{font-size:10.6px;font-weight:620;letter-spacing:.15em;text-transform:uppercase;
   color:rgba(255,255,255,.72)}
 .bb-t{font-size:clamp(19px,1.9vw,23px);font-weight:640;letter-spacing:-.025em;margin-top:10px;
   color:#fff}
-.bb-s{font-size:14px;color:rgba(255,255,255,.86);margin-top:9px;max-width:64ch}
-.bb-jauge{height:8px;border-radius:999px;background:rgba(255,255,255,.24);margin-top:20px;
-  overflow:hidden}
-.bb-jauge>i{display:block;height:100%;background:#fff;border-radius:999px}
-.bb-n{font-size:11.9px;color:rgba(255,255,255,.72);margin-top:12px;max-width:72ch;line-height:1.55}
+.bb-s{font-size:13.4px;color:rgba(255,255,255,.85);margin-top:7px;max-width:80ch;line-height:1.55}
 
-.etapes{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:0}
-.et{position:relative;padding:0 14px 0 0}
+/* SEPT ÉTAPES, UNE LIGNE, SANS DÉBORDEMENT.
+   C'était « autant de colonnes que ça rentre » : sept étapes de 148
+   points minimum passaient à la ligne dès que le panneau descendait sous
+   mille points. Sept colonnes égales, et minmax(0,1fr) pour qu'une
+   colonne accepte d'être plus étroite que son contenu au lieu de pousser
+   la grille — c'est exactement ce qui fait déborder une grille CSS. Les
+   mots longs se coupent plutôt que de dépasser. */
+.etapes{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0}
+.etapes>li{min-width:0;overflow-wrap:break-word}
+.et{position:relative;padding:0 10px 0 0;min-width:0}
 .et::before{content:"";position:absolute;left:11px;right:0;top:11px;height:2px;
   background:var(--line);border-radius:2px}
+/* Le trait entre deux étapes faites passe au vert pâle, comme dans la
+   maquette : il prolonge le fil de ce qui est accompli.
+   Déclaré APRÈS la règle générique : à spécificité égale, c'est l'ordre
+   qui tranche, et l'inverse laissait le trait gris. */
+.et-fait::before{background:var(--fait-ln)}
 .et:last-child::before{display:none}
 .et-p{position:relative;z-index:2;display:grid;place-items:center;width:24px;height:24px;
   border-radius:50%;background:var(--card);border:2px solid var(--ink-5);box-sizing:border-box;
   margin-bottom:13px;color:#fff}
 .et-p .ico{width:13px;height:13px;flex:0 0 13px;stroke-width:3}
-.et-fait .et-p{background:var(--pri);border-color:var(--pri)}
+.et-fait .et-p{background:var(--fait);border-color:var(--fait)}
 .et-encours .et-p{border-color:var(--pri);border-style:dashed}
-.et-n{display:block;font-size:13.2px;font-weight:580;letter-spacing:-.015em;line-height:1.3}
-.et-e{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+.et-n{display:block;font-size:12.6px;font-weight:580;letter-spacing:-.015em;line-height:1.3;hyphens:auto}
+.et-e{display:block;font-size:10.4px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
   color:var(--ink-4);margin-top:6px}
-.et-fait .et-e{color:var(--pri-d)}
-.et-d{display:block;font-size:11px;color:var(--ink-5);font-family:var(--mono);margin-top:4px}
+.et-fait .et-e{color:#0f7f39}
+.et-d{display:block;font-size:10.6px;color:var(--ink-5);font-family:var(--mono);margin-top:4px}
 @media(max-width:760px){
   .etapes{grid-template-columns:1fr;gap:14px}
   .et{padding:0 0 0 34px}
@@ -791,8 +827,20 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
   <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v4M16 3.5v4"/><path d="M9 15l1.8 1.8L15 12.6"/></symbol>
   <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M9 3.5h6a1.5 1.5 0 011.5 1.5v.5h1.5A1.5 1.5 0 0119.5 7v12.5A1.5 1.5 0 0118 21H6a1.5 1.5 0 01-1.5-1.5V7A1.5 1.5 0 016 5.5h1.5V5A1.5 1.5 0 019 3.5z"/><path d="M8.5 11h7M8.5 14.5h7M8.5 18h4"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3.5H7A1.5 1.5 0 005.5 5v14A1.5 1.5 0 007 20.5h10a1.5 1.5 0 001.5-1.5V8z"/><path d="M14 3.5V8h4.5M8.5 12.5h7M8.5 16h5"/></symbol>
-  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 108.5-8.5A8.5 8.5 0 005.4 6.6"/><path d="M3.5 3.5v3.4h3.4M12 7.5V12l3.2 2"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11.2A7 7 0 005 9.8C5 14.7 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.5"/></symbol>
+  <!-- Cinq symboles qui MANQUAIENT alors que le code les demandait :
+       i-stetho, i-flask, i-lungs, i-syringe pour les étiquettes de la
+       frise des visites, i-chat pour la case « points à discuter ».
+       Un « use » qui pointe vers un symbole absent ne provoque aucune
+       erreur : il dessine simplement un vide. Les étiquettes de la frise
+       s'affichaient donc sans leur pictogramme depuis le début, et rien
+       ne le signalait. Un contrôle du vérificateur compare désormais les
+       symboles demandés et les symboles présents. -->
+  <symbol id="i-stetho" viewBox="0 0 24 24"><path d="M5 3.5v5a4.2 4.2 0 008.4 0v-5"/><path d="M9.2 12.7v2.6a4.3 4.3 0 008.6 0v-1.6"/><circle cx="18.1" cy="11.4" r="2.1"/><path d="M3.4 3.5h3.2M11.8 3.5H15"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3.5h6M10.2 3.5v5.1L5.6 17a2.2 2.2 0 001.9 3.4h9a2.2 2.2 0 001.9-3.4l-4.6-8.4V3.5"/><path d="M7.4 14.2h9.2"/></symbol>
+  <symbol id="i-lungs" viewBox="0 0 24 24"><path d="M12 3.5v9.2"/><path d="M9.4 8.4c0 2.6-1 3-2.4 4.4-1.6 1.6-2.5 3-2.5 5.2 0 1.6.9 2.5 2.4 2.5 1.9 0 4.9-1.1 4.9-3.4V8.4"/><path d="M14.6 8.4c0 2.6 1 3 2.4 4.4 1.6 1.6 2.5 3 2.5 5.2 0 1.6-.9 2.5-2.4 2.5-1.9 0-4.9-1.1-4.9-3.4V8.4"/></symbol>
+  <symbol id="i-syringe" viewBox="0 0 24 24"><path d="M20.5 3.5l-3 3M18 9l-3-3M10.5 8.5l5 5-7 7H4v-4.5z"/><path d="M13.5 5.5l5 5M9 12l3 3"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20.5 12.4c0 4-3.8 7.2-8.5 7.2a10 10 0 01-2.6-.34L4.5 20.5l1.2-3.3A6.9 6.9 0 013.5 12.4c0-4 3.8-7.2 8.5-7.2s8.5 3.2 8.5 7.2z"/></symbol>
 </defs></svg>
 
 <div class="bandeau">
@@ -844,13 +892,13 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=16"></script>
-<script src="../commun/visuels.js?v=16"></script>
-<script src="../commun/domaines.js?v=16"></script>
-<script src="../commun/avis.js?v=16"></script>
-<script src="../commun/themes.js?v=16"></script>
-<script src="../commun/lexique.js?v=16"></script>
-<script src="suivi.js?v=16"></script>
+<script src="../plateforme/biologie.js?v=17"></script>
+<script src="../commun/visuels.js?v=17"></script>
+<script src="../commun/domaines.js?v=17"></script>
+<script src="../commun/avis.js?v=17"></script>
+<script src="../commun/themes.js?v=17"></script>
+<script src="../commun/lexique.js?v=17"></script>
+<script src="suivi.js?v=17"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>
