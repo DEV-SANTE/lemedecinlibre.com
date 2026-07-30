@@ -420,9 +420,13 @@ let compare = null;   /* id du second paramètre, même unité seulement */
    assez fine pour être écrite ici et contrôlée.
    ===================================================================== */
 const DISPOSITIONS = [
-  { id: 'deroule', nom: 'Déroulé', resume: 'Tout sur une page' },
-  { id: 'rail',    nom: 'Rail et panneau', resume: 'Liste à gauche, détail à droite' }
+  { id: 'deroule',  nom: 'Déroulé', resume: 'Tout sur une page' },
+  { id: 'rail',     nom: 'Rail et panneau', resume: 'Liste à gauche, détail à droite' },
+  { id: 'domaines', nom: 'Domaines', resume: 'Seize cartes illustrées' }
 ];
+
+/* Domaine ouvert dans la disposition « Domaines ». null = la grille. */
+let domaineOuvert = null;
 let disposition = 'deroule';
 
 /* Vue affichée dans le panneau. « mesure » suit le paramètre choisi. */
@@ -446,6 +450,155 @@ const ORDRE_DEROULE = ['cockpit', 'lire', 'graphique', 'vignettes', 'parcours',
 
 function shellDeroule(S) {
   return ORDRE_DEROULE.map(k => S[k]).join('\n');
+}
+
+/* =====================================================================
+   SHELL « DOMAINES » — L'ESTHÉTIQUE v0, L'ORIGINE INCHANGÉE
+
+   Grille de seize cartes illustrées, exactement la structure de la
+   maquette : image en haut avec la pastille de statut posée dessus,
+   nom du domaine, formulation grand public, nombre de résultats.
+
+   UNE SEULE DIFFÉRENCE, INVISIBLE À L'ŒIL, ET C'EST TOUT LE SUJET.
+   Dans la maquette, la pastille était un attribut de la donnée : elle
+   s'affichait toujours, produite par personne. Ici elle vient de
+   Avis.lire(), qui rend null si l'avis n'a pas de statut, pas d'auteur
+   ou pas de date. Un domaine que le médecin n'a pas commenté affiche
+   « Non commenté » — pas une pastille verte par défaut. C'est le seul
+   endroit où l'on pourrait rebrancher un calcul sans que ça se voie,
+   donc le seul qu'il faut verrouiller.
+
+   L'image ne dépend d'aucun avis : les seize cartes s'affichent
+   toujours, y compris sur un dossier vierge. Un domaine masqué faute
+   d'avis serait un domaine dont la personne ignore qu'il a été abordé.
+   ===================================================================== */
+function carteDomaine(d) {
+  const a = DOSSIER ? Avis.lire(DOSSIER, d.id) : null;
+  const st = a ? Avis.statut(a.statut) : null;
+  const n = d.parametres.length;
+
+  return `
+    <button class="dcarte" data-dom="${esc(d.id)}" style="--dc:${d.couleur}">
+      <span class="dc-img">
+        <img src="../images/domaines/${esc(d.id)}.jpg" width="800" height="500"
+             loading="lazy" decoding="async"
+             alt="${esc(VIS_LOCAL[d.id] || ('Illustration : ' + d.nom))}">
+        ${a ? `<span class="dc-pastille m-${esc(TEINTE_AVIS[a.statut])}">
+                 <i></i>${esc(st.l)}</span>`
+            : `<span class="dc-pastille dc-neutre"><i></i>Non commenté</span>`}
+      </span>
+      <span class="dc-corps">
+        <b class="dc-nom">${esc(d.nom)}</b>
+        <span class="dc-clair">${esc(d.clair)}</span>
+        <span class="dc-syn">${a && a.synthese ? esc(a.synthese)
+          : 'Aucune synthèse écrite pour ce domaine.'}</span>
+        <span class="dc-pied">
+          <em>${n ? n + ' mesure' + (n > 1 ? 's' : '') : 'Sans mesure biologique'}</em>
+          <span class="dc-go">Consulter ${ic('i-arrow')}</span>
+        </span>
+      </span>
+    </button>`;
+}
+
+/* Correspondance statut d'avis -> classe de teinte déjà en place. Une
+   seule échelle de couleurs dans tout le produit. */
+const TEINTE_AVIS = { usuelles: 'vert', surveiller: 'orange', interpreter: 'rouge' };
+
+/* Textes alternatifs, repris du catalogue des visuels. */
+const VIS_LOCAL = {};
+if (typeof VISUELS !== 'undefined' && VISUELS.locales) {
+  VISUELS.locales.forEach(v => { VIS_LOCAL[v.id] = v.sujet; });
+}
+
+/* Sections placées sous la grille. Elles ne sont pas dans une carte de
+   domaine : le parcours, les dépistages, les comptes rendus, le
+   glossaire et les limites concernent la personne entière, pas un
+   organe. Sans elles, la disposition « Domaines » ferait disparaître de
+   l'écran cinq blocs d'information — exactement ce que le contrôle des
+   agencements est censé empêcher. « vignettes » et « graphique » sont
+   atteints à l'intérieur d'un domaine, pas ici. */
+const SOUS_GRILLE = ['parcours', 'actes', 'couverture', 'documents',
+                     'glossaire', 'limites'];
+
+function shellDomaines(S, groupes, p) {
+  if (!domaineOuvert) {
+    return `
+      ${S.cockpit}
+      <section class="bloc">
+        <div class="b-h"><div>
+          <h2>Vos domaines de santé</h2>
+          <p class="b-s">Seize domaines, qu’ils aient donné un résultat ou non. Une pastille
+          n’apparaît que si votre médecin a qualifié le domaine : elle porte alors son nom et
+          la date. Aucun statut n’est calculé.</p>
+        </div></div>
+        <div class="dgrille">${DOMAINES.liste.map(carteDomaine).join('')}</div>
+      </section>
+      ${S.lire}
+      ${SOUS_GRILLE.map(k => S[k]).join('\n')}`;
+  }
+
+  const d = DOMAINES.trouver(domaineOuvert);
+  const a = DOSSIER ? Avis.lire(DOSSIER, d.id) : null;
+  const st = a ? Avis.statut(a.statut) : null;
+  const params = d.parametres.map(id => PARAMETRES.filter(x => x.id === id)[0]).filter(Boolean);
+
+  return `
+    <div class="dtete" style="--dc:${d.couleur}">
+      <button class="dretour" data-dom-retour="1">${ic('i-arrow')}Tous les domaines</button>
+      <div class="dt-in">
+        <img class="dt-img" src="../images/domaines/${esc(d.id)}.jpg" width="800" height="500"
+             decoding="async" alt="${esc(VIS_LOCAL[d.id] || ('Illustration : ' + d.nom))}">
+        <div>
+          <h1>${esc(d.nom)}</h1>
+          <p class="dt-clair">${esc(d.clair)}</p>
+          ${a ? `
+          <div class="dt-avis m-${esc(TEINTE_AVIS[a.statut])}">
+            <span class="dt-past"><i></i>${esc(st.l)}</span>
+            <p class="dt-syn">${a.synthese ? esc(a.synthese)
+              : 'Domaine qualifié, sans synthèse écrite.'}</p>
+            <p class="dt-sig">${esc(a.medecin)} · le ${esc(jolieDate(a.date))}</p>
+          </div>` : `
+          <div class="dt-avis dc-neutre">
+            <span class="dt-past"><i></i>Non commenté</span>
+            <p class="dt-syn">Votre médecin n’a pas encore qualifié ce domaine. Les mesures
+            ci-dessous sont affichées telles que transmises.</p>
+          </div>`}
+        </div>
+      </div>
+    </div>
+
+    ${params.length ? `
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Les mesures de ce domaine</h2>
+        <p class="b-s">Cliquez une mesure pour l’afficher en grand, avec son historique et son
+        explication.</p>
+      </div></div>
+      <div class="minis">
+        ${params.map(x => `
+          <button class="minicard ${x.id === choisi ? 'on' : ''}" data-p="${esc(x.id)}"
+                  style="--fc:${famille(x.groupe).c}">
+            <span class="m-nom">${esc(x.nom)}
+              ${marqueDu(x.id) ? `<i class="mqm-tag m-${esc(marqueDu(x.id).couleur)}"
+                 title="Marque ${esc(LIB_COULEUR[marqueDu(x.id).couleur])} posée par ${esc(marqueDu(x.id).medecin)}"
+                 >${esc(LIB_COULEUR[marqueDu(x.id).couleur].charAt(0))}</i>` : ''}</span>
+            ${mini(x)}
+            <span class="m-val"><b>${fmtVal(x.valeurs[x.valeurs.length - 1])}</b> ${esc(x.unite)}</span>
+            <span class="m-per">${esc(courteDate(DATES[0]))} → ${esc(courteDate(DATES[DATES.length - 1]))}</span>
+            <span class="m-res">${esc(LEX.parametres[x.id].resume)}</span>
+          </button>`).join('')}
+      </div>
+    </section>
+    ${params.some(x => x.id === choisi) ? S.graphique : ''}`
+    : `
+    <section class="bloc">
+      <div class="b-h"><div>
+        <h2>Aucune mesure biologique dans ce domaine</h2>
+        <p class="b-s">Ce domaine est abordé au questionnaire et en consultation, sans donner de
+        chiffre de laboratoire. Il figure ici pour que vous sachiez qu’il a été abordé.</p>
+      </div></div>
+    </section>
+    ${S.vignettes}`}`;
 }
 
 function shellRail(S, groupes, p) {
@@ -809,8 +962,9 @@ function rendre() {
     </section>
   `;
 
-  $('#app').innerHTML = disposition === 'rail'
-    ? shellRail(S, groupes, p)
+  $('#app').innerHTML =
+      disposition === 'rail'     ? shellRail(S, groupes, p)
+    : disposition === 'domaines' ? shellDomaines(S, groupes, p)
     : shellDeroule(S);
 
   document.querySelectorAll('[data-p]').forEach(b => {
@@ -850,6 +1004,25 @@ function rendre() {
       const h = document.querySelector('.panneau');
       if (h && window.innerWidth <= 960) h.scrollIntoView({ block: 'start', behavior: 'smooth' });
     };
+  });
+
+  /* Cartes de domaine : ouvrir, revenir. Le paramètre affiché en grand
+     est le premier du domaine, sauf si l'un d'eux est déjà choisi. */
+  document.querySelectorAll('[data-dom]').forEach(b => {
+    b.onclick = () => {
+      domaineOuvert = b.dataset.dom;
+      const d = DOMAINES.trouver(domaineOuvert);
+      if (d && d.parametres.length && d.parametres.indexOf(choisi) === -1) {
+        choisi = d.parametres[0];
+        compare = null;
+      }
+      rendre();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+  });
+  document.querySelectorAll('[data-dom-retour]').forEach(b => {
+    b.onclick = () => { domaineOuvert = null; rendre();
+      window.scrollTo({ top: 0, behavior: 'smooth' }); };
   });
 
   const rb = document.getElementById('rail-b');
@@ -935,6 +1108,7 @@ function barreThemes() {
       /* En arrivant dans le rail, on ouvre sur l'accueil : atterrir sur
          une courbe sans avoir vu le sommaire désoriente. */
       if (disposition === 'rail' && vue === 'mesure') vue = 'accueil';
+      if (disposition !== 'domaines') domaineOuvert = null;
       barreThemes();
       rendre();
     };
