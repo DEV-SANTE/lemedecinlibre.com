@@ -13,7 +13,7 @@
    parce qu'ils ne concernent qu'elle. */
 *,*::before,*::after{box-sizing:border-box}
 body{
-  margin:0;background:#fff;color:var(--ink);font-family:var(--f);
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);
   font-size:14.7px;line-height:1.6;-webkit-font-smoothing:antialiased;
 }
 h1,h2{margin:0;letter-spacing:-.02em;line-height:1.2}
