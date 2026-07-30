@@ -33,12 +33,76 @@
 
 var VISUELS = {
 
-  /* Hôtes autorisés à servir une image. Toute autre origine fait échouer
-     la vérification. Liste volontairement minimale. */
+  /* Hôtes autorisés à servir une image DISTANTE. Toute autre origine
+     fait échouer la vérification. Liste volontairement minimale. */
   hotes: ['images.unsplash.com'],
 
-  /* La seule page autorisée à charger une image distante. */
+  /* La seule page autorisée à charger une image DISTANTE. */
   pagePublique: 'index.html',
+
+  /* ==================================================================
+     IMAGES LOCALES — ET POURQUOI LA RÈGLE N'EST PAS LA MÊME
+
+     La règle « page publique uniquement » ne portait jamais sur les
+     images : elle portait sur les TIERS. Une image servie par notre
+     propre domaine ne fait parler personne d'autre que nous. Aucune
+     adresse IP ne part ailleurs, aucun tiers n'apprend qu'une personne
+     consulte un dossier médical. Les images locales sont donc admises
+     partout, y compris sur les pages de santé — c'était précisément
+     l'argument en faveur de l'auto-hébergement.
+
+     Les deux régimes coexistent et le vérificateur les distingue :
+       - image distante  -> page publique uniquement, hôte en liste
+         blanche, renvoi de page masqué ;
+       - image locale    -> partout, déclarée ici, fichier présent,
+         sous budget de poids.
+
+     PROVENANCE. Illustrations produites avec v0.app, reprises de la
+     maquette fournie par le donneur d'ordre. Droits détenus par le
+     Groupe Dev Santé, sur déclaration du 30 juillet 2026. Cette phrase
+     n'est pas une formalité : elle date et nomme la personne qui
+     affirme détenir les droits, ce qui est le minimum si la question
+     est posée un jour.
+
+     Une réserve à connaître, sans conséquence sur l'usage : le statut
+     d'auteur d'une image produite par un modèle génératif n'est pas
+     établi en droit français. Cela ne limite pas votre droit de les
+     utiliser ; cela limiterait votre capacité à en interdire la reprise
+     par un tiers.
+
+     POIDS. Les originaux pesaient 7,3 Mo pour seize fichiers, sur une
+     page qui les affiche tous. Recadrés au format de la carte et
+     réencodés, ils pèsent 398 Ko au total. Sur un téléphone en 4G, la
+     différence n'est pas cosmétique.
+
+     SUJETS. Illustrations d'organes et d'objets, jamais de personne.
+     La réserve de l'article R.4127-19-1 ne s'applique donc pas. En
+     revanche le registre est doux, presque enfantin sur certaines —
+     la lune du sommeil a un visage souriant. Sur un écran où quelqu'un
+     lit qu'un examen doit être recontrôlé, c'est un choix éditorial
+     assumé, pas un détail : à revoir si le ton paraît minimiser.
+  ================================================================== */
+  dossierLocal: 'images/domaines/',
+  poidsMaxKo: 60,
+
+  locales: [
+    { id: 'cardiovasculaire',   sujet: 'Illustration stylisée d’un cœur et de ses vaisseaux.' },
+    { id: 'metabolisme',        sujet: 'Illustration stylisée évoquant la gestion du sucre et de l’énergie.' },
+    { id: 'hematologie',        sujet: 'Illustration stylisée de cellules sanguines.' },
+    { id: 'foie',               sujet: 'Illustration stylisée d’un foie.' },
+    { id: 'rein',               sujet: 'Illustration stylisée d’un rein.' },
+    { id: 'thyroide',           sujet: 'Illustration stylisée de la glande thyroïde.' },
+    { id: 'nutrition',          sujet: 'Illustration stylisée d’aliments et de vitamines.' },
+    { id: 'condition-physique', sujet: 'Illustration stylisée évoquant l’activité physique.' },
+    { id: 'respiration',        sujet: 'Illustration stylisée de poumons.' },
+    { id: 'sommeil',            sujet: 'Illustration stylisée d’un croissant de lune sur un oreiller.' },
+    { id: 'inflammation',       sujet: 'Illustration stylisée évoquant une réaction inflammatoire.' },
+    { id: 'osseuse',            sujet: 'Illustration stylisée d’un os.' },
+    { id: 'vision',             sujet: 'Illustration stylisée d’un œil.' },
+    { id: 'audition',           sujet: 'Illustration stylisée d’une oreille.' },
+    { id: 'peau',               sujet: 'Illustration stylisée d’un grain de beauté examiné.' },
+    { id: 'depistage',          sujet: 'Illustration stylisée d’une loupe au-dessus de cellules.' }
+  ],
 
   photos: [
     {
