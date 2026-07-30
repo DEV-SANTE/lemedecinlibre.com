@@ -398,19 +398,7 @@ details.lire>summary:hover{border-color:var(--pri);background:var(--pri-l2)}
 /* Barre de sélection. Il n'y reste que la disposition : le sélecteur
    d'apparence est retiré, le choix étant fait. Elle disparaîtra
    entièrement à la mise en service. */
-.themes{max-width:var(--cadre);margin:26px auto 0;padding:0 32px}
-.th-in{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);
-  padding:18px 22px;box-shadow:var(--sh-s)}
-.th-k{display:block;font-size:11px;font-weight:620;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--ink-4);margin-bottom:12px}
-.th-b{display:flex;flex-wrap:wrap;gap:8px}
-.th-x{font-size:12.6px;font-weight:520;padding:9px 17px;border:1.5px solid var(--line);
-  background:var(--card);color:var(--ink-2);border-radius:999px;cursor:pointer;
-  display:inline-flex;align-items:baseline;gap:8px}
-.th-x:hover{border-color:var(--pri);color:var(--pri-d)}
-.th-x em{font-style:normal;font-size:11px;color:var(--ink-4)}
-.th-x.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
-.th-x.on em{color:rgba(255,255,255,.72)}
+/* Les styles de la barre d'essai ont été retirés avec la barre. */
 
 /* ---------------------------------------------------------------------
    VITAMINÉ — couleurs franches, grands arrondis, fond crème.
@@ -462,7 +450,6 @@ html[data-theme="epure"]{
 }
 html[data-theme="epure"] body{line-height:1.72}
 html[data-theme="epure"]{--cadre:920px}   /* lecture lente : cadre étroit assumé */
-html[data-theme="epure"] .themes,
 html[data-theme="epure"] .top-in{max-width:920px}
 html[data-theme="epure"] .bloc{padding:28px 26px}
 html[data-theme="epure"] .c-tiles{grid-template-columns:1fr 1fr}
@@ -503,8 +490,6 @@ html[data-theme="nuit"] .cockpit::before{
   background:radial-gradient(760px 300px at 4% -30%,rgba(34,211,238,.13) 0%,transparent 62%)}
 html[data-theme="nuit"] .chip.on,
 html[data-theme="nuit"] .cmp-x.on,
-html[data-theme="nuit"] .th-x.on{color:#06121a}
-html[data-theme="nuit"] .th-x.on em{color:rgba(6,18,26,.62)}
 html[data-theme="nuit"] .gp{stroke-width:3}
 html[data-theme="nuit"] .t-v,
 html[data-theme="nuit"] .m-val b,
@@ -533,7 +518,6 @@ html[data-theme="editorial"]{
 }
 html[data-theme="editorial"] .top{background:rgba(251,248,242,.92)}
 html[data-theme="editorial"]{--cadre:1040px}  /* le texte d’abord */
-html[data-theme="editorial"] .themes,
 html[data-theme="editorial"] .top-in{max-width:1040px}
 html[data-theme="editorial"] h1{font-weight:600;letter-spacing:-.012em}
 html[data-theme="editorial"] h2{font-weight:600;letter-spacing:-.012em;font-size:22.3px}
@@ -555,7 +539,6 @@ html[data-theme="editorial"] .minis{grid-template-columns:repeat(auto-fill,minma
 html[data-theme="editorial"] .g-fam{border-radius:3px}
 html[data-theme="editorial"] .chip,
 html[data-theme="editorial"] .cmp-x,
-html[data-theme="editorial"] .th-x{border-radius:5px}
 
 /* ---------- disposition « rail et panneau » ----------
    Le rail est de la NAVIGATION, le panneau est du CONTENU. La règle qui
@@ -636,7 +619,6 @@ html[data-theme="clinique"] .minicard{border-radius:18px}
 html[data-theme="clinique"] .grp-t{border-left-width:3px}
 html[data-theme="clinique"] .chip,
 html[data-theme="clinique"] .cmp-x,
-html[data-theme="clinique"] .th-x{border-width:1px}
 /* Les trois teintes d'avis, reprises de la maquette : douces, non
    alarmistes. Le rouge de v0 (#d1495b) est un rose brique, pas un rouge
    d'alerte — c'est un choix que je garde, il change le ton d'un écran. */
@@ -834,25 +816,12 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
   </div>
 </header>
 
-<!-- Le sélecteur d'apparence a été retiré : le choix est fait, il n'y a
-     plus à l'arbitrer. L'apparence est désormais fixée dans le code, à
-     un seul endroit (suivi.js, la constante « theme »).
-
-     Les règles des autres apparences restent dans la feuille de style.
-     Ce n'est pas un oubli : elles ne coûtent rien à l'affichage, elles
-     ne sont jamais appliquées tant qu'aucun attribut ne les appelle, et
-     elles permettent de revenir sur le choix en changeant une ligne au
-     lieu de réécrire une feuille de style.
-
-     La barre de DISPOSITION reste, elle : elle ne choisit pas une
-     apparence mais un agencement, et l'agencement n'est pas encore
-     arrêté. Elle partira de la même façon le jour où il le sera. -->
-<section class="themes" aria-label="Disposition">
-  <div class="th-in">
-    <span class="th-k">Version d’essai — disposition</span>
-    <div class="th-b" id="th-disp"></div>
-  </div>
-</section>
+<!-- Les deux barres d'essai — apparence et disposition — ont été
+     retirées : les deux choix sont faits. L'apparence est fixée par la
+     constante « theme » de suivi.js, la disposition par la constante
+     « disposition ». Les règles CSS des autres apparences restent dans
+     cette feuille : elles ne s'appliquent jamais sans attribut, et elles
+     permettent de revenir sur le choix en changeant une ligne. -->
 
 <main id="app"></main>
 <div id="tip" role="status" aria-live="polite"></div>
@@ -875,13 +844,13 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=15"></script>
-<script src="../commun/visuels.js?v=15"></script>
-<script src="../commun/domaines.js?v=15"></script>
-<script src="../commun/avis.js?v=15"></script>
-<script src="../commun/themes.js?v=15"></script>
-<script src="../commun/lexique.js?v=15"></script>
-<script src="suivi.js?v=15"></script>
+<script src="../plateforme/biologie.js?v=16"></script>
+<script src="../commun/visuels.js?v=16"></script>
+<script src="../commun/domaines.js?v=16"></script>
+<script src="../commun/avis.js?v=16"></script>
+<script src="../commun/themes.js?v=16"></script>
+<script src="../commun/lexique.js?v=16"></script>
+<script src="suivi.js?v=16"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>

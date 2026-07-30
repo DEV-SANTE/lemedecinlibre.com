@@ -473,7 +473,19 @@ const LIB_ETAT = { fait: 'Réalisé', encours: 'Programmé', prevu: 'À programm
    'avenir:<clé>'. Un seul sélecteur pour toute la navigation latérale :
    deux états concurrents finissent toujours par se désynchroniser. */
 let lateral = 'apercu';
-let disposition = 'deroule';
+/* DISPOSITION ARRÊTÉE — « Vue d'ensemble ».
+   C'est la seule disposition publiée : bandeau photographique, parcours,
+   et les seize domaines en cartes illustrées. Comme pour l'apparence, ce
+   qui était une variable devient une constante le jour où le choix est
+   fait.
+
+   Les deux autres agencements (« Déroulé », « Rail et panneau ») restent
+   dans ce fichier sans être atteignables. C'est un choix, pas un oubli :
+   ils ne coûtent rien à l'affichage, ils construisent les mêmes dix
+   sections à partir du même objet S, et le vérificateur continue de
+   contrôler qu'aucun des trois n'escamote une section. Le jour où on est
+   certain de ne plus y revenir, ils se suppriment d'un bloc. */
+const disposition = 'domaines';
 
 /* Vue affichée dans le panneau. « mesure » suit le paramètre choisi. */
 let vue = 'accueil';
@@ -1239,10 +1251,10 @@ function rendre() {
     </section>
   `;
 
-  $('#app').innerHTML =
-      disposition === 'rail'     ? shellRail(S, groupes, p)
-    : disposition === 'domaines' ? shellDomaines(S, groupes, p)
-    : shellDeroule(S);
+  /* Une seule disposition publiée, donc plus de branche à l'affichage.
+     Les deux autres coquilles restent définies plus haut (voir la note
+     sur la constante « disposition ») mais ne sont plus appelées. */
+  $('#app').innerHTML = shellDomaines(S, groupes, p);
 
   document.querySelectorAll('[data-p]').forEach(b => {
     b.onclick = () => {
@@ -1352,47 +1364,24 @@ function brancherInfobulle(series) {
 }
 
 /* =====================================================================
-   BARRE DE DISPOSITION
+   PLUS AUCUNE BARRE D'ESSAI
 
-   Ce qui reste de la barre d'essai. Le sélecteur d'APPARENCE a été
-   retiré : le choix graphique est fait, l'apparence est fixée par la
-   constante « theme » plus haut. Le retrait n'a rien demandé d'autre que
-   de supprimer un bout de balisage et un bout de cette fonction —
-   c'était l'intérêt de ne jamais laisser un thème conditionner un
-   contenu : on peut en retirer le choix sans toucher à ce qui s'affiche.
+   Il y en avait deux : l'apparence et la disposition. Les deux choix
+   sont faits, les deux barres sont parties, et le retrait n'a demandé
+   dans les deux cas que de supprimer un bout de balisage et une
+   fonction. C'était tout l'intérêt de ne jamais laisser une apparence ni
+   une disposition conditionner un CONTENU : on retire le choix sans
+   toucher à ce qui s'affiche.
 
-   La disposition, elle, n'est pas encore arrêtée, donc son sélecteur
-   reste. Il partira de la même manière.
-
-   Le choix n'est pas mémorisé. Une préférence stockée dans le navigateur
-   serait la première donnée persistée par cette page en dehors du
-   dossier, et il n'y a aucune raison d'ouvrir cette porte pour une
-   maquette.
+   Rien n'a jamais été mémorisé dans le navigateur. Une préférence
+   d'affichage y aurait été la première donnée persistée par cette page
+   en dehors du dossier, et il n'y avait aucune raison d'ouvrir cette
+   porte pour une maquette. La question ne se pose plus.
    ===================================================================== */
-function barreDisposition() {
-  const zd = $('#th-disp');
-  if (!zd) return;
-  zd.innerHTML = DISPOSITIONS.map(d =>
-    '<button class="th-x' + (d.id === disposition ? ' on' : '') + '" data-d="' + esc(d.id) + '">' +
-    esc(d.nom) + '<em>' + esc(d.resume) + '</em></button>').join('');
-  zd.querySelectorAll('[data-d]').forEach(b => {
-    b.onclick = () => {
-      disposition = b.dataset.d;
-      document.documentElement.setAttribute('data-dispo', disposition);
-      /* En arrivant dans le rail, on ouvre sur l'accueil : atterrir sur
-         une courbe sans avoir vu le sommaire désoriente. */
-      if (disposition === 'rail' && vue === 'mesure') vue = 'accueil';
-      if (disposition !== 'domaines') lateral = 'apercu';
-      barreDisposition();
-      rendre();
-    };
-  });
-}
 
 window.addEventListener('DOMContentLoaded', () => {
   DOSSIER = dossierCourant();
   document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.setAttribute('data-dispo', disposition);
-  barreDisposition();
   rendre();
 });
