@@ -36,6 +36,18 @@
   --sand-line:#eee5d8;
   --ech:1;            /* échelle typographique du thème */
   --colonnes:2;       /* colonnes du bloc d'explications */
+  /* LARGEUR DU CADRE ET MESURE DE LECTURE — deux réglages distincts.
+     Le cadre s'élargit pour occuper un grand écran : sur un tableau de
+     bord, laisser un tiers de l'écran vide de chaque côté est du gâchis,
+     et la grille de cartes en profite directement.
+     La MESURE, elle, ne suit pas. Au-delà d'environ soixante-quinze
+     signes par ligne, l'œil perd le début de la ligne suivante : c'est
+     mesuré, pas une affaire de goût. Les blocs de prose gardent donc
+     leur plafond en « ch », qui suit la taille du texte et non celle de
+     l'écran. Élargir le cadre sans plafonner la prose aurait rendu la
+     page plus remplie et moins lisible. */
+  --cadre:min(1760px, 94vw);
+  --mesure:72ch;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
@@ -58,7 +70,7 @@ button{font:inherit}
 /* ---------- en-tête ---------- */
 .top{border-bottom:1px solid var(--line-2);background:rgba(255,255,255,.9);
   backdrop-filter:saturate(180%) blur(12px);position:sticky;top:0;z-index:50}
-.top-in{max-width:1120px;margin:0 auto;padding:0 26px;height:68px;display:flex;align-items:center;gap:13px}
+.top-in{max-width:var(--cadre);margin:0 auto;padding:0 32px;height:68px;display:flex;align-items:center;gap:13px}
 .mark{width:33px;height:33px;flex:0 0 33px}
 .brand{font-weight:740;letter-spacing:-.034em;font-size:16.5px;line-height:1.05;
   color:var(--ink);text-decoration:none}
@@ -68,7 +80,7 @@ button{font:inherit}
 .top nav a{color:var(--ink-2);text-decoration:none;font-weight:550}
 .top nav a:hover{color:var(--pri-d)}
 
-main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
+main{max-width:var(--cadre);margin:0 auto;padding:34px 32px 90px}
 
 /* ---------- cockpit ---------- */
 .cockpit{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);
@@ -151,7 +163,8 @@ main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
   border:1px solid color-mix(in srgb,var(--fc) 25%,var(--card));
   padding:3px 9px;border-radius:6px;margin-left:12px;vertical-align:2px}
 .g-wrap{margin:4px 0 0}
-.gc{width:100%;height:auto;display:block;overflow:visible}
+.gc{width:100%;max-width:1010px;height:auto;display:block;overflow:visible}  /* voir la note sur --cadre : le viewBox impose le ratio, donc
+     élargir sans plafonner rendrait le graphique très haut */
 .gl{stroke:var(--line-2);stroke-width:1}
 .gyear{stroke:var(--line);stroke-width:1;stroke-dasharray:2 5}
 .gy{fill:var(--ink-5);font-size:11px;font-family:var(--mono);text-anchor:end}
@@ -251,7 +264,7 @@ main{max-width:1120px;margin:0 auto;padding:34px 26px 90px}
 .ex-k{display:block;font-size:10.5px;font-weight:720;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink-4);margin-bottom:6px}
 .ex-r.sombre .ex-k{color:var(--ink-2)}
-.ex-t{font-size:14.9px;color:var(--ink-2);line-height:1.62}
+.ex-t{font-size:14.9px;color:var(--ink-2);line-height:1.62;max-width:var(--mesure)}
 .ex-u{grid-column:1/-1;background:var(--surf);border:1px solid var(--line-2);
   border-radius:var(--r);padding:14px 17px;border-left:none}
 .ex-u .ex-t{font-size:14.3px;color:var(--ink-3)}
@@ -274,7 +287,7 @@ details.lire>summary:hover{border-color:var(--pri);background:var(--pri-l2)}
   border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;background:var(--line-2)}
 .glo-i{background:var(--card);padding:19px 21px}
 .glo-t{display:block;font-size:15.3px;font-weight:700;letter-spacing:-.015em;margin-bottom:6px}
-.glo-d{font-size:14.2px;color:var(--ink-2);line-height:1.6}
+.glo-d{font-size:14.2px;color:var(--ink-2);line-height:1.6;max-width:var(--mesure)}
 
 .m-res{display:block;font-size:12.4px;color:var(--ink-4);line-height:1.45;margin-top:7px;
   border-top:1px solid var(--line-2);padding-top:7px}
@@ -364,7 +377,7 @@ details.lire>summary:hover{border-color:var(--pri);background:var(--pri-l2)}
 
 .pied{border-top:1px solid var(--line);background:var(--surf);padding:30px 26px;
   font-size:13px;color:var(--ink-3);line-height:1.62}
-.pied-in{max-width:1120px;margin:0 auto}
+.pied-in{max-width:var(--cadre);margin:0 auto}
 .pied strong{color:var(--ink-2)}
 
 /* =====================================================================
@@ -383,7 +396,7 @@ details.lire>summary:hover{border-color:var(--pri);background:var(--pri-l2)}
 
 /* Barre de sélection. Elle disparaîtra à la mise en service : elle
    n'existe que pour arbitrer une direction graphique. */
-.themes{max-width:1120px;margin:26px auto 0;padding:0 26px}
+.themes{max-width:var(--cadre);margin:26px auto 0;padding:0 32px}
 .th-in{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);
   padding:18px 22px;box-shadow:var(--sh-s)}
 .th-k{display:block;font-size:10.5px;font-weight:720;letter-spacing:.13em;
@@ -447,9 +460,9 @@ html[data-theme="epure"]{
   --sh-s:none; --sh:none; --sh-l:none;
 }
 html[data-theme="epure"] body{line-height:1.72}
-html[data-theme="epure"] main{max-width:860px}
+html[data-theme="epure"]{--cadre:920px}   /* lecture lente : cadre étroit assumé */
 html[data-theme="epure"] .themes,
-html[data-theme="epure"] .top-in{max-width:860px}
+html[data-theme="epure"] .top-in{max-width:920px}
 html[data-theme="epure"] .bloc{padding:28px 26px}
 html[data-theme="epure"] .c-tiles{grid-template-columns:1fr 1fr}
 html[data-theme="epure"] .ruban{grid-template-columns:1fr;gap:22px}
@@ -518,9 +531,9 @@ html[data-theme="editorial"]{
   --colonnes:1;
 }
 html[data-theme="editorial"] .top{background:rgba(251,248,242,.92)}
-html[data-theme="editorial"] main{max-width:960px}
+html[data-theme="editorial"]{--cadre:1040px}  /* le texte d’abord */
 html[data-theme="editorial"] .themes,
-html[data-theme="editorial"] .top-in{max-width:960px}
+html[data-theme="editorial"] .top-in{max-width:1040px}
 html[data-theme="editorial"] h1{font-weight:680;letter-spacing:-.012em}
 html[data-theme="editorial"] h2{font-weight:660;letter-spacing:-.012em;font-size:24px}
 html[data-theme="editorial"] .cockpit::before{background:none}
@@ -636,7 +649,7 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
    maquette est l'origine de la pastille : elle vient d'un avis signé,
    et « Non commenté » s'affiche quand il n'y en a pas.
    ------------------------------------------------------------------ */
-.dgrille{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:18px}
+.dgrille{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:18px}
 .dcarte{display:flex;flex-direction:column;text-align:left;padding:0;cursor:pointer;
   background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;
   box-shadow:var(--sh-s);transition:transform .25s,box-shadow .25s,border-color .25s}
@@ -673,7 +686,7 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
 .dretour .ico{width:15px;height:15px;flex:0 0 15px;stroke-width:2.4;transform:rotate(180deg)}
 .dt-in{display:grid;grid-template-columns:232px 1fr;gap:22px;align-items:start}
 @media(max-width:760px){.dt-in{grid-template-columns:1fr}}
-.dt-img{width:100%;height:auto;border-radius:16px;display:block;background:var(--surf)}
+.dt-img{width:100%;max-width:720px;height:auto;border-radius:16px;display:block;background:var(--surf)}  /* largeur du fichier source : au-delà, on agrandit et ça se voit */
 .dtete h1{font-size:clamp(24px,3.4vw,32px)}
 .dt-clair{font-size:15.5px;font-weight:600;color:var(--dc);margin-top:6px}
 .dt-avis{margin-top:16px;padding:15px 17px;border-radius:var(--r);
@@ -681,7 +694,7 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
 .dt-past{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
   color:var(--mq,var(--ink-2))}
 .dt-past>i{width:7px;height:7px;border-radius:50%;flex:0 0 7px;background:var(--mq,var(--ink-4))}
-.dt-syn{font-size:15px;color:var(--ink);line-height:1.6;margin-top:9px}
+.dt-syn{font-size:15px;color:var(--ink);line-height:1.6;margin-top:9px;max-width:var(--mesure)}
 .dt-sig{font-family:var(--mono);font-size:11.8px;color:var(--ink-4);margin-top:9px}
 .dt-avis.dc-neutre .dt-past{color:var(--ink-3)}
 
@@ -738,7 +751,7 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
 .pt-st{display:inline-flex;align-items:center;gap:6px;font-size:11.8px;font-weight:660;
   color:var(--mq);margin-left:auto}
 .pt-st>i{width:6px;height:6px;border-radius:50%;flex:0 0 6px;background:var(--mq)}
-.pt-c{font-size:15px;color:var(--ink);line-height:1.6}
+.pt-c{font-size:15px;color:var(--ink);line-height:1.6;max-width:var(--mesure)}
 .pt-s{font-family:var(--mono);font-size:11.6px;color:var(--ink-4);margin-top:10px}
 
 /* Écran « module à venir » : deux rubriques, dont celle qui manque. */
@@ -747,8 +760,8 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
 .avenir .ex-r{border-left:2.5px solid var(--line);padding-left:16px}
 .avenir .ex-r.sombre{border-left-color:var(--ink-4)}
 /* Dans la vue d'ensemble, la barre latérale se comporte comme le rail. */
-html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:266px minmax(0,1fr);
-  gap:22px;align-items:start}
+html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minmax(0,1fr);
+  gap:26px;align-items:start}
 @media(max-width:980px){html[data-dispo="domaines"] .shell{grid-template-columns:1fr;gap:14px}}
 </style>
 </head>
@@ -818,13 +831,13 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:266px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=11"></script>
-<script src="../commun/visuels.js?v=11"></script>
-<script src="../commun/domaines.js?v=11"></script>
-<script src="../commun/avis.js?v=11"></script>
-<script src="../commun/themes.js?v=11"></script>
-<script src="../commun/lexique.js?v=11"></script>
-<script src="suivi.js?v=11"></script>
+<script src="../plateforme/biologie.js?v=12"></script>
+<script src="../commun/visuels.js?v=12"></script>
+<script src="../commun/domaines.js?v=12"></script>
+<script src="../commun/avis.js?v=12"></script>
+<script src="../commun/themes.js?v=12"></script>
+<script src="../commun/lexique.js?v=12"></script>
+<script src="suivi.js?v=12"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>
