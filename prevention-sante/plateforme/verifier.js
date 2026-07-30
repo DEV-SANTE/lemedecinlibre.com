@@ -1591,6 +1591,163 @@ section('13. Images locales — déclarées, présentes, légères');
    « dans les valeurs usuelles » du médecin, la page se mettrait à
    suggérer qu'une étape faite est une étape rassurante.
    ================================================================== */
+/* ==================================================================
+   15. LES CINQ MODULES REMPLIS D'EXEMPLES
+
+   Ils ont été construits pour la présentation, et c'est précisément
+   pourquoi ils méritent des contrôles : un exemple crédible est ce qui
+   ressemble le plus à un produit fini. Si un statut y apparaissait sans
+   auteur, ou si une mesure d'objet connecté y était comparée à un seuil,
+   la démonstration montrerait un logiciel qui interprète — et c'est
+   l'inverse de ce qui est promis à l'écran juste à côté.
+
+   Ce qui est vérifié :
+     - tout le contenu inventé vit dans un seul fichier, supprimable ;
+     - ce fichier dit qu'il est fictif, en toutes lettres ;
+     - chacun de ses avis porte un statut, un auteur et une date ;
+     - aucune phrase d'évaluation reprise de la maquette (« bonne
+       récupération », « aucune anomalie détectée », « zone normale ») ;
+     - aucun objectif ni fourchette de normalité sur les objets
+       connectés ;
+     - la page ne calcule rien d'autre qu'une moyenne, et le dit ;
+     - chaque module affiche ce qui manque avant sa mise en service.
+   ================================================================== */
+section('15. Modules de démonstration — exemples crédibles, sans interprétation');
+
+(function () {
+  const DEMOF = 'commun/demonstration.js';
+  verifier('le jeu de démonstration est isolé dans un seul fichier', existe(DEMOF));
+  if (!existe(DEMOF)) return;
+
+  const src = lire(DEMOF);
+  const DM = require('../' + DEMOF);
+  const js = lire('suivi/suivi.js');
+
+  /* --- 15.1 Le fichier annonce ce qu'il est. --- */
+  verifier('demonstration.js — annonce que tout est inventé',
+    /TOUT EST INVENT[ÉE]/.test(src) && /n'existe pas|n’existe pas/.test(src));
+  verifier('demonstration.js — la procédure de suppression est écrite',
+    /supprime[\s\S]{0,80}fichier/.test(src));
+  verifier('suivi/index.html — le fichier de démonstration est chargé et signalé',
+    /demonstration\.js/.test(lire('suivi/index.html')));
+
+  /* --- 15.2 Chaque avis d'exemple est signé. C'est le contrôle le plus
+         important du lot : un statut sans auteur, dans une démonstration,
+         montre exactement le produit qu'on ne fait pas. --- */
+  const AV = require('../commun/avis.js').Avis;
+  const nonSignes = (DM.avis || []).filter(a => !a.medecin || !a.date || !a.statut ||
+    !AV.statut(a.statut));
+  verifier('demonstration.js — les ' + (DM.avis || []).length +
+    ' avis d’exemple sont signés et datés', nonSignes.length === 0,
+    nonSignes.length ? 'Non signés : ' + nonSignes.map(a => a.domaine).join(', ') : null);
+  const lisibles = (DM.avis || []).filter(a => AV.lire(DM.dossierDemo, a.domaine)).length;
+  verifier('demonstration.js — les avis passent le contrôle de complétude d’avis.js (' +
+    lisibles + ')', lisibles === (DM.avis || []).length);
+  /* Tous les domaines ne sont pas commentés : une démonstration où tout
+     porte une pastille laisserait croire à un statut automatique. */
+  const DOM = require('../commun/domaines.js');
+  verifier('demonstration.js — tous les domaines ne sont pas commentés (' +
+    (DM.avis || []).length + ' sur ' + DOM.liste.length + ')',
+    (DM.avis || []).length < DOM.liste.length,
+    'Un dossier où chaque domaine porte une pastille ressemble à un calcul automatique.');
+
+  /* --- 15.3 Les comptes rendus d'examen sont signés eux aussi. --- */
+  const nonSignesEx = []
+    .concat(DM.imagerie || [], DM.complementaires || [])
+    .filter(e => e.conclusion && (!e.medecin || !e.date || !e.statut));
+  verifier('demonstration.js — chaque conclusion d’examen porte un auteur et une date',
+    nonSignesEx.length === 0,
+    nonSignesEx.length ? 'Sans auteur : ' + nonSignesEx.map(e => e.id).join(', ') : null);
+  verifier('suivi.js — la pastille d’examen refuse de s’afficher sans auteur',
+    /function pastilleAvis\([^)]*\)\s*\{\s*if \(!statut \|\| !medecin\) return ''/.test(js),
+    'Sans ce refus, un statut pourrait apparaître sans être attribué à personne.');
+
+  /* --- 15.4 Aucune phrase d'évaluation reprise de la maquette. La
+         maquette d'origine en plaçait une sous chacune de ses huit
+         mesures d'objet connecté : c'est la seule partie de son contenu
+         qui ne devait pas être reprise. --- */
+  const interdits = ['bonne récupération', 'aucune anomalie', 'zone normale',
+                     'objectif atteint', 'valeurs attendues', 'tout va bien',
+                     'excellente', 'à améliorer'];
+  const zone = sansCommentaires(src).toLowerCase();
+  const trouves = interdits.filter(t => zone.indexOf(t) !== -1);
+  verifier('demonstration.js — aucune phrase d’évaluation automatique', trouves.length === 0,
+    trouves.length ? 'Formules trouvées : ' + trouves.join(', ') : null);
+
+  /* --- 15.5 Aucun objectif, aucune fourchette de normalité sur les
+         mesures d'objets connectés. La maquette en avait deux
+         (refLow/refHigh) : elles n'ont pas été reprises. --- */
+  const champs = Object.keys((DM.objets.mesures || [])[0] || {});
+  const suspects = champs.filter(c => /^(ref|seuil|objectif|cible|min|max|tone|norme)/i.test(c));
+  verifier('demonstration.js — aucune borne de normalité sur les objets connectés (' +
+    champs.join(', ') + ')', suspects.length === 0,
+    suspects.length ? 'Champs à retirer : ' + suspects.join(', ') : null);
+  verifier('suivi.js — le module objets connectés écrit ce qu’il refuse de faire',
+    /ni objectif à atteindre[\s\S]{0,200}fourchette/.test(js) &&
+    /dispositif médical/.test(js));
+  /* La seule opération faite sur ces séries est une moyenne, et elle est
+     nommée à l'écran. */
+  verifier('suivi.js — la seule opération sur les séries est une moyenne, annoncée',
+    /moyenne \$\{esc\(fmtVal\(moyenne/.test(js));
+
+  /* --- 15.6 Les photographies des modules sont déclarées, présentes,
+         légères — même régime que les autres. --- */
+  const V = require('../commun/visuels.js');
+  let manquants = [], lourds = [];
+  (V.modules || []).forEach(m => {
+    const rel = V.dossierModules + m.id + '.jpg';
+    if (!existe(rel)) { manquants.push(m.id); return; }
+    const ko = fs.statSync(path.join(RACINE, rel)).size / 1024;
+    if (ko > V.poidsMaxModuleKo) lourds.push(m.id + ' (' + Math.round(ko) + ' Ko)');
+  });
+  verifier('images — les photographies des modules sont présentes (' +
+    (V.modules || []).length + ')', manquants.length === 0,
+    manquants.length ? 'Absentes : ' + manquants.join(', ') : null);
+  verifier('images — chaque photographie de module sous ' + V.poidsMaxModuleKo + ' Ko',
+    lourds.length === 0, lourds.length ? 'Trop lourdes : ' + lourds.join(', ') : null);
+  if (existe(V.dossierModules)) {
+    const surPlace = fs.readdirSync(path.join(RACINE, V.dossierModules))
+      .filter(f => /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(f));
+    const declares = (V.modules || []).map(m => m.id + '.jpg');
+    const intrus = surPlace.filter(f => declares.indexOf(f) === -1);
+    verifier('images — aucun fichier de module non déclaré', intrus.length === 0,
+      intrus.length ? 'Non déclarés : ' + intrus.join(', ') : null);
+  }
+  verifier('visuels.js — l’image écartée de la maquette est justifiée',
+    /hero-editorial/.test(lire('commun/visuels.js')) &&
+    /promesse/.test(lire('commun/visuels.js')),
+    'Écarter une image sans écrire pourquoi, c’est la réintroduire au prochain passage.');
+
+  /* --- 15.7 Chaque module dit ce qui manque avant sa mise en service, et
+         le dit à l'écran. --- */
+  const CLES = ['imagerie', 'complementaires', 'rdv', 'objets', 'messagerie'];
+  const sansModule = CLES.filter(c => !new RegExp('\\b' + c + ':\\s*module').test(js));
+  verifier('suivi.js — les cinq modules sont branchés', sansModule.length === 0,
+    sansModule.length ? 'Non branchés : ' + sansModule.join(', ') : null);
+  verifier('suivi.js — chaque module rappelle ce qui manque',
+    (js.match(/blocManque\('/g) || []).length >= 5,
+    'Un module d’exemple sans cette mention se prend pour une fonction livrée.');
+  verifier('suivi.js — la mention « les exemples sont inventés » est à l’écran',
+    /exemples ci-dessus sont inventés/.test(js));
+
+  /* --- 15.8 Aucun bouton qui ne fait rien : c'était la règle posée pour
+         la barre du haut, elle vaut pour les modules. --- */
+  verifier('suivi.js — pas de bouton de prise de rendez-vous factice',
+    !/Prendre rendez-vous<\/button>|class="btn-rdv"/.test(js) &&
+    /pas de bouton de prise de rendez-vous/.test(js));
+  verifier('suivi.js — pas de champ de réponse dans la messagerie',
+    !/<textarea/.test(js) && /pas de champ de réponse/.test(js));
+
+  /* --- 15.9 Rien ne part vers un tiers. Les modules « objets
+         connectés » et « messagerie » sont les deux endroits où la
+         tentation d'appeler une API existe. --- */
+  const fuites = ['fetch(', 'XMLHttpRequest', 'navigator.sendBeacon', 'WebSocket',
+                  'localStorage.setItem']
+    .filter(t => codeSeul(js).indexOf(t) !== -1);
+  verifier('suivi.js — aucun appel réseau, aucune écriture de stockage', fuites.length === 0,
+    fuites.length ? 'Trouvé : ' + fuites.join(', ') : null);
+})();
+
 section('13 ter. Pictogrammes présents, vert d’avancement distinct');
 
 (function () {
