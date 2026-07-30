@@ -53,8 +53,14 @@
      mesuré, pas une affaire de goût. Les blocs de prose gardent donc
      leur plafond en « ch », qui suit la taille du texte et non celle de
      l'écran. Élargir le cadre sans plafonner la prose aurait rendu la
-     page plus remplie et moins lisible. */
-  --cadre:min(1760px, 94vw);
+     page plus remplie et moins lisible.
+
+     Le cadre n'a plus de plafond du tout : la page prend toute la
+     largeur de l'écran, quel qu'il soit. Il ne reste que la gouttière de
+     vingt-quatre points de chaque côté — du texte collé au bord de
+     l'écran se lit mal, et ce n'est pas du vide au sens où vous
+     l'entendiez. */
+  --cadre:100%;
   --mesure:72ch;
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -79,7 +85,7 @@ button{font:inherit}
 /* ---------- en-tête ---------- */
 .top{border-bottom:1px solid var(--line-2);background:rgba(255,255,255,.9);
   backdrop-filter:saturate(180%) blur(12px);position:sticky;top:0;z-index:50}
-.top-in{max-width:var(--cadre);margin:0 auto;padding:0 32px;height:68px;display:flex;align-items:center;gap:13px}
+.top-in{max-width:var(--cadre);margin:0 auto;padding:0 24px;height:68px;display:flex;align-items:center;gap:13px}
 /* Contexte patient à gauche, comme dans la maquette : le logo du service
    est descendu dans la barre latérale, cette barre-ci dit qui on est et
    de quand date le dernier bilan. */
@@ -94,7 +100,7 @@ button{font:inherit}
 .top nav a{color:var(--ink-2);text-decoration:none;font-weight:520}
 .top nav a:hover{color:var(--pri-d)}
 
-main{max-width:var(--cadre);margin:0 auto;padding:34px 32px 90px}
+main{max-width:var(--cadre);margin:0 auto;padding:26px 24px 90px}
 
 /* ---------- cockpit ---------- */
 /* L'en-tête est du texte posé sur la page, pas une carte : c'est ce qui
@@ -190,7 +196,7 @@ main{max-width:var(--cadre);margin:0 auto;padding:34px 32px 90px}
   border:1px solid color-mix(in srgb,var(--fc) 25%,var(--card));
   padding:3px 9px;border-radius:6px;margin-left:12px;vertical-align:2px}
 .g-wrap{margin:4px 0 0}
-.gc{width:100%;max-width:1010px;height:auto;display:block;overflow:visible}  /* voir la note sur --cadre : le viewBox impose le ratio, donc
+.gc{width:100%;max-width:1180px;height:auto;display:block;overflow:visible}  /* voir la note sur --cadre : le viewBox impose le ratio, donc
      élargir sans plafonner rendrait le graphique très haut */
 .gl{stroke:var(--line-2);stroke-width:1}
 .gyear{stroke:var(--line);stroke-width:1;stroke-dasharray:2 5}
@@ -1000,13 +1006,13 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=20"></script>
-<script src="../commun/visuels.js?v=20"></script>
-<script src="../commun/domaines.js?v=20"></script>
-<script src="../commun/avis.js?v=20"></script>
-<script src="../commun/themes.js?v=20"></script>
-<script src="../commun/lexique.js?v=20"></script>
-<script src="suivi.js?v=20"></script>
+<script src="../plateforme/biologie.js?v=21"></script>
+<script src="../commun/visuels.js?v=21"></script>
+<script src="../commun/domaines.js?v=21"></script>
+<script src="../commun/avis.js?v=21"></script>
+<script src="../commun/themes.js?v=21"></script>
+<script src="../commun/lexique.js?v=21"></script>
+<script src="suivi.js?v=21"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>
