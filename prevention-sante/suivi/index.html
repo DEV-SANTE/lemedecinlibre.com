@@ -796,19 +796,29 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
    cent quatre-vingts points de bloc, on passe donc à la verticale — c'est
    plus lisible qu'une ligne écrasée. */
 .etapes-c{container-type:inline-size}
+/* Repli d'abord, requête de conteneur ensuite : l'ordre compte, à
+   spécificité égale c'est la dernière règle qui gagne. Le repli sert aux
+   navigateurs sans requête de conteneur ; là où elles existent, c'est la
+   largeur du bloc qui doit trancher, pas celle de la fenêtre. */
+@media(max-width:760px){
+  .etapes{grid-template-columns:1fr;gap:14px}
+  .et{padding:0 0 0 34px}
+  .et::before{left:11px;right:auto;top:24px;bottom:-14px;width:2px;height:auto}
+  .et-p{position:absolute;left:0;top:0;margin:0}
+}
 @container (max-width:779.9px){
   .etapes{grid-template-columns:1fr;gap:14px}
   .et{padding:0 0 0 34px}
   .et::before{left:11px;right:auto;top:24px;bottom:-14px;width:2px;height:auto}
   .et-p{position:absolute;left:0;top:0;margin:0}
 }
-/* Repli pour un navigateur sans requête de conteneur : au moins la
-   version téléphone reste correcte. */
-@media(max-width:760px){
-  .etapes{grid-template-columns:1fr;gap:14px}
-  .et{padding:0 0 0 34px}
-  .et::before{left:11px;right:auto;top:24px;bottom:-14px;width:2px;height:auto}
-  .et-p{position:absolute;left:0;top:0;margin:0}
+/* Et au-delà : les sept étapes reprennent leur ligne, quelle que soit la
+   fenêtre. Sans cette reprise, le repli téléphone resterait collé. */
+@container (min-width:780px){
+  .etapes{grid-template-columns:repeat(7,minmax(0,1fr));gap:0}
+  .et{padding:0 10px 0 0}
+  .et::before{left:11px;right:0;top:11px;height:2px;width:auto;bottom:auto}
+  .et-p{position:relative;left:auto;top:auto;margin:0 0 13px}
 }
 
 .points{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
@@ -908,13 +918,13 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=18"></script>
-<script src="../commun/visuels.js?v=18"></script>
-<script src="../commun/domaines.js?v=18"></script>
-<script src="../commun/avis.js?v=18"></script>
-<script src="../commun/themes.js?v=18"></script>
-<script src="../commun/lexique.js?v=18"></script>
-<script src="suivi.js?v=18"></script>
+<script src="../plateforme/biologie.js?v=19"></script>
+<script src="../commun/visuels.js?v=19"></script>
+<script src="../commun/domaines.js?v=19"></script>
+<script src="../commun/avis.js?v=19"></script>
+<script src="../commun/themes.js?v=19"></script>
+<script src="../commun/lexique.js?v=19"></script>
+<script src="suivi.js?v=19"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>
