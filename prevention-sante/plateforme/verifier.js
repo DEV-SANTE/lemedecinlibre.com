@@ -1626,6 +1626,124 @@ section('13. Images locales — déclarées, présentes, légères');
    empêchent qu'on le réécrive à la main, et vérifient que chaque domaine
    porte les deux textes qui rendent un nom de spécialité compréhensible.
    ================================================================== */
+/* ==================================================================
+   17. UNE SEULE CHARTE POUR SEPT PAGES
+
+   Chaque page portait sa copie des couleurs. La page de suivi est passée
+   à la palette de la maquette, les six autres sont restées au bleu-vert
+   sombre, et le site s'est retrouvé dépareillé sans que rien ne soit
+   cassé — personne n'avait fait d'erreur, la duplication avait
+   simplement fait son travail.
+
+   Les jetons vivent maintenant dans commun/charte.css. Ces contrôles
+   empêchent qu'une page s'en refasse une copie, et surveillent la seule
+   copie qui subsiste : celle de la page de suivi, gardée en ligne parce
+   que sa feuille de style contient six apparences.
+   ================================================================== */
+section('17. Charte partagée — une seule définition des couleurs');
+
+(function () {
+  const CHARTE = 'commun/charte.css';
+  verifier('la charte partagée existe', existe(CHARTE));
+  if (!existe(CHARTE)) return;
+  const ch = lire(CHARTE);
+  /* Les deux contrôles qui suivent portent sur les RÈGLES, pas sur les
+     commentaires : le fichier explique lui-même qu'il n'a pas le droit
+     d'employer @import ni les trois teintes d'avis, et il échouerait sur
+     sa propre documentation. Troisième fois que ce piège se referme dans
+     ce vérificateur — d'où sansCommentaires, écrit pour ça. */
+  const chNu = sansCommentaires(ch);
+
+  /* --- 17.1 Aucune ressource tierce dans un fichier chargé par des pages
+         de santé. --- */
+  const tiers = ['@import', 'url(http', 'fonts.googleapis', 'fonts.gstatic']
+    .filter(t => chNu.indexOf(t) !== -1);
+  verifier('charte.css — aucune ressource distante, aucun @import', tiers.length === 0,
+    tiers.length ? 'Trouvé : ' + tiers.join(', ') : null);
+
+  /* --- 17.2 Les pages chargent la charte et n'ont plus de bloc :root de
+         palette. On tolère un :root local s'il ne contient aucune couleur
+         — une largeur propre à une page est légitime. --- */
+  const PAGES = ['index.html', 'espace/index.html', 'contenus/index.html',
+                 'entreprise/index.html', 'pilotage/index.html', 'plateforme/index.html'];
+  const sansCharte = PAGES.filter(f => existe(f) && !/commun\/charte\.css/.test(lire(f)));
+  verifier('les ' + PAGES.length + ' pages chargent la charte', sansCharte.length === 0,
+    sansCharte.length ? 'Sans charte : ' + sansCharte.join(', ') : null);
+
+  const FEUILLES = PAGES.concat(['plateforme/style.css']);
+  const copies = [];
+  FEUILLES.forEach(f => {
+    if (!existe(f)) return;
+    const src = sansCommentaires(lire(f));
+    const blocs = src.match(/:root\s*\{[^}]*\}/g) || [];
+    blocs.forEach(b => {
+      /* Une couleur dans un :root local est une copie de palette. Sauf
+         sur la page de pilotage, dont les couleurs d'indicateur qualifient
+         l'organisation du centre et non une personne — c'est écrit dans
+         le fichier, et c'est le seul cas admis. */
+      if (/#[0-9a-fA-F]{3,6}/.test(b) && f.indexOf('pilotage') === -1) copies.push(f);
+    });
+  });
+  verifier('aucune page ne redéfinit une couleur pour elle-même', copies.length === 0,
+    copies.length ? 'Palettes locales : ' + [...new Set(copies)].join(', ') : null);
+  verifier('pilotage — ses couleurs d’indicateur sont justifiées par écrit',
+    existe('pilotage/index.html') &&
+    /INDICATEUR DE PRATIQUE DU CENTRE/.test(lire('pilotage/index.html')) &&
+    /#0f766e/.test(lire('pilotage/index.html')),
+    'La distinction entre évaluer une organisation et évaluer une personne doit être écrite.');
+
+  /* --- 17.3 LA COPIE QUI RESTE. La page de suivi garde ses jetons en
+         ligne. Ce contrôle compare les deux jeux : c'est la seule
+         protection honnête tant que la copie existe. --- */
+  const jeton = (src, nom) => {
+    const m = src.match(new RegExp('--' + nom + ':\\s*(#[0-9a-fA-F]{6})'));
+    return m ? m[1].toLowerCase() : null;
+  };
+  const suivi = lire('suivi/index.html');
+  const bloc = (suivi.match(/html\[data-theme="clinique"\]\{[^}]*\}/) || [''])[0];
+  const divergents = [];
+  ['pri', 'pri-d', 'pri-2', 'pri-l', 'ink', 'ink-2', 'line'].forEach(n => {
+    const a = jeton(ch, n), b = jeton(bloc, n);
+    if (a && b && a !== b) divergents.push(n + ' : charte ' + a + ' / suivi ' + b);
+  });
+  verifier('charte.css et la page de suivi emploient les mêmes couleurs',
+    divergents.length === 0,
+    divergents.length ? 'Divergences : ' + divergents.join(' · ') +
+      ' — c’est exactement la dérive que la charte devait supprimer.' : null);
+  verifier('charte.css — la duplication restante est documentée',
+    /DUPLICATION QUI RESTE/.test(ch) && /suivi/.test(ch));
+
+  /* --- 17.4 Les trois teintes d'avis n'entrent pas dans la charte : une
+         page ne doit pas pouvoir les employer comme couleur décorative. --- */
+  const reservees = require('../commun/themes.js').reservees;
+  const fuites = reservees.filter(c => chNu.toLowerCase().indexOf(c.toLowerCase()) !== -1);
+  verifier('charte.css — aucune teinte d’avis médical dans la charte', fuites.length === 0,
+    fuites.length ? 'Teintes réservées présentes : ' + fuites.join(', ') : null);
+  verifier('charte.css — la raison en est écrite',
+    /TROIS TEINTES R[ÉE]SERV[ÉE]ES/.test(ch));
+
+  /* --- 17.5 Plus aucune trace de l'ancienne palette bleu-vert, y compris
+         dans les schémas dessinés à la main : c'est là qu'elle avait
+         survécu au premier passage. --- */
+  const ANCIENNES = ['#0f5f6b', '#0a464f', '#14818f', '#e4f1f3', '#08181f', '#0a1c24'];
+  const restes = [];
+  ['index.html', 'espace/index.html', 'contenus/index.html', 'entreprise/index.html',
+   'pilotage/index.html', 'plateforme/index.html', 'plateforme/style.css',
+   'suivi/index.html', 'espace/modules.js', 'espace/patient.js']
+    .forEach(f => {
+      if (!existe(f)) return;
+      const src = lire(f);
+      ANCIENNES.forEach(c => {
+        /* La page de suivi conserve l'apparence « sobre » dans sa feuille :
+           c'est une apparence non publiée, pas un reste de dérive. */
+        if (f === 'suivi/index.html') return;
+        if (src.toLowerCase().indexOf(c) !== -1) restes.push(f + ' → ' + c);
+      });
+    });
+  verifier('aucune trace de l’ancienne palette dans les pages', restes.length === 0,
+    restes.length ? 'À reprendre : ' + [...new Set(restes)].join(', ') : null);
+})();
+
 section('16. Nom de spécialité — un seul libellé, expliqué');
 
 (function () {
