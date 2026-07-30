@@ -140,6 +140,20 @@ input:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0
 /* questionnaire patient */
 .qbar{height:5px;background:var(--line-2);border-radius:999px;overflow:hidden;margin-bottom:8px}
 .qbar i{display:block;height:100%;background:var(--pri);border-radius:999px;transition:width .3s}
+/* ---------------------------------------------------------------------
+   LISIBILITÉ DU QUESTIONNAIRE
+
+   Un questionnaire de santé de douze sections est une épreuve : la
+   personne ne sait pas pourquoi on lui demande ça, ni ce qu'on en fera.
+   D'où le bandeau photographique — on voit de quoi parle la page avant
+   de lire — et les deux paragraphes d'explication, à la mesure de
+   lecture, avant la première question.
+   ------------------------------------------------------------------ */
+.qphoto{width:100%;max-width:720px;height:150px;object-fit:cover;display:block;
+  border-radius:var(--r);margin:0 0 20px;background:var(--surf)}
+.qpara{font-size:14.4px;color:var(--ink-2);line-height:1.66;margin-top:11px;
+  max-width:var(--mesure)}
+.qpara:first-of-type{margin-top:14px}
 .qmeta{font-size:12.2px;color:var(--ink-3);margin-bottom:26px}
 .qintro{font-size:14px;color:var(--ink-2);background:var(--pri-l2);border-left:3px solid var(--pri);
   padding:14px 18px;border-radius:0 var(--r) var(--r) 0;margin:16px 0 8px;max-width:70ch}
@@ -202,11 +216,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0
 <header>
   <div class="hin">
     <a class="logo" href="./">
-      <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
-        <rect width="40" height="40" rx="11.5" fill="#2069b0"/>
-        <path d="M8.5 20.5h4.6l2.7-7 3.5 13.5 2.7-8.6 2 5.1h5.5" stroke="#fff"
-              stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <img class="marque" src="../commun/marque.svg" width="40" height="40" alt="">
       <span class="logo-t">Prévention Santé<span>Mon espace</span></span>
     </a>
     <div class="who" id="who"></div>

@@ -498,8 +498,10 @@ function vueQuestionnaire() {
       <p class="qmeta">Section ${etapeQ + 1} sur ${mods.length} · vous pouvez interrompre
       et reprendre plus tard, vos réponses sont conservées.</p>
 
+      ${banniereSection(m)}
       <h1>${esc(m.titre)}</h1>
       ${m.intro ? `<p class="qintro">${esc(m.intro)}</p>` : ''}
+      ${(m.paragraphes || []).map(t => `<p class="qpara">${esc(t)}</p>`).join('')}
 
       <form id="fq" novalidate>${qs.map(q => champ(q, d)).join('')}</form>
 
@@ -524,6 +526,23 @@ function vueQuestionnaire() {
     const n = $('#note'); n.textContent = 'Enregistré';
     setTimeout(() => { n.textContent = ''; }, 1400);
   });
+}
+
+/* BANDEAU DE SECTION.
+
+   La photographie et les paragraphes viennent du questionnaire, donc du
+   même fichier que les questions : une section qu'on ajoute arrive avec
+   son texte et son image, ou sans, mais jamais avec ceux d'une autre.
+
+   Rien ici ne consulte les réponses déjà données. La fonction ne reçoit
+   que le module, pas le dossier — c'est volontaire, et c'est ce qui rend
+   impossible un paragraphe qui s'adapterait à ce que la personne a
+   répondu. */
+function banniereSection(m) {
+  if (!m.photo) return '';
+  const src = '../images/' + m.photo.dossier + '/' + m.photo.id + '.jpg';
+  return '<img class="qphoto" src="' + src + '" width="720" height="450" ' +
+         'loading="lazy" decoding="async" alt="">';
 }
 
 function champ(q, d) {
