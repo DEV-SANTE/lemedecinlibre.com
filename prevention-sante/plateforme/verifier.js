@@ -1514,6 +1514,104 @@ section('13. Images locales — déclarées, présentes, légères');
 })();
 
 /* ==================================================================
+   13 bis. LE BANDEAU PHOTOGRAPHIQUE ET SON VOILE
+
+   Le bandeau de bilan porte une photographie en fond et du texte blanc
+   par-dessus. C'est le seul endroit du produit où la lisibilité d'un
+   texte dépend d'un réglage graphique. Un voile trop léger ne provoque
+   aucune erreur, ne casse aucune mise en page et n'apparaît dans aucun
+   journal : il rend simplement le texte difficile à lire, et personne ne
+   s'en aperçoit avant qu'un utilisateur ne le signale. C'est exactement
+   le type de régression qui mérite un contrôle automatique.
+
+   Ce qui est vérifié : la photographie est déclarée comme les autres,
+   elle existe, elle est légère, elle porte un texte alternatif vide
+   parce qu'elle n'apprend rien, et le voile qui la recouvre part de la
+   couleur pleine du thème et ne descend jamais sous un tiers d'opacité.
+   ================================================================== */
+section('13 bis. Bandeau photographique — déclaré, léger, lisible');
+
+(function () {
+  const b = (VISUELS.bandeaux || [])[0];
+  verifier('visuels.js — la photographie du bandeau est déclarée', !!b);
+  if (!b) return;
+
+  const rel = VISUELS.dossierBandeau + b.id + '.jpg';
+  verifier('bandeau — le fichier est présent (' + rel + ')', existe(rel));
+  if (existe(rel)) {
+    const ko = fs.statSync(path.join(RACINE, rel)).size / 1024;
+    verifier('bandeau — sous ' + VISUELS.poidsMaxBandeauKo + ' Ko (' + Math.round(ko) + ' Ko)',
+      ko <= VISUELS.poidsMaxBandeauKo,
+      ko > VISUELS.poidsMaxBandeauKo ? 'Cette image est visible sans défiler : ' +
+        'elle est chargée immédiatement, son poids se voit au premier écran.' : null);
+  }
+  verifier('bandeau — son sujet est décrit', !!b.sujet && b.sujet.length >= 20);
+
+  /* --- Aucun fichier non déclaré dans le dossier du bandeau. --- */
+  if (existe(VISUELS.dossierBandeau)) {
+    const surPlace = fs.readdirSync(path.join(RACINE, VISUELS.dossierBandeau))
+      .filter(f => /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(f));
+    const declares = (VISUELS.bandeaux || []).map(v => v.id + '.jpg');
+    const intrus = surPlace.filter(f => declares.indexOf(f) === -1);
+    verifier('bandeau — aucun fichier non déclaré dans le dossier',
+      intrus.length === 0, intrus.length ? 'Non déclarés : ' + intrus.join(', ') : null);
+  }
+
+  /* --- Le fond ne s'écrit pas en dur : il vient du catalogue. --- */
+  /* Deux vérifications, sur la source nue plutôt que sur codeSeul.
+     codeSeul efface les gabarits de chaîne, et sa règle d'effacement ne
+     sait pas suivre des accolades imbriquées dans un ${...} : sur un
+     fichier qui en contient autant que celui-ci, elle emporte des
+     morceaux de vrai code. Ici la chaîne EST ce qu'on veut inspecter,
+     donc on lit la source telle quelle. */
+  const jsBrut = sansCommentaires(lire('suivi/suivi.js'));
+  verifier('suivi.js — le nom du fichier de fond n’est pas écrit en dur',
+    /images\/bandeau\/\$\{esc\(BANDEAU\.id\)\}\.jpg/.test(jsBrut));
+  verifier('suivi.js — la photographie du bandeau vient du catalogue',
+    /const BANDEAU\s*=[\s\S]{0,160}VISUELS\.bandeaux/.test(jsBrut));
+  verifier('suivi.js — le fond du bandeau porte un texte alternatif vide',
+    /class="bb-fond"[\s\S]{0,220}?alt=""/.test(lire('suivi/suivi.js')));
+  verifier('suivi.js — le voile est posé au-dessus de la photographie',
+    /class="bb-voile"/.test(lire('suivi/suivi.js')));
+
+  /* --- LE CONTRÔLE QUI COMPTE : le voile tient le contraste. --- */
+  const css = sansCommentaires(lire('suivi/index.html'));
+  const m = css.match(/\.bb-voile\{[^}]*\}/);
+  verifier('index.html — le voile de lisibilité existe', !!m);
+  if (m) {
+    const regle = m[0];
+    verifier('voile — il part de la couleur pleine du thème, donc opaque',
+      /var\(--pri\)\s+0%/.test(regle),
+      !/var\(--pri\)\s+0%/.test(regle) ? 'Sans départ opaque, le texte blanc passe sur ' +
+        'une photographie claire.' : null);
+    /* Toutes les opacités déclarées dans le dégradé, y compris la plus
+       faible : c'est celle-là qui décide de la lisibilité au pire
+       endroit. */
+    const opacites = (regle.match(/rgba\([^)]*?,\s*(\.\d+|0?\.\d+|1|0)\s*\)/g) || [])
+      .map(t => parseFloat(t.replace(/.*,\s*/, '').replace(')', '')));
+    const mini = opacites.length ? Math.min.apply(null, opacites) : 1;
+    verifier('voile — jamais en dessous d’un tiers d’opacité (min ' + mini + ')',
+      mini >= 0.3,
+      mini < 0.3 ? 'Le côté clair du dégradé laisse passer trop de photographie : ' +
+        'le texte blanc devient illisible sur les zones claires.' : null);
+  }
+
+  /* --- Quatre cartes par ligne, et mesurées sur le conteneur. --- */
+  verifier('index.html — quatre cartes de domaine par ligne',
+    /@container[^{]*\{\s*\.dgrille\{grid-template-columns:repeat\(4,/.test(
+      css.replace(/\s*\n\s*/g, '')),
+    null);
+  verifier('index.html — le compte de colonnes est mesuré sur le conteneur',
+    /\.dgrille-c\{container-type:inline-size\}/.test(css));
+  verifier('suivi.js — la grille est bien placée dans son conteneur',
+    /class="dgrille-c"/.test(lire('suivi/suivi.js')));
+  /* Un repli existe pour les navigateurs sans requête de conteneur :
+     sinon la grille s'effondrerait à une colonne. */
+  verifier('index.html — repli sans requête de conteneur',
+    /\.dgrille\{display:grid;grid-template-columns:repeat\(auto-fill/.test(css));
+})();
+
+/* ==================================================================
    14. LA MAQUETTE v0 N'A PAS IMPORTÉ SON AUTOMATISME
 
    L'esthétique de v0 est reprise telle quelle, y compris ses libellés.
