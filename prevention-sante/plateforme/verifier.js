@@ -1612,6 +1612,81 @@ section('13. Images locales — déclarées, présentes, légères');
      - la page ne calcule rien d'autre qu'une moyenne, et le dit ;
      - chaque module affiche ce qui manque avant sa mise en service.
    ================================================================== */
+/* ==================================================================
+   16. LE MENU ET LA PAGE PORTENT LE MÊME NOM
+
+   Le menu affichait « Dermatologie », la page ouverte s'intitulait
+   « Peau ». Deux mots pour la même chose, à deux endroits de la même
+   interface : impossible de savoir si on a cliqué au bon endroit. La
+   cause était banale — le libellé du menu était écrit à la main dans le
+   fichier d'affichage, à côté d'un identifiant qui pointait vers un
+   domaine nommé autrement.
+
+   Le libellé est maintenant lu dans commun/domaines.js. Ces contrôles
+   empêchent qu'on le réécrive à la main, et vérifient que chaque domaine
+   porte les deux textes qui rendent un nom de spécialité compréhensible.
+   ================================================================== */
+section('16. Nom de spécialité — un seul libellé, expliqué');
+
+(function () {
+  const DOM = require('../commun/domaines.js');
+  const js = lire('suivi/suivi.js');
+
+  /* --- 16.1 Aucune entrée de domaine n'écrit son libellé à la main. --- */
+  const enDur = (js.match(/id: 'dom:[a-z-]+',\s*nom: '[^']+'/g) || []);
+  verifier('suivi.js — aucun libellé de domaine écrit à la main', enDur.length === 0,
+    enDur.length ? 'Écrits en dur : ' + enDur.join(' | ') +
+      ' — c’est exactement ce qui avait fait diverger « Dermatologie » et « Peau ».' : null);
+  verifier('suivi.js — les libellés de domaine sont lus dans domaines.js',
+    /function nomDom\(id\)/.test(js) && /DOMAINES\.trouver\(id\)/.test(js) &&
+    (js.match(/nom: nomDom\('/g) || []).length >= 5);
+
+  /* --- 16.2 Chaque entrée « dom: » du menu vise un domaine existant. --- */
+  const vises = (js.match(/nomDom\('([a-z-]+)'\)/g) || [])
+    .map(t => t.replace(/nomDom\('|'\)/g, ''));
+  const inconnus = vises.filter(id => !DOM.trouver(id));
+  verifier('suivi.js — chaque entrée de menu vise un domaine existant (' + vises.length + ')',
+    inconnus.length === 0, inconnus.length ? 'Inconnus : ' + inconnus.join(', ') : null);
+
+  /* --- 16.3 Un nom de spécialité ne suffit pas : il faut dire de quoi il
+         s'agit. Deux textes obligatoires, et une longueur minimale — une
+         explication de dix mots n'explique rien. --- */
+  const sansClair = DOM.liste.filter(d => !d.clair || d.clair.length < 18);
+  verifier('domaines.js — chaque domaine nomme les organes concernés',
+    sansClair.length === 0,
+    sansClair.length ? 'Sans ligne claire : ' + sansClair.map(d => d.id).join(', ') : null);
+  const sansExp = DOM.liste.filter(d => !d.explique || d.explique.length < 200);
+  verifier('domaines.js — chaque domaine explique ce que la spécialité regarde',
+    sansExp.length === 0,
+    sansExp.length ? 'Explication absente ou trop courte : ' +
+      sansExp.map(d => d.id).join(', ') : null);
+  verifier('suivi.js — l’explication est affichée dans le panneau du domaine',
+    /class="dt-exp"/.test(js) && /d\.explique/.test(js));
+
+  /* --- 16.4 Ces textes décrivent une spécialité, pas une personne. Même
+         règle que pour le lexique : aucune phrase ne doit pouvoir se lire
+         comme un commentaire de résultat. --- */
+  const individualise = [];
+  DOM.liste.forEach(d => {
+    const t = (d.clair + ' ' + d.explique);
+    [/votre taux/i, /vos r[eé]sultats/i, /vous avez/i, /votre valeur/i,
+     /est [eé]lev[eé]/i, /est normal/i, /anormal/i].forEach(rx => {
+      if (rx.test(t)) individualise.push(d.id + ' (' + rx.source + ')');
+    });
+  });
+  verifier('domaines.js — aucun texte ne commente un résultat',
+    individualise.length === 0,
+    individualise.length ? 'À réécrire : ' + individualise.join(', ') : null);
+  /* Et aucun seuil chiffré dans une unité biologique : l'intervalle de
+     référence appartient au compte rendu du laboratoire. */
+  const seuils = DOM.liste.filter(d =>
+    /\d+([.,]\d+)?\s*(g\/L|mg\/L|mmol\/L|µg\/L|UI\/L|mUI\/L|nmol\/L|µmol\/L)/i
+      .test(d.clair + ' ' + d.explique));
+  verifier('domaines.js — aucun seuil chiffré dans une unité biologique',
+    seuils.length === 0, seuils.length ? 'Seuils trouvés : ' +
+      seuils.map(d => d.id).join(', ') : null);
+})();
+
 section('15. Modules de démonstration — exemples crédibles, sans interprétation');
 
 (function () {
