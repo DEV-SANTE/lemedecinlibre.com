@@ -188,6 +188,11 @@ const courteDate = iso => { const d = new Date(iso);
 const annee = iso => new Date(iso).getFullYear();
 const ic = (n, cls) => '<svg class="ico ' + (cls || '') + '"><use href="#' + n + '"/></svg>';
 const fmtVal = v => (Math.round(v * 100) / 100).toString().replace('.', ',');
+/* Initiales d'un nom de médecin, pour la vignette ronde des cartes
+   « points à discuter » — la maquette y met un portrait ; on n'a ni
+   portrait, ni le droit d'en inventer un. */
+const initiales = nom => String(nom || '').replace(/^(Dr|Docteur)\.?\s*/i, '')
+  .split(/[\s-]+/).filter(Boolean).slice(0, 2).map(m => m.charAt(0).toUpperCase()).join('');
 
 /* Paramètres partageant l'unité du paramètre donné. */
 const memeUnite = p => PARAMETRES.filter(x => x.unite === p.unite && x.id !== p.id);
@@ -697,12 +702,14 @@ function blocPoints() {
           ${points.map(x => `
             <div class="pt m-${esc(TEINTE_AVIS[x.a.statut])}">
               <div class="pt-h">
-                <span class="pt-d" style="--dc:${x.d.couleur}">${esc(x.d.nom)}</span>
+                <span class="pt-ini">${esc(initiales(x.a.medecin))}</span>
+                <span class="pt-qui">${esc(x.a.medecin)}
+                  <em>Le ${esc(jolieDate(x.a.date))}</em></span>
                 <span class="pt-st"><i></i>${esc(Avis.statut(x.a.statut).l)}</span>
               </div>
+              <b class="pt-d" style="--dc:${x.d.couleur}">${esc(x.d.nom)}</b>
               <p class="pt-c">${x.a.synthese ? esc(x.a.synthese)
                 : 'Domaine signalé, sans phrase écrite.'}</p>
-              <p class="pt-s">${esc(x.a.medecin)} · le ${esc(jolieDate(x.a.date))}</p>
             </div>`).join('')}
         </div>`
       : `<p class="cmp-n">Aucun point n’a été signalé par votre médecin à ce jour. Ce n’est pas
@@ -735,30 +742,30 @@ function blocPoints() {
    ===================================================================== */
 const LATERAL = [
   { titre: 'Mon bilan', items: [
-    { id: 'apercu',            nom: 'Vue d’ensemble' },
-    { id: 'section:parcours',  nom: 'Mon parcours' }
+    { id: 'apercu',            nom: 'Vue d’ensemble',        ic: 'i-grid' },
+    { id: 'section:parcours',  nom: 'Mon parcours',          ic: 'i-route' }
   ]},
   { titre: 'Résultats', items: [
-    { id: 'section:vignettes', nom: 'Mes mesures' },
-    { id: 'dom:cardiovasculaire', nom: 'Cardiologie' },
-    { id: 'dom:respiration',   nom: 'Pneumologie' },
-    { id: 'dom:sommeil',       nom: 'Sommeil' },
-    { id: 'dom:peau',          nom: 'Dermatologie' },
-    { id: 'dom:vision',        nom: 'Ophtalmologie' },
-    { id: 'avenir:imagerie',   nom: 'Imagerie' },
-    { id: 'avenir:complementaires', nom: 'Examens complémentaires' }
+    { id: 'section:vignettes', nom: 'Mes mesures',           ic: 'i-tube' },
+    { id: 'dom:cardiovasculaire', nom: 'Cardiologie',        ic: 'i-heart' },
+    { id: 'dom:respiration',   nom: 'Pneumologie',           ic: 'i-lungs' },
+    { id: 'dom:sommeil',       nom: 'Sommeil',               ic: 'i-moon' },
+    { id: 'dom:peau',          nom: 'Dermatologie',          ic: 'i-face' },
+    { id: 'dom:vision',        nom: 'Ophtalmologie',         ic: 'i-eye' },
+    { id: 'avenir:imagerie',   nom: 'Imagerie',              ic: 'i-image' },
+    { id: 'avenir:complementaires', nom: 'Examens complémentaires', ic: 'i-scan' }
   ]},
   { titre: 'Suivi', items: [
-    { id: 'section:couverture', nom: 'Vaccinations, dépistages' },
-    { id: 'section:documents',  nom: 'Mes comptes rendus' },
-    { id: 'section:actes',      nom: 'Chaque acte expliqué' },
-    { id: 'avenir:rdv',         nom: 'Rendez-vous' },
-    { id: 'avenir:objets',      nom: 'Objets connectés' },
-    { id: 'avenir:messagerie',  nom: 'Messagerie sécurisée' }
+    { id: 'section:couverture', nom: 'Vaccinations, dépistages', ic: 'i-shield' },
+    { id: 'section:documents',  nom: 'Mes comptes rendus',    ic: 'i-file' },
+    { id: 'section:actes',      nom: 'Chaque acte expliqué',  ic: 'i-clipboard' },
+    { id: 'avenir:rdv',         nom: 'Rendez-vous',           ic: 'i-calendar' },
+    { id: 'avenir:objets',      nom: 'Objets connectés',      ic: 'i-watch' },
+    { id: 'avenir:messagerie',  nom: 'Messagerie sécurisée',  ic: 'i-chat' }
   ]},
   { titre: 'Repères', items: [
-    { id: 'section:glossaire',  nom: 'Les mots employés' },
-    { id: 'section:limites',    nom: 'Ce que la page ne fait pas' }
+    { id: 'section:glossaire',  nom: 'Les mots employés',     ic: 'i-book' },
+    { id: 'section:limites',    nom: 'Ce que la page ne fait pas', ic: 'i-info' }
   ]}
 ];
 
@@ -820,18 +827,30 @@ const SOUS_GRILLE = ['parcours', 'actes', 'couverture', 'documents',
                      'glossaire', 'limites'];
 
 function shellDomaines(S, groupes, p) {
-  const item = (id, nom, actif) =>
-    '<button class="rail-x' + (actif ? ' on' : '') + '" data-lat="' + esc(id) + '">' +
-    esc(nom) + '</button>';
+  /* Chaque entrée porte son pictogramme, et l'entrée active se signale
+     par un fond bleu pâle plutôt que par un aplat bleu : c'est ce que
+     fait la maquette, et c'est plus lisible — du texte foncé sur un fond
+     clair, au lieu de blanc sur bleu saturé. */
+  const item = (x, actif) =>
+    '<button class="rail-x' + (actif ? ' on' : '') + '" data-lat="' + esc(x.id) + '">' +
+    ic(x.ic || 'i-info') + '<span>' + esc(x.nom) + '</span></button>';
 
   const barre = `
     <aside class="rail">
       <button class="rail-b" id="rail-b" aria-expanded="${railOuvert ? 'true' : 'false'}">
-        ${ic('i-clipboard')}<span>${esc(titreLateral())}</span><i class="chev"></i>
+        ${ic('i-grid')}<span>${esc(titreLateral())}</span><i class="chev"></i>
       </button>
       <nav class="rail-nav${railOuvert ? ' ouvert' : ''}" aria-label="Mes pages">
+        <div class="rail-logo">
+          <span class="rail-mark">${ic('i-heart')}</span>
+          <span class="rail-nom">Prévention Santé<em>Médecine préventive</em></span>
+        </div>
         ${LATERAL.map(g => '<p class="rail-t">' + esc(g.titre) + '</p>' +
-          g.items.map(x => item(x.id, x.nom, lateral === x.id)).join('')).join('')}
+          g.items.map(x => item(x, lateral === x.id)).join('')).join('')}
+        <div class="rail-pied">
+          <span class="rail-ini">CD</span>
+          <span class="rail-qui">Camille Durand<em>Dossier fictif nº 0000-0000</em></span>
+        </div>
       </nav>
     </aside>`;
 

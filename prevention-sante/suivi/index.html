@@ -64,7 +64,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);
   text-rendering:optimizeLegibility}
 h1,h2{margin:0;letter-spacing:-.03em;line-height:1.14;font-family:var(--titre)}
 h1{font-size:clamp(23px,2.2vw,27px);font-weight:640}
-h2{font-size:18.5px;font-weight:620}
+h2{font-size:16px;font-weight:600}
 p{margin:0}
 ul,ol{margin:0;padding:0;list-style:none}
 table{border-collapse:collapse;width:100%}
@@ -80,11 +80,16 @@ button{font:inherit}
 .top{border-bottom:1px solid var(--line-2);background:rgba(255,255,255,.9);
   backdrop-filter:saturate(180%) blur(12px);position:sticky;top:0;z-index:50}
 .top-in{max-width:var(--cadre);margin:0 auto;padding:0 32px;height:68px;display:flex;align-items:center;gap:13px}
-.mark{width:33px;height:33px;flex:0 0 33px}
-.brand{font-weight:640;letter-spacing:-.034em;font-size:15.3px;line-height:1.05;
-  color:var(--ink);text-decoration:none}
-.brand small{display:block;font-size:11px;font-weight:580;letter-spacing:.17em;
-  text-transform:uppercase;color:var(--ink-4);margin-top:3px}
+/* Contexte patient à gauche, comme dans la maquette : le logo du service
+   est descendu dans la barre latérale, cette barre-ci dit qui on est et
+   de quand date le dernier bilan. */
+.top-id{min-width:0}
+.top-id b{display:block;font-size:13.2px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.top-id span{display:flex;align-items:center;gap:6px;font-size:11.6px;color:var(--ink-3);
+  margin-top:2px}
+.top-id .ico{width:13px;height:13px;flex:0 0 13px;color:var(--ink-4);stroke-width:1.8}
+.top-av{width:33px;height:33px;flex:0 0 33px;border-radius:50%;background:var(--pri);color:#fff;
+  display:grid;place-items:center;font-size:11.6px;font-weight:600;letter-spacing:.02em}
 .top nav{margin-left:auto;display:flex;gap:22px;align-items:center;font-size:13.5px}
 .top nav a{color:var(--ink-2);text-decoration:none;font-weight:520}
 .top nav a:hover{color:var(--pri-d)}
@@ -115,16 +120,21 @@ main{max-width:var(--cadre);margin:0 auto;padding:34px 32px 90px}
 .t-ic{width:32px;height:32px;border-radius:9px;background:var(--pri-l);color:var(--pri-d);
   display:grid;place-items:center;margin-bottom:11px}
 .t-ic .ico{width:17px;height:17px;flex:0 0 17px}
-.t-v{display:block;font-size:19px;font-weight:640;letter-spacing:-.03em;
-  font-variant-numeric:tabular-nums}
+/* Chiffres en chasse fixe, comme la maquette : ils s'alignent d'une
+   carte à l'autre au lieu de danser. */
+.t-v{display:block;font-size:18px;font-weight:600;letter-spacing:-.02em;
+  font-family:var(--mono);font-variant-numeric:tabular-nums}
 .t-k{display:block;font-size:12.8px;font-weight:560;color:var(--ink-2);margin-top:3px}
 .t-d{display:block;font-size:11.8px;color:var(--ink-4);margin-top:1px}
 
 /* ---------- blocs ---------- */
-.bloc{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);
-  padding:32px;box-shadow:var(--sh-s);margin-bottom:22px}
-.b-h{display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;margin-bottom:24px}
-.b-s{font-size:14px;color:var(--ink-3);margin-top:8px;max-width:74ch}
+/* La maquette respire moins : ses cartes ont environ vingt-deux points
+   de marge intérieure, pas trente-deux, et ses titres de section font
+   seize points. C'est une bonne part de l'impression « plus fin ». */
+.bloc{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);
+  padding:22px 24px;box-shadow:var(--sh-s);margin-bottom:16px}
+.b-h{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.b-s{font-size:12.8px;color:var(--ink-3);margin-top:5px;max-width:74ch;line-height:1.55}
 .b-lien{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-size:13.3px;
   font-weight:520;color:var(--pri-d);text-decoration:none;white-space:nowrap;
   border:1.5px solid var(--line);border-radius:999px;padding:9px 17px}
@@ -566,18 +576,41 @@ html[data-theme="editorial"] .cmp-x,
 .shell{display:grid;grid-template-columns:266px minmax(0,1fr);gap:22px;align-items:start}
 .panneau{min-width:0}
 
+/* BARRE LATÉRALE — structure de la maquette : bloc d'identité de service
+   en haut, groupes d'entrées, bloc patient en bas. */
 .rail{position:sticky;top:86px;background:var(--card);border:1px solid var(--line);
-  border-radius:var(--r-xl);padding:15px 12px;box-shadow:var(--sh-s);
+  border-radius:var(--r-l);padding:12px 10px;box-shadow:var(--sh-s);
   max-height:calc(100vh - 108px);overflow:auto}
-.rail-t{font-size:11px;font-weight:620;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--ink-4);margin:18px 10px 8px}
+.rail-logo{display:flex;align-items:center;gap:10px;padding:6px 8px 14px}
+.rail-mark{width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:var(--pri);
+  color:#fff;display:grid;place-items:center}
+.rail-mark .ico{width:17px;height:17px;flex:0 0 17px;stroke-width:2}
+.rail-nom{font-size:13.2px;font-weight:600;letter-spacing:-.02em;color:var(--ink);
+  line-height:1.2;min-width:0}
+.rail-nom em{display:block;font-style:normal;font-size:10.6px;font-weight:400;
+  color:var(--ink-4);margin-top:2px}
+.rail-pied{display:flex;align-items:center;gap:9px;margin-top:16px;padding:12px 8px 4px;
+  border-top:1px solid var(--line-2)}
+.rail-ini{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--pri-l);
+  color:var(--pri-d);display:grid;place-items:center;font-size:11.4px;font-weight:600}
+.rail-qui{font-size:11.9px;font-weight:520;color:var(--ink);line-height:1.25;min-width:0}
+.rail-qui em{display:block;font-style:normal;font-size:10.4px;font-weight:400;
+  color:var(--ink-4);margin-top:2px}
+.rail-t{font-size:10px;font-weight:620;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-4);margin:14px 10px 6px}
 .rail-f{font-size:11px;font-weight:620;letter-spacing:.1em;text-transform:uppercase;
   color:var(--fc);margin:12px 10px 5px;padding-left:8px;border-left:2.5px solid var(--fc)}
-.rail-x{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;
-  border:none;padding:8px 10px;border-radius:9px;cursor:pointer;font-size:13.2px;
-  font-weight:520;color:var(--ink-2);line-height:1.35}
-.rail-x:hover{background:var(--surf);color:var(--ink)}
-.rail-x.on{background:var(--fc,var(--pri));color:#fff;font-weight:580}
+.rail-x{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;
+  border:none;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:12.6px;
+  font-weight:450;color:var(--ink-2);line-height:1.35}
+.rail-x>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-x .ico{width:16px;height:16px;flex:0 0 16px;color:var(--ink-4);stroke-width:1.7}
+.rail-x:hover{background:var(--pri-l2);color:var(--ink)}
+.rail-x:hover .ico{color:var(--pri)}
+/* Entrée active : fond bleu pâle et texte bleu foncé, comme la maquette.
+   L'aplat bleu saturé d'avant écrasait la colonne. */
+.rail-x.on{background:var(--pri-l);color:var(--pri-d);font-weight:560}
+.rail-x.on .ico{color:var(--pri)}
 .rail-x i.pt{width:8px;height:8px;border-radius:3px;flex:0 0 8px;background:var(--fc,var(--ink-5))}
 .rail-x.on i.pt{background:#fff}
 .rail-b{display:none}
@@ -692,7 +725,11 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
   border-color:var(--line)}
 .dc-corps{display:flex;flex-direction:column;flex:1;padding:16px 18px 15px}
 .dc-nom{font-size:14.9px;font-weight:620;letter-spacing:-.02em;color:var(--ink)}
-.dc-clair{display:block;font-size:11.9px;font-weight:520;color:var(--dc);margin-top:3px}
+/* La maquette met cette ligne dans le bleu d'action, la même pour les
+   seize cartes. J'avais mis la couleur propre du domaine : plus varié,
+   mais seize teintes de texte sur un même écran, ce n'est pas ce que
+   montre la vidéo. La couleur du domaine reste sur le liseré au survol. */
+.dc-clair{display:block;font-size:11.9px;font-weight:520;color:var(--pri);margin-top:3px}
 .dc-syn{display:block;font-size:12.6px;color:var(--ink-3);line-height:1.5;margin-top:9px;flex:1}
 .dc-pied{display:flex;align-items:center;justify-content:space-between;gap:10px;
   margin-top:14px;padding-top:11px;border-top:1px solid var(--line-2);font-size:12.1px}
@@ -784,9 +821,20 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
 .et-fait .et-p{background:var(--fait);border-color:var(--fait)}
 .et-encours .et-p{border-color:var(--pri);border-style:dashed}
 .et-n{display:block;font-size:12.6px;font-weight:580;letter-spacing:-.015em;line-height:1.3;hyphens:auto}
-.et-e{display:block;font-size:10.4px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
-  color:var(--ink-4);margin-top:6px}
-.et-fait .et-e{color:#0f7f39}
+/* Le statut d'étape est une pastille, comme dans la maquette : un point
+   coloré et un libellé sur un fond très pâle. C'était une capitale grise,
+   qui ne ressemblait à rien de la vidéo.
+   Les trois teintes ne qualifient pas un résultat : « réalisé »,
+   « programmé » et « à programmer » sont des états d'avancement. */
+.et-e{display:inline-flex;align-items:center;gap:5px;font-size:10.6px;font-weight:520;
+  line-height:1.25;padding:3px 8px;border-radius:999px;margin-top:7px;
+  background:var(--surf);color:var(--ink-3);border:1px solid var(--line)}
+.et-e::before{content:"";width:5px;height:5px;border-radius:50%;flex:0 0 5px;
+  background:var(--ink-4)}
+.et-fait .et-e{background:var(--fait-l);color:#116e35;border-color:var(--fait-ln)}
+.et-fait .et-e::before{background:var(--fait)}
+.et-encours .et-e{background:var(--pri-l);color:var(--pri-d);border-color:var(--pri-l)}
+.et-encours .et-e::before{background:var(--pri)}
 .et-d{display:block;font-size:10.6px;color:var(--ink-5);font-family:var(--mono);margin-top:4px}
 /* Le basculement en liste verticale est décidé sur la LARGEUR DU BLOC et
    non sur celle de la fenêtre. Le parcours s'affiche dans un panneau qui
@@ -821,16 +869,28 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
   .et-p{position:relative;left:auto;top:auto;margin:0 0 13px}
 }
 
-.points{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-.pt{padding:16px 18px;border-radius:var(--r);background:var(--mqbg);
-  border:1px solid var(--mqln)}
-.pt-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
-.pt-d{font-size:11px;font-weight:620;letter-spacing:.1em;text-transform:uppercase;color:var(--dc)}
-.pt-st{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
-  color:var(--mq);margin-left:auto}
-.pt-st>i{width:6px;height:6px;border-radius:50%;flex:0 0 6px;background:var(--mq)}
-.pt-c{font-size:14px;color:var(--ink);line-height:1.6;max-width:var(--mesure)}
-.pt-s{font-family:var(--mono);font-size:11px;color:var(--ink-4);margin-top:10px}
+/* CARTES « POINTS À DISCUTER » — structure de la maquette : en haut le
+   médecin qui parle, avec ses initiales et la date, et sa qualification
+   en pastille à droite ; en dessous le domaine, puis sa phrase.
+   La carte est blanche. Avant, tout son fond prenait la teinte de l'avis,
+   ce qui donnait deux blocs colorés côte à côte et beaucoup de bruit. La
+   couleur de l'avis subsiste là où elle sert : la pastille et le liseré
+   de gauche. */
+.points{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.pt{padding:15px 17px;border-radius:var(--r);background:var(--card);
+  border:1px solid var(--line);border-left:3px solid var(--mq)}
+.pt-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:11px}
+.pt-ini{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--surf);
+  color:var(--ink-2);display:grid;place-items:center;font-size:11.2px;font-weight:600}
+.pt-qui{font-size:12.4px;font-weight:560;color:var(--ink);line-height:1.25;min-width:0}
+.pt-qui em{display:block;font-style:normal;font-size:10.8px;font-weight:400;
+  color:var(--ink-4);margin-top:2px}
+.pt-st{display:inline-flex;align-items:center;gap:6px;font-size:10.6px;font-weight:520;
+  color:var(--mq);background:var(--mqbg);border:1px solid var(--mqln);border-radius:999px;
+  padding:3px 9px;margin-left:auto}
+.pt-st>i{width:5px;height:5px;border-radius:50%;flex:0 0 5px;background:var(--mq)}
+.pt-d{display:block;font-size:13.4px;font-weight:600;letter-spacing:-.015em;color:var(--ink)}
+.pt-c{font-size:13px;color:var(--ink-2);line-height:1.6;max-width:var(--mesure);margin-top:5px}
 
 /* Écran « module à venir » : deux rubriques, dont celle qui manque. */
 .avenir{display:grid;grid-template-columns:1fr 1fr;gap:18px 30px}
@@ -867,6 +927,23 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
   <symbol id="i-lungs" viewBox="0 0 24 24"><path d="M12 3.5v9.2"/><path d="M9.4 8.4c0 2.6-1 3-2.4 4.4-1.6 1.6-2.5 3-2.5 5.2 0 1.6.9 2.5 2.4 2.5 1.9 0 4.9-1.1 4.9-3.4V8.4"/><path d="M14.6 8.4c0 2.6 1 3 2.4 4.4 1.6 1.6 2.5 3 2.5 5.2 0 1.6-.9 2.5-2.4 2.5-1.9 0-4.9-1.1-4.9-3.4V8.4"/></symbol>
   <symbol id="i-syringe" viewBox="0 0 24 24"><path d="M20.5 3.5l-3 3M18 9l-3-3M10.5 8.5l5 5-7 7H4v-4.5z"/><path d="M13.5 5.5l5 5M9 12l3 3"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20.5 12.4c0 4-3.8 7.2-8.5 7.2a10 10 0 01-2.6-.34L4.5 20.5l1.2-3.3A6.9 6.9 0 013.5 12.4c0-4 3.8-7.2 8.5-7.2s8.5 3.2 8.5 7.2z"/></symbol>
+  <!-- Douze pictogrammes pour la barre latérale. La maquette en met un
+       devant chaque entrée ; sans eux, la colonne est une liste de mots
+       et ne ressemble pas à la vidéo. Ils sont dessinés à la main, au
+       même trait que les autres : reprendre la bibliothèque d'icônes de
+       la maquette aurait ajouté une dépendance pour du décor. -->
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6.5" cy="6" r="2.5"/><circle cx="17.5" cy="18" r="2.5"/><path d="M9 6h4.5a3.5 3.5 0 010 7h-3a3.5 3.5 0 000 7H15"/></symbol>
+  <symbol id="i-tube" viewBox="0 0 24 24"><path d="M8 3.5h8M9.5 3.5v13a2.5 2.5 0 005 0v-13"/><path d="M9.5 11.5h5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.3S3.8 15.4 3.8 9.6A4.6 4.6 0 0112 7.4a4.6 4.6 0 018.2 2.2c0 5.8-8.2 10.7-8.2 10.7z"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></symbol>
+  <symbol id="i-face" viewBox="0 0 24 24"><path d="M4 8.5V6a2 2 0 012-2h2.5M20 8.5V6a2 2 0 00-2-2h-2.5M4 15.5V18a2 2 0 002 2h2.5M20 15.5V18a2 2 0 01-2 2h-2.5"/><path d="M9.5 10.5v.6M14.5 10.5v.6M9.6 14.4a3.2 3.2 0 004.8 0"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.8 12S6.4 5.8 12 5.8 21.2 12 21.2 12 17.6 18.2 12 18.2 2.8 12 2.8 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.2"/><circle cx="8.8" cy="9.8" r="1.6"/><path d="M4 17l5-4.6 4 3.4 2.6-2.2 4.4 3.8"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5.8A1.8 1.8 0 015.8 4H8M16 4h2.2A1.8 1.8 0 0120 5.8V8M20 16v2.2a1.8 1.8 0 01-1.8 1.8H16M8 20H5.8A1.8 1.8 0 014 18.2V16"/><path d="M4 12h16"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 2.4v5.4c0 4.4-2.9 7.7-7 9.2-4.1-1.5-7-4.8-7-9.2V5.9z"/><path d="M9.2 12.2l2 2 3.6-3.8"/></symbol>
+  <symbol id="i-watch" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="3.4"/><path d="M9.5 6.5l.6-3h3.8l.6 3M9.5 17.5l.6 3h3.8l.6-3M12 10v2.4l1.7 1.1"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.2A1.7 1.7 0 015.7 3.5H10a2.5 2.5 0 012 4.4V20.5a2.5 2.5 0 00-2-1H5.7A1.7 1.7 0 014 17.8z"/><path d="M20 5.2a1.7 1.7 0 00-1.7-1.7H14a2.5 2.5 0 00-2 4.4V20.5a2.5 2.5 0 012-1h4.3a1.7 1.7 0 001.7-1.7z"/></symbol>
 </defs></svg>
 
 <div class="bandeau">
@@ -876,17 +953,22 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
 
 <header class="top">
   <div class="top-in">
-    <svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-      <rect width="40" height="40" rx="11.5" fill="#0f5f6b"/>
-      <path d="M8.5 20.5h4.6l2.7-7 3.5 13.5 2.7-8.6 2 5.1h5.5" stroke="#fff"
-            stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <a class="brand" href="./">Prévention Santé<small>Mon suivi</small></a>
+    <div class="top-id">
+      <b>Camille Durand</b>
+      <span><svg class="ico"><use href="#i-calendar"/></svg>Dernier bilan : 20 juillet 2026</span>
+    </div>
     <nav>
       <a href="../espace/">Mon espace</a>
       <a href="../contenus/">Repères</a>
       <a href="#documents">Mes documents</a>
     </nav>
+    <!-- La maquette place ici trois commandes de plus : une cloche de
+         notifications, un point d'interrogation et un sélecteur de
+         période. Elles ne sont pas reprises : aucune des trois n'a de
+         fonction dans cette version, et un bouton qui ne fait rien est
+         pire qu'un bouton absent. Les initiales, elles, ne prétendent
+         rien faire : c'est un repère d'identité. -->
+    <span class="top-av" aria-hidden="true">CD</span>
   </div>
 </header>
 
@@ -918,13 +1000,13 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=19"></script>
-<script src="../commun/visuels.js?v=19"></script>
-<script src="../commun/domaines.js?v=19"></script>
-<script src="../commun/avis.js?v=19"></script>
-<script src="../commun/themes.js?v=19"></script>
-<script src="../commun/lexique.js?v=19"></script>
-<script src="suivi.js?v=19"></script>
+<script src="../plateforme/biologie.js?v=20"></script>
+<script src="../commun/visuels.js?v=20"></script>
+<script src="../commun/domaines.js?v=20"></script>
+<script src="../commun/avis.js?v=20"></script>
+<script src="../commun/themes.js?v=20"></script>
+<script src="../commun/lexique.js?v=20"></script>
+<script src="suivi.js?v=20"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>
