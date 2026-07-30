@@ -1,0 +1,93 @@
+/* =====================================================================
+   CHARTE — LES JETONS GRAPHIQUES, EN UN SEUL ENDROIT
+
+   Pourquoi ce fichier existe. Chaque page portait sa propre copie des
+   couleurs, des rayons et des ombres, dans son bloc :root. Quatre copies
+   du même bleu : la page de suivi est passée à la palette de la maquette
+   v0, les trois autres sont restées au bleu-vert sombre, et le site s'est
+   retrouvé dépareillé sans que personne n'ait rien cassé. C'est la
+   définition d'une duplication : rien n'est faux, tout dérive.
+
+   Ce fichier est désormais la source unique. Les pages n'ont plus de
+   bloc :root ; elles le chargent.
+
+   CE QUE CONTIENT LA PALETTE. Les jetons de la maquette v0.app : fond
+   bleu-gris très clair, cartes blanches, bleu calme en couleur d'action,
+   encre bleu-nuit. Repris tels quels, sans le build ni les dépendances
+   de la maquette.
+
+   CE QUI RESTE INTERDIT ICI. Aucune police distante, aucune image, aucun
+   @import : ce fichier est chargé par des pages qui affichent des
+   données de santé, et une seule requête vers un tiers suffirait à
+   révéler qu'une personne consulte son dossier.
+
+   LES TROIS TEINTES RÉSERVÉES — #0f766e, #b45309, #a52222 — n'ont pas
+   leur place dans cette charte : elles appartiennent aux avis du
+   médecin et vivent dans commun/avis.js. Une page ne doit pas pouvoir
+   les employer par commodité graphique.
+
+   DUPLICATION QUI RESTE, ET ASSUMÉE. La page de suivi garde ses jetons
+   en ligne : sa feuille de style fait plus de huit cents lignes et
+   contient six apparences, la déplacer maintenant serait un chantier à
+   part. Un contrôle du vérificateur compare les deux jeux de couleurs et
+   échoue s'ils divergent, ce qui est la seule protection honnête tant
+   que la copie existe.
+   ===================================================================== */
+
+:root{
+  /* --- encre --- */
+  --ink:#16324f;      /* texte courant */
+  --ink-2:#3d5a75;    /* texte secondaire */
+  --ink-3:#5c7183;    /* légendes */
+  --ink-4:#8ba1b3;    /* mentions, unités */
+  --ink-5:#b9cbd9;    /* traits, points inactifs */
+
+  /* --- bleu d'action --- */
+  --pri:#2069b0;
+  --pri-d:#1b4c7e;
+  --pri-2:#3a86c8;
+  --pri-l:#e9f2fb;    /* fond d'état actif */
+  --pri-l2:#f2f7fc;   /* survol */
+
+  /* --- surfaces --- */
+  --bg:#f4f8fb;
+  --card:#ffffff;
+  --blanc:#ffffff;
+  --surf:#eef3f7;
+  --sand:#f2f7fc;
+  --sand-line:#dfe9f2;
+  --line:#e3ebf2;
+  --line-2:#eef3f7;
+
+  /* --- ambre des bandeaux d'avertissement, jamais un résultat de santé.
+         Il valait #b45309 jusqu'au 30 juillet 2026, c'est-à-dire la teinte
+         exacte de l'avis médical « à surveiller » : le même orange disait
+         « environnement de test » en haut de page et « à surveiller » sur
+         une pastille de domaine. C'est un contrôle du vérificateur qui l'a
+         signalé, en refusant qu'une teinte d'avis entre dans la charte.
+         Celui-ci est un jaune franc, sans parenté avec l'orange d'avis. --- */
+  --amber:#a16207; --amber-bg:#fefbeb; --amber-line:#f3e0a6;
+
+  /* --- vert d'avancement : dit qu'un acte a eu lieu, jamais qu'un
+         résultat est bon --- */
+  --fait:#16a34a; --fait-l:#dcfce7; --fait-ln:#86e0aa;
+
+  /* --- géométrie --- */
+  --r:12px; --r-l:16px; --r-xl:24px;
+  --sh-s:0 1px 2px rgba(22,50,79,.04);
+  --sh:0 1px 3px rgba(22,50,79,.05), 0 12px 32px rgba(22,50,79,.06);
+  --sh-l:0 2px 6px rgba(22,50,79,.05), 0 24px 60px rgba(22,50,79,.08);
+
+  /* --- caractères. Pas de police distante : celle du système. La
+         maquette utilise Geist, servie par un tiers — inacceptable sur
+         une page qui affiche un dossier médical. --- */
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --titre:var(--f);
+
+  /* --- largeurs. Le cadre prend l'écran, la prose garde sa mesure :
+         au-delà d'environ soixante-quinze signes par ligne, l'œil perd
+         le début de la ligne suivante. --- */
+  --cadre:100%;
+  --mesure:72ch;
+}
