@@ -670,11 +670,19 @@ const VISUELS = require('../commun/visuels.js');
     fautes.length ? fautes.join(', ') : null);
 });
 
-/* --- 7.2 Aucune image distante hors de la page publique --- */
+/* --- 7.2 Aucune image distante hors des pages publiques.
+
+       La liste des pages interdites n'est plus écrite à la main : elle se
+       déduit du catalogue. Ajouter une page à VISUELS.pagesPubliques est
+       donc un geste visible, qui la retire d'ici automatiquement — et
+       oublier de le faire interdit l'image, ce qui est le bon sens de
+       l'erreur. --- */
 ['plateforme/index.html', 'plateforme/style.css', 'espace/index.html',
  'pilotage/index.html', 'entreprise/index.html', 'contenus/index.html',
  'suivi/index.html', 'commun/navigation.js', 'commun/lexique.js',
- 'commun/themes.js'].forEach(f => {
+ 'commun/themes.js']
+ .filter(f => VISUELS.pagesPubliques.indexOf(f) === -1)
+ .forEach(f => {
   const src = lire(f);
   const ext = (src.match(/(https?:)?\/\/[a-z0-9.-]+\.[a-z]{2,}/gi) || [])
     .filter(u => !/w3\.org/.test(u));
@@ -683,20 +691,70 @@ const VISUELS = require('../commun/visuels.js');
       + ' — une page qui affiche des données de santé ne doit rien demander à un tiers.' : null);
 });
 
-/* --- 7.3 Les images de la page publique sont conformes au catalogue --- */
-(function () {
-  const src = lire(VISUELS.pagePublique);
+/* --- 7.3 Les images des pages publiques sont conformes au catalogue.
+
+       Le décompte se fait page par page. Sur la page Repères, les images
+       ne sont pas écrites dans le balisage mais produites par
+       contenus.js à partir du catalogue : on compte donc les
+       photographies déclarées pour cette page et on vérifie que le code
+       qui les affiche va bien les chercher dans le catalogue. --- */
+VISUELS.pagesPubliques.forEach(page => {
+  const declarees = VISUELS.photos.filter(p => p.page === page);
+  const src = lire(page);
   const balises = src.match(/<img\b[^>]*>/gi) || [];
 
-  verifier('index.html — autant d’images que de photographies déclarées (' +
-    balises.length + '/' + VISUELS.photos.length + ')',
-    balises.length === VISUELS.photos.length,
-    balises.length !== VISUELS.photos.length
+  /* Ces deux contrôles valent pour TOUTE page publique qui charge une
+     image distante, et non pour la seule page d'accueil : une promesse
+     périmée est plus gênante que la fuite qu'elle cache. */
+  verifier(page + ' — ne promet plus l’absence de ressource externe',
+    !/[Aa]ucune\s+ressource\s+externe\s*[.,]/i.test(src) &&
+    !/[Aa]ucune\s+ressource\s+externe\s+n['’]est\s+charg/i.test(src));
+  verifier(page + ' — la fuite d’adresse IP est écrite noir sur blanc',
+    /adresse\s+IP/i.test(src) ||
+    (page === 'contenus/index.html' && /adresse\s+IP/i.test(lire('contenus/contenus.js'))));
+
+  if (page === 'contenus/index.html') {
+    const js = lire('contenus/contenus.js');
+    verifier(page + ' — les photographies viennent du catalogue (' +
+      declarees.length + ' déclarées)',
+      /VISUELS\.photos/.test(js) && /images\.unsplash\.com/.test(js) &&
+      declarees.length > 0);
+    verifier(page + ' — aucune adresse d’image écrite en dur',
+      (js.match(/https:\/\/images\.unsplash\.com/g) || []).length === 1,
+      'Une seule construction d’adresse, alimentée par le catalogue.');
+    verifier(page + ' — chaque photographie de thème est différée et sans renvoi de page',
+      /loading="lazy"/.test(js) && /referrerpolicy="no-referrer"/.test(js));
+    /* Le thème visé doit exister, sinon la photographie ne s'affiche
+       jamais et personne ne s'en aperçoit. */
+    const themes = (js.match(/theme: '([^']+)'/g) || []);
+    const CONT = lire('contenus/contenus.js');
+    const orphelines = declarees.filter(p =>
+      CONT.indexOf("theme: '" + p.theme + "'") === -1);
+    verifier(page + ' — chaque photographie vise un thème existant',
+      orphelines.length === 0,
+      orphelines.length ? 'Thèmes introuvables : ' +
+        orphelines.map(p => p.theme).join(', ') : null);
+    /* Les crédits sont produits depuis le catalogue, pas recopiés : on
+       contrôle donc le mécanisme, et non la présence des noms dans la
+       source. Un nom recopié à la main finirait par désigner une autre
+       photographie que celle affichée. */
+    verifier(page + ' — les crédits sont produits depuis le catalogue',
+      /function creditsPhotos/.test(js) && /ph\.auteur/.test(js) && /ph\.pseudo/.test(js) &&
+      /licence Unsplash/.test(js));
+    verifier(page + ' — la page dit ce qu’implique un hôte tiers',
+      /adresse IP/.test(js));
+    return;
+  }
+
+  verifier(page + ' — autant d’images que de photographies déclarées (' +
+    balises.length + '/' + declarees.length + ')',
+    balises.length === declarees.length,
+    balises.length !== declarees.length
       ? 'Toute image affichée doit être déclarée dans commun/visuels.js, et inversement.' : null);
 
   const vus = [];
   balises.forEach((b, i) => {
-    const rang = 'index.html — image ' + (i + 1);
+    const rang = page + ' — image ' + (i + 1);
 
     /* Toutes les origines de la balise, src et srcset confondus. */
     const urls = b.match(/https?:\/\/[^\s"',]+/g) || [];
@@ -740,28 +798,20 @@ const VISUELS = require('../commun/visuels.js');
 
   /* Toute déclaration doit servir : un catalogue qui gonfle sans être
      affiché finirait par ne plus décrire la page. */
-  const orphelines = VISUELS.photos.filter(p => vus.indexOf(p.id) === -1);
-  verifier('commun/visuels.js — aucune déclaration inutilisée', orphelines.length === 0,
+  const orphelines = declarees.filter(p => vus.indexOf(p.id) === -1);
+  verifier(page + ' — aucune déclaration inutilisée', orphelines.length === 0,
     orphelines.length ? 'Déclarées sans être affichées : '
       + orphelines.map(p => p.id).join(', ') : null);
 
   /* Un auteur non cité est une attribution perdue : la licence n'exige
      pas le crédit, mais le projet se l'impose. */
-  VISUELS.photos.forEach(p => {
-    verifier('index.html — auteur cité : ' + p.auteur,
-      src.indexOf(p.auteur) !== -1 && src.indexOf(p.compte) !== -1,
+  declarees.forEach(p => {
+    verifier(page + ' — auteur cité : ' + p.auteur,
+      src.indexOf(p.auteur) !== -1 && src.indexOf(p.pseudo) !== -1,
       null);
   });
 
-  /* Le pied de page doit dire ce qui est chargé et ce que ça implique.
-     Une page qui promet « aucune ressource externe » alors qu'elle en
-     charge cinq est plus dommageable que la fuite d'IP elle-même. */
-  verifier('index.html — le pied de page ne promet plus l’absence de ressource externe',
-    !/[Aa]ucune\s+ressource\s+externe\s+n['’]est\s+charg/i.test(src),
-    null);
-  verifier('index.html — la fuite d’adresse IP est écrite noir sur blanc',
-    /adresse\s+IP/i.test(src));
-})();
+});
 
 /* ==================================================================
    8. LES EXPLICATIONS NE PEUVENT PAS DEVENIR UNE INTERPRÉTATION
