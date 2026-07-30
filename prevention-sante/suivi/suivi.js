@@ -821,6 +821,298 @@ function blocAVenir(cle) {
     </section>`;
 }
 
+/* =====================================================================
+   LES CINQ MODULES REMPLIS D'EXEMPLES
+
+   Ils affichent le jeu de démonstration de commun/demonstration.js.
+   Trois principes, les mêmes que sur le reste de la page :
+
+   1. Toute qualification affichée est celle d'un praticien nommé et
+      datée. Le logiciel n'en produit aucune.
+   2. Les textes d'explication ne dépendent d'aucune valeur : ils
+      décrivent l'examen ou l'appareil, pas ce qui a été mesuré.
+   3. Chaque module se termine par ce qui manque avant qu'il puisse
+      servir en vrai. C'est écrit à l'écran, pas seulement en commentaire.
+   ===================================================================== */
+
+/* Pastille d'avis, à partir d'un statut signé. Renvoie une chaîne vide si
+   le statut est absent : une pastille sans auteur ne s'affiche pas. */
+function pastilleAvis(statut, medecin) {
+  if (!statut || !medecin) return '';
+  const st = Avis.statut(statut);
+  if (!st) return '';
+  return '<span class="ex-past m-' + esc(TEINTE_AVIS[statut]) + '"><i></i>' +
+    esc(st.l) + '</span>';
+}
+
+/* Courbe de sept points, sans échelle et sans repère de normalité : elle
+   montre une forme, elle ne situe rien. */
+function courbette(serie, couleur) {
+  const L = 190, H = 44, pad = 5;
+  let mn = Math.min.apply(null, serie), mx = Math.max.apply(null, serie);
+  if (mn === mx) { mn -= 1; mx += 1; }
+  const pts = serie.map((v, i) => {
+    const x = pad + (i * (L - 2 * pad)) / Math.max(1, serie.length - 1);
+    const y = H - pad - ((v - mn) / (mx - mn)) * (H - 2 * pad);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  });
+  const d = pts[pts.length - 1].split(',');
+  return '<svg viewBox="0 0 ' + L + ' ' + H + '" class="mc" aria-hidden="true">' +
+    '<polyline points="' + pts.join(' ') + '" class="mp" stroke="' + couleur + '"/>' +
+    '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="3.4" fill="' + couleur + '"/></svg>';
+}
+
+function enTeteModule(titre, sous) {
+  return `<div class="b-h"><div><h2>${esc(titre)}</h2>
+    <p class="b-s">${sous}</p></div></div>`;
+}
+
+/* Rappel de ce qui manque, à la fin de chaque module. Le texte vient de
+   A_VENIR : un seul endroit décrit l'état réel d'avancement. */
+function blocManque(cle) {
+  const m = A_VENIR[cle];
+  if (!m) return '';
+  return `
+    <section class="bloc bloc-manque">
+      <span class="ex-k">Ce qui manque avant la mise en service</span>
+      <p class="ex-t">${esc(m.manque)}</p>
+      <p class="ex-t" style="margin-top:9px">Les exemples ci-dessus sont inventés et ne
+      correspondent à personne. Ils servent à montrer l’écran, pas à afficher un dossier.</p>
+    </section>`;
+}
+
+function moduleImagerie() {
+  const faits = DEMO.imagerie.filter(e => e.conclusion);
+  const autres = DEMO.imagerie.filter(e => !e.conclusion);
+  const carte = e => `
+    <article class="exm ${e.conclusion ? '' : 'exm-vide'}">
+      <div class="exm-h">
+        <span class="exm-mod">${esc(e.modalite)}</span>
+        <div class="exm-t"><b>${esc(e.type)}</b><span>${esc(e.zone)}</span></div>
+        ${pastilleAvis(e.statut, e.medecin)}
+      </div>
+      <dl class="exm-m">
+        <div>${ic('i-calendar')}<dd>${e.date ? esc(jolieDate(e.date)) : 'Non programmé'}</dd></div>
+        <div>${ic('i-pin')}<dd>${esc(e.lieu)}</dd></div>
+        ${e.medecin ? `<div>${ic('i-stetho')}<dd>${esc(e.medecin)}</dd></div>` : ''}
+      </dl>
+      ${e.conclusion ? `<p class="exm-c">${esc(e.conclusion)}</p>
+        <p class="exm-s">Conclusion écrite et signée par ${esc(e.medecin)}, le
+        ${esc(jolieDate(e.date))} · compte rendu de ${e.pages} page${e.pages > 1 ? 's' : ''}</p>`
+      : `<p class="exm-c exm-att">${esc(e.attente)}</p>`}
+    </article>`;
+
+  return `
+    <section class="bloc">
+      ${enTeteModule('Imagerie', 'Vos examens d’imagerie et leur compte rendu, tel que le ' +
+        'radiologue l’a écrit et signé. Cette page n’ajoute rien à ce qu’il a rédigé et ' +
+        'n’en résume rien.')}
+      <div class="exm-g">${faits.map(carte).join('')}</div>
+      ${autres.length ? `<p class="exm-titre">Examens possibles, non prescrits</p>
+        <div class="exm-g">${autres.map(carte).join('')}</div>` : ''}
+    </section>
+    <section class="bloc">
+      <span class="ex-k">Ce qu’un compte rendu d’imagerie est, et n’est pas</span>
+      <p class="ex-t">Un compte rendu décrit ce que le radiologue a vu sur les images, dans
+      les conditions de l’examen. Une image normale ne garantit pas l’absence de tout
+      problème, et une image décrite comme anormale n’est pas nécessairement grave : les
+      classifications employées — ACR pour le sein, EU-TIRADS pour la thyroïde — servent
+      justement à dire à quel point une image est banale. Leur lecture et la conduite à tenir
+      appartiennent au médecin, en consultation.</p>
+    </section>
+    ${blocManque('imagerie')}`;
+}
+
+function moduleComplementaires() {
+  const carte = e => `
+    <article class="exm">
+      <div class="exm-h">
+        <span class="exm-mod">${esc(e.code)}</span>
+        <div class="exm-t"><b>${esc(e.nom)}</b><span>${esc(jolieDate(e.date))} ·
+          ${esc(e.lieu)}</span></div>
+        ${pastilleAvis(e.statut, e.medecin)}
+      </div>
+      <p class="exm-i"><b>Pourquoi il a été fait.</b> ${esc(e.indication)}</p>
+      <table class="exm-tbl">
+        <tbody>${e.mesures.map(m => `<tr><th>${esc(m.l)}</th>
+          <td>${esc(m.v)}${m.u ? ' <em>' + esc(m.u) + '</em>' : ''}</td></tr>`).join('')}</tbody>
+      </table>
+      <p class="exm-c">${esc(e.conclusion)}</p>
+      <p class="exm-s">Conclusion écrite et signée par ${esc(e.medecin)}, le
+      ${esc(jolieDate(e.date))}</p>
+    </article>`;
+
+  return `
+    <section class="bloc">
+      ${enTeteModule('Examens complémentaires', 'Les examens décidés au cas par cas, après ' +
+        'consultation. Les mesures sont reproduites telles que l’appareil les a imprimées ; ' +
+        'la lecture est celle du praticien, signée.')}
+      <div class="exm-g exm-g1">${DEMO.complementaires.map(carte).join('')}</div>
+    </section>
+    <section class="bloc">
+      <span class="ex-k">Pourquoi ces examens ne sont pas systématiques</span>
+      <p class="ex-t">Aucun de ces trois examens ne fait partie d’un forfait. Chacun a été
+      décidé après un entretien et un examen, pour une raison écrite au-dessus. Un examen
+      réalisé sans indication ne produit pas plus d’information : il produit surtout des
+      résultats limites, qui appellent d’autres examens et de l’inquiétude, sans bénéfice
+      démontré. C’est la raison pour laquelle cette page ne propose jamais d’examen
+      elle-même.</p>
+    </section>
+    ${blocManque('complementaires')}`;
+}
+
+function moduleRdv() {
+  const r = DEMO.rdv.prochain;
+  const vis = (VISUELS.modules || []).filter(v => v.id === 'consultation')[0];
+  return `
+    <section class="rdv-b">
+      <img class="rdv-img" src="../images/modules/consultation.jpg" width="720" height="450"
+           loading="lazy" decoding="async" alt="${esc(vis ? vis.sujet : '')}">
+      <div class="rdv-in">
+        <span class="ex-k">Prochain rendez-vous</span>
+        <b class="rdv-t">${esc(jolieDate(r.date))}, ${esc(r.heure)}</b>
+        <p class="rdv-m">${esc(r.motif)} · ${esc(r.qui)}</p>
+        <p class="rdv-l">${ic('i-pin')}${esc(r.lieu)} — ${esc(r.adresse)}</p>
+      </div>
+    </section>
+    <section class="bloc">
+      <span class="ex-k">Comment vous y préparer</span>
+      <p class="ex-t">${esc(r.preparation)}</p>
+    </section>
+    <section class="bloc">
+      ${enTeteModule('Mes rendez-vous passés', 'Ce qui a eu lieu, dans l’ordre, avec le lieu ' +
+        'et la personne rencontrée.')}
+      <ol class="rdvl">
+        ${DEMO.rdv.passes.map(x => `
+          <li class="rdvl-x">
+            <span class="rdvl-d">${esc(jolieDate(x.date))}</span>
+            <b class="rdvl-t">${esc(x.motif)}</b>
+            <span class="rdvl-q">${esc(x.qui)} · ${esc(x.lieu)}</span>
+          </li>`).join('')}
+      </ol>
+      <p class="ex-t" style="margin-top:14px">Il n’y a pas de bouton de prise de rendez-vous
+      sur cette page. Les agendas des centres ne sont pas raccordés : un bouton qui ne ferait
+      rien serait plus gênant qu’une absence de bouton. Pour prendre ou déplacer un
+      rendez-vous, appelez le centre.</p>
+    </section>
+    ${blocManque('rdv')}`;
+}
+
+function moduleObjets() {
+  const O = DEMO.objets;
+  const moyenne = serie => {
+    const m = serie.reduce((a, b) => a + b, 0) / serie.length;
+    return Math.round(m * 10) / 10;
+  };
+  const appareil = a => {
+    const vis = (VISUELS.modules || []).filter(v => v.id === a.id)[0];
+    return `
+    <article class="app">
+      <img class="app-img" src="../images/modules/${esc(a.id)}.jpg" width="240" height="240"
+           loading="lazy" decoding="async" alt="${esc(vis ? vis.sujet : '')}">
+      <div class="app-in">
+        <b class="app-n">${esc(a.nom)}</b>
+        <span class="app-m">${esc(a.modele)} · synchronisé ${esc(a.synchro)}</span>
+        <span class="app-x">${esc(a.mesure)}</span>
+      </div>
+      <span class="app-bat">${a.batterie} %</span>
+    </article>`;
+  };
+  const mesure = m => `
+    <article class="wm">
+      <div class="wm-h">${ic(m.ic)}<span>${esc(m.l)}</span></div>
+      <b class="wm-v">${esc(fmtVal(m.serie[m.serie.length - 1]))}<em>${esc(m.u)}</em></b>
+      ${courbette(m.serie, 'var(--pri-2)')}
+      <span class="wm-d">Sept derniers jours · moyenne ${esc(fmtVal(moyenne(m.serie)))}
+      ${esc(m.u)}</span>
+      <span class="wm-s">${esc(m.source)}</span>
+    </article>`;
+
+  return `
+    <section class="bloc">
+      ${enTeteModule('Objets connectés', 'Ce que vos appareils ont transmis, tel quel. Ces ' +
+        'mesures ne sont pas des examens médicaux : elles sont produites par des appareils ' +
+        'grand public, non étalonnés, et ne remplacent aucune mesure faite au centre.')}
+      <div class="app-g">${O.appareils.map(appareil).join('')}</div>
+    </section>
+    <section class="bloc">
+      ${enTeteModule('Mes mesures des sept derniers jours', 'La dernière valeur transmise, la ' +
+        'forme des sept derniers jours, et la moyenne de ces sept jours.')}
+      <div class="wm-g">${O.mesures.map(mesure).join('')}</div>
+    </section>
+    <section class="bloc">
+      <span class="ex-k">Ce qui n’est pas affiché ici, et pourquoi</span>
+      <p class="ex-t">Vous ne trouverez sur cette page ni objectif à atteindre, ni fourchette
+      de valeurs « normales », ni flèche de progrès, ni phrase du type « bonne récupération »
+      ou « aucune anomalie détectée ». Ce n’est pas un oubli. Comparer une mesure à un seuil
+      et en tirer une conclusion sur une personne est ce qui distingue un logiciel de suivi
+      d’un dispositif médical, lequel doit être certifié avant d’être utilisé. Une montre
+      grand public affiche volontiers ce genre de phrases ; cette page, non.</p>
+      <p class="ex-t" style="margin-top:9px">Une deuxième raison, plus simple : ces appareils
+      se trompent. Une fréquence cardiaque au poignet pendant l’effort, une saturation en
+      oxygène mesurée à travers la peau la nuit, une durée de sommeil déduite de mouvements —
+      chacune de ces mesures a une marge d’erreur que le fabricant ne publie pas toujours.
+      Elles sont utiles pour voir une tendance sur des semaines, et elles ne suffisent pas
+      pour décider quoi que ce soit.</p>
+    </section>
+    ${blocManque('objets')}`;
+}
+
+function moduleMessagerie() {
+  const fil = f => `
+    <article class="fil${f.etat === 'clos' ? ' fil-clos' : ''}">
+      <div class="fil-h">
+        <b class="fil-s">${esc(f.sujet)}</b>
+        <span class="fil-e">${f.etat === 'clos' ? 'Fil clos' : 'Fil ouvert'}</span>
+      </div>
+      <span class="fil-a">Avec ${esc(f.avec)}</span>
+      <ol class="msgs">
+        ${f.messages.map(m => `
+          <li class="msg${m.moi ? ' msg-moi' : ''}">
+            <span class="msg-i">${esc(initiales(m.de))}</span>
+            <div class="msg-c">
+              <span class="msg-q">${esc(m.de)} · ${esc(jolieDate(m.quand))}</span>
+              <p class="msg-t">${esc(m.texte)}</p>
+            </div>
+          </li>`).join('')}
+      </ol>
+    </article>`;
+
+  return `
+    <section class="bloc">
+      ${enTeteModule('Messagerie sécurisée', 'Les échanges écrits avec l’équipe médicale, ' +
+        'conservés dans le dossier. Deux exemples, dont un clos.')}
+      <div class="fil-g">${DEMO.messagerie.map(fil).join('')}</div>
+      <p class="ex-t" style="margin-top:16px">Il n’y a volontairement pas de champ de réponse.
+      Une messagerie de santé suppose un hébergement certifié et un service conforme : écrite
+      sur la base actuelle, elle transporterait des informations médicales nominatives sur un
+      hébergement ordinaire. Ce ne serait pas une fonction incomplète, ce serait une fuite
+      organisée.</p>
+    </section>
+    <section class="bloc">
+      <span class="ex-k">Ce qu’une messagerie ne remplace pas</span>
+      <p class="ex-t">Un échange écrit convient pour une question de suivi, une précision
+      d’ordonnance, un rendez-vous. Il ne convient pas à un symptôme nouveau, à une douleur,
+      à une gêne respiratoire : un message peut rester sans lecture plusieurs jours. En cas
+      de symptôme qui inquiète, appelez votre médecin ou, en urgence, le 15.</p>
+    </section>
+    ${blocManque('messagerie')}`;
+}
+
+const MODULES = {
+  imagerie: moduleImagerie,
+  complementaires: moduleComplementaires,
+  rdv: moduleRdv,
+  objets: moduleObjets,
+  messagerie: moduleMessagerie
+};
+
+/* Un module rempli s'il existe, sinon l'écran « ce qui est prévu ». */
+function panneauModule(cle) {
+  if (typeof DEMO === 'undefined') return blocAVenir(cle);
+  return MODULES[cle] ? MODULES[cle]() : blocAVenir(cle);
+}
+
 /* Sections atteintes par la barre latérale. Sert au vérificateur autant
    qu'à la lecture : c'est la liste de ce qui reste accessible. */
 const SOUS_GRILLE = ['parcours', 'actes', 'couverture', 'documents',
@@ -877,7 +1169,7 @@ function shellDomaines(S, groupes, p) {
   } else if (lateral.indexOf('section:') === 0) {
     panneau = S[lateral.slice(8)] || '';
   } else if (lateral.indexOf('avenir:') === 0) {
-    panneau = blocAVenir(lateral.slice(7));
+    panneau = panneauModule(lateral.slice(7));
   } else if (lateral.indexOf('dom:') === 0) {
     panneau = panneauDomaine(S, lateral.slice(4));
   } else {
@@ -1460,7 +1752,13 @@ function brancherInfobulle(series) {
    ===================================================================== */
 
 window.addEventListener('DOMContentLoaded', () => {
+  /* Aucun dossier enregistré dans ce navigateur — c'est le cas à chaque
+     première ouverture, donc pendant une présentation. On prend alors le
+     dossier de démonstration, entièrement fictif, décrit dans
+     commun/demonstration.js. Un dossier réel, s'il existe, a la
+     priorité : la démonstration ne peut pas écraser des données. */
   DOSSIER = dossierCourant();
+  if (!DOSSIER && typeof DEMO !== 'undefined') DOSSIER = DEMO.dossierDemo;
   document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.setAttribute('data-dispo', disposition);
   rendre();
