@@ -287,31 +287,34 @@ function blocMaladies() {
   if (typeof DEPISTAGES === 'undefined') return '';
   const ordre = ['organise', 'pilote', 'individuel'];
   const ligne = d => `
-    <div class="mal">
+    <div class="mal mal-${esc(d.plateau)}">
       <div class="mal-h">
         <b>${esc(d.maladie)}</b>
-        <span class="mal-n">${esc((DEPISTAGES.niveau(d.niveau) || {}).l || '')}</span>
+        <span class="mal-n">${esc(DEPISTAGES.plateauLib(d.plateau))}</span>
       </div>
-      <p class="mal-t">${esc(d.test)}</p>
+      <p class="mal-t">${esc(d.examens)}</p>
       <p class="mal-q"><b>Qui</b> ${esc(d.population)} · <b>Rythme</b> ${esc(d.rythme)}</p>
-      <p class="mal-p">${esc(d.pourquoi)}</p>
-      <p class="mal-p mal-lim"><b>Ce que ce dépistage ne fait pas.</b> ${esc(d.limites)}</p>
+      ${d.redige ? `<p class="mal-p">${esc(d.pourquoi)}</p>
+      <p class="mal-p mal-lim"><b>Ce que ce dépistage ne fait pas.</b> ${esc(d.limites)}</p>`
+      : `<p class="mal-nr">Explication détaillée et limites en cours de rédaction pour cette
+         ligne. Rien n’est écrit au hasard : une phrase inventée sur les limites d’un
+         dépistage aurait l’air d’une information.</p>`}
     </div>`;
 
+  const V = DEPISTAGES.validation || {};
   return `
     <div class="mal-bloc">
+      ${V.etat === 'en-attente' ? `<div class="mal-att">
+        <b>Ce périmètre n’est pas encore validé.</b> ${esc(V.detail)}</div>` : ''}
       <h3 class="mal-titre">Les maladies que ce parcours cherche</h3>
-      <p class="mal-intro">Quinze maladies, et trois situations différentes qu’il ne faut pas
-      confondre : les programmes nationaux, auxquels vous êtes invité par l’Assurance maladie ;
-      un programme pilote, encore en évaluation ; et les dépistages qui se décident au cas par
-      cas avec un médecin. Les âges indiqués sont ceux des programmes, pas une consigne qui
-      vous serait adressée.</p>
-      ${ordre.map(niv => {
-        const g = DEPISTAGES.liste.filter(d => d.niveau === niv);
-        if (!g.length) return '';
-        return `<p class="mal-k">${esc((DEPISTAGES.niveau(niv) || {}).l || '')}</p>
-                <div class="mal-g">${g.map(ligne).join('')}</div>`;
-      }).join('')}
+      <p class="mal-intro">Le périmètre complet, groupé par spécialité. Pour chaque maladie :
+      les examens mobilisés, qui est concerné, à quel rythme, et ce que le plateau des centres
+      permet de faire sur place. Les âges indiqués sont des repères de programme ou de
+      dimensionnement, pas une consigne qui vous serait adressée : c’est en consultation que
+      votre médecin décide de ce qui vous concerne.</p>
+      ${DEPISTAGES.parAxe().map(g => `
+        <p class="mal-k">${esc(g.axe)} — ${g.liste.length}</p>
+        <div class="mal-g">${g.liste.map(ligne).join('')}</div>`).join('')}
 
       <h3 class="mal-titre" style="margin-top:30px">Ce que ce parcours ne cherche pas</h3>
       <p class="mal-intro">Ces examens existent et se vendent. Ils ne sont pas proposés ici, et
