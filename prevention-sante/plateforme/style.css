@@ -328,3 +328,34 @@ tr.marque-medecin th{box-shadow:inset 3px 0 0 var(--mq)}
 .qlu-img{width:100%;max-width:420px;height:120px;object-fit:cover;border-radius:9px;
   display:block;margin:12px 0 0;background:var(--blanc)}
 .qlu-p{font-size:13px;color:var(--ink-2);line-height:1.62;margin-top:10px;max-width:72ch}
+
+/* ---------------------------------------------------------------------
+   MALADIES À DÉPISTER
+
+   Une carte par maladie, et le niveau du dispositif en pastille. Trois
+   niveaux, trois teintes — et aucune n'est une teinte d'avis médical :
+   ce qui est qualifié ici est un DISPOSITIF (programme national, pilote,
+   décision partagée), jamais l'état de santé de quelqu'un.
+   ------------------------------------------------------------------ */
+.dep-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px}
+.dep{background:var(--blanc,#fff);border:1px solid var(--line);border-radius:var(--r);
+  padding:15px 17px;border-left:3px solid var(--ink-5)}
+.dep-organise{border-left-color:var(--pri)}
+.dep-pilote{border-left-color:var(--pri-2)}
+.dep-individuel{border-left-color:var(--ink-4)}
+.dep-ecarte{border-left-color:var(--ink-5);background:var(--surf)}
+.dep-h{display:flex;align-items:flex-start;gap:12px;margin-bottom:11px}
+.dep-h b{font-size:13.8px;font-weight:600;letter-spacing:-.015em;color:var(--ink);flex:1}
+.dep-n{flex:0 0 auto;font-size:10.2px;font-weight:520;padding:3px 9px;border-radius:999px;
+  background:var(--pri-l);color:var(--pri-d);white-space:nowrap}
+.dep-ecarte .dep-n{background:var(--line-2);color:var(--ink-3)}
+.dep-l{display:grid;grid-template-columns:auto 1fr;gap:0;margin:0 0 11px;font-size:12.2px}
+.dep-l dt{color:var(--ink-4);padding:6px 13px 6px 0;border-bottom:1px solid var(--line-2);
+  white-space:nowrap}
+.dep-l dd{margin:0;color:var(--ink);padding:6px 0;border-bottom:1px solid var(--line-2)}
+.dep-l>dt:last-of-type,.dep-l>dd:last-of-type{border-bottom:none}
+.dep-p{font-size:12.8px;color:var(--ink-2);line-height:1.62;margin-top:8px;max-width:72ch}
+.dep-p b{color:var(--ink);font-weight:560}
+.dep-lim{color:var(--ink-2)}
+.dep-s{font-family:var(--mono);font-size:10.6px;color:var(--ink-4);margin-top:10px;
+  line-height:1.5}

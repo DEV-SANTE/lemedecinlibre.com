@@ -1718,6 +1718,152 @@ section('13. Images locales — déclarées, présentes, légères');
    consulter une réponse. Une règle qu'on ne peut pas enfreindre par
    distraction vaut mieux qu'une règle écrite.
    ================================================================== */
+/* ==================================================================
+   19. LE RÉFÉRENTIEL DES MALADIES À DÉPISTER
+
+   C'est le fichier le plus exposé du produit. Il contient des tranches
+   d'âge, des périodicités et des tests : c'est-à-dire tout ce qu'il faut
+   pour qu'un jour quelqu'un écrive trois lignes de code comparant l'âge
+   du patient à ces bornes et affichant « vous devriez faire ce test ».
+   Ce jour-là, la plateforme délivrerait une indication individuelle, donc
+   un avis médical, et sortirait de son cadre.
+
+   D'où des contrôles qui portent moins sur le contenu que sur la
+   MÉCANIQUE : les fonctions du fichier ne reçoivent jamais de dossier ni
+   d'âge, et les fonctions d'affichage des deux interfaces non plus.
+
+   Le reste vérifie l'honnêteté du référentiel : une liste de ce qu'on
+   refuse aussi fournie que la liste de ce qu'on fait, une source par
+   maladie, des limites écrites pour chacune, et une date de revue — un
+   référentiel de dépistage sans date ne dit pas s'il est périmé.
+   ================================================================== */
+section('19. Maladies à dépister — référentiel daté, jamais individualisé');
+
+(function () {
+  const F = 'commun/depistages.js';
+  verifier('le référentiel des maladies à dépister existe', existe(F));
+  if (!existe(F)) return;
+  const src = lire(F);
+  const DEP = require('../' + F);
+
+  /* --- 19.1 Daté, et récemment. Un référentiel de dépistage vieux de
+         plus d'un an doit être relu, pas servi tel quel. --- */
+  verifier('depistages.js — la date de revue est écrite (' + DEP.dateRevue + ')',
+    /^\d{4}-\d{2}-\d{2}$/.test(DEP.dateRevue || ''));
+  const jours = (Date.now() - new Date(DEP.dateRevue).getTime()) / 86400000;
+  verifier('depistages.js — la revue a moins de 400 jours (' + Math.round(jours) + ')',
+    jours < 400,
+    'Les recommandations bougent : un référentiel qui n’a pas été relu depuis plus d’un an ' +
+    'doit l’être avant d’être affiché.');
+  verifier('depistages.js — la relecture médicale est demandée par écrit',
+    /RELIRE PAR UN MÉDECIN RÉFÉRENT/i.test(src));
+
+  /* --- 19.2 Chaque maladie porte ses cinq champs, dont les limites et la
+         source. Une entrée sans limites est une publicité. --- */
+  const incomplets = (DEP.liste || []).filter(d =>
+    !d.maladie || !d.test || !d.population || !d.rythme ||
+    !d.pourquoi || !d.limites || !d.role || !d.source || !d.niveau);
+  verifier('depistages.js — chaque maladie est complète (' + (DEP.liste || []).length + ')',
+    incomplets.length === 0,
+    incomplets.length ? 'Incomplètes : ' + incomplets.map(d => d.id).join(', ') : null);
+  const sansLimite = (DEP.liste || []).filter(d => (d.limites || '').length < 120);
+  verifier('depistages.js — les limites de chaque dépistage sont développées',
+    sansLimite.length === 0,
+    sansLimite.length ? 'Limites trop courtes : ' + sansLimite.map(d => d.id).join(', ') +
+      ' — un dépistage présenté sans ses inconvénients est un argument de vente.' : null);
+  const niveauxConnus = (DEP.niveaux || []).map(n => n.v);
+  const horsNiveau = (DEP.liste || []).filter(d => niveauxConnus.indexOf(d.niveau) === -1);
+  verifier('depistages.js — chaque maladie a un niveau de dispositif connu',
+    horsNiveau.length === 0);
+
+  /* --- 19.3 La liste des refus existe, elle est fournie, et chaque refus
+         est motivé. C'est la moitié qui distingue un référentiel d'un
+         catalogue. --- */
+  verifier('depistages.js — la liste des examens écartés existe (' +
+    (DEP.ecartes || []).length + ')', (DEP.ecartes || []).length >= 5);
+  const sansRaison = (DEP.ecartes || []).filter(e => !e.quoi || (e.raison || '').length < 100);
+  verifier('depistages.js — chaque refus est motivé', sansRaison.length === 0,
+    sansRaison.length ? 'Sans motif développé : ' + sansRaison.map(e => e.id).join(', ') : null);
+  /* Les quatre refus qui comptent le plus, parce que ce sont ceux que
+     vendent les offres concurrentes. */
+  ['multi-cancers', 'marqueurs-tumoraux', 'echo-thyroide', 'omiques'].forEach(id => {
+    verifier('depistages.js — refus documenté : ' + id,
+      (DEP.ecartes || []).some(e => e.id === id));
+  });
+  verifier('depistages.js — le contre-exemple coréen est cité',
+    /Cor[ée]e du Sud/.test(src) && /surdiagnostic/i.test(src),
+    'Le dépistage thyroïdien massif en Corée du Sud est l’argument le plus parlant contre ' +
+    'l’idée qu’un dépistage de plus est toujours un progrès.');
+
+  /* --- 19.4 LES CONTRÔLES QUI COMPTENT : aucune éligibilité calculée.
+         Ni dans le référentiel, ni dans les deux interfaces. --- */
+  const code = codeSeul(src);
+  const fuites = ['dossier', 'reponses', 'age', 'annee_naissance', 'localStorage']
+    .filter(t => new RegExp('\\b' + t + '\\b').test(code));
+  verifier('depistages.js — le référentiel ne connaît aucun patient', fuites.length === 0,
+    fuites.length ? 'Références trouvées : ' + fuites.join(', ') : null);
+  verifier('depistages.js — aucune fonction ne reçoit d’âge ni de dossier',
+    !/function\s*\([^)]*\b(age|dossier|patient)\b/.test(code) &&
+    !/trouver:\s*function\s*\([^)]*,/.test(code));
+
+  const suivi = lire('suivi/suivi.js');
+  verifier('suivi.js — le bloc des maladies ne reçoit aucun paramètre',
+    /function blocMaladies\(\)\s*\{/.test(suivi),
+    'Un paramètre suffirait à faire dépendre l’affichage d’une réponse du patient.');
+  const app = lire('plateforme/app.js');
+  verifier('app.js — le bloc des maladies ne reçoit pas le dossier',
+    /function blocDepistages\(\)\s*\{/.test(app));
+
+  /* Et la phrase interdite, cherchée telle qu'elle apparaîtrait. */
+  const phrases = [/vous devriez (faire|passer)/i, /vous [êe]tes concern[ée]/i,
+                   /il est temps de/i, /vous relevez du programme/i,
+                   /d['’]apr[èe]s votre [âa]ge/i];
+  const trouvees = [];
+  [src, suivi, app].forEach((t, i) => phrases.forEach(rx => {
+    if (rx.test(sansCommentaires(t))) trouvees.push(['depistages.js','suivi.js','app.js'][i] +
+      ' : ' + rx.source);
+  }));
+  verifier('aucune phrase n’adresse un dépistage à la personne', trouvees.length === 0,
+    trouvees.length ? 'À réécrire : ' + trouvees.join(' · ') : null);
+
+  /* --- 19.5 Les deux interfaces affichent la même chose, refus compris.
+         Une liste de refus visible du médecin mais cachée au patient
+         serait une précaution pour nous, pas pour lui. --- */
+  verifier('les deux interfaces affichent la liste des refus',
+    /DEPISTAGES\.ecartes/.test(suivi) && /DEPISTAGES\.ecartes/.test(app));
+  verifier('suivi/index.html — le référentiel est chargé',
+    /commun\/depistages\.js/.test(lire('suivi/index.html')));
+  verifier('plateforme/index.html — le référentiel est chargé',
+    /commun\/depistages\.js/.test(lire('plateforme/index.html')));
+  /* Le rattachement à un domaine doit exister, sinon la maladie n'est
+     reliée à rien dans l'espace patient. */
+  const DOM = require('../commun/domaines.js');
+  const orphelines = (DEP.liste || []).filter(d => !DOM.trouver(d.domaine));
+  verifier('depistages.js — chaque maladie est rattachée à un domaine existant',
+    orphelines.length === 0,
+    orphelines.length ? 'Domaines inconnus : ' +
+      orphelines.map(d => d.id + ' → ' + d.domaine).join(', ') : null);
+
+  /* --- 19.6 Les trois programmes organisés français sont là, et le
+         pilote poumon aussi : c'est le socle, son absence serait une
+         erreur factuelle. --- */
+  ['colorectal', 'sein', 'col-uterus'].forEach(id => {
+    const d = DEP.trouver(id);
+    verifier('depistages.js — programme organisé présent : ' + id,
+      !!d && d.niveau === 'organise');
+  });
+  const poumon = DEP.trouver('poumon');
+  verifier('depistages.js — le dépistage du poumon est au bon statut (pilote)',
+    !!poumon && poumon.niveau === 'pilote',
+    'Il n’existe pas de programme organisé du cancer du poumon en France : le présenter ' +
+    'comme tel serait faux.');
+  const prostate = DEP.trouver('prostate');
+  verifier('depistages.js — la prostate reste en décision partagée',
+    !!prostate && prostate.niveau === 'individuel' &&
+    /pas de d[ée]pistage organis[ée]|absence de d[ée]pistage organis[ée]/i.test(prostate.source
+      + ' ' + prostate.limites));
+})();
+
 section('18. Questionnaire — lisible, illustré, non individualisé');
 
 (function () {

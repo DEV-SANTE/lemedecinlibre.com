@@ -555,6 +555,7 @@ function vueMedecin(id) {
         <button data-o="biologie" class="${ongletMedecin === 'biologie' ? 'on' : ''}">Biologie${Biologie.compte(dossier) ? ' · ' + Biologie.compte(dossier) : ''}</button>
         <button data-o="domaines" class="${ongletMedecin === 'domaines' ? 'on' : ''}">Domaines${Avis.compte(dossier) ? ' · ' + Avis.compte(dossier) : ''}</button>
         <button data-o="scores" class="${ongletMedecin === 'scores' ? 'on' : ''}">Scores</button>
+        <button data-o="depistages" class="${ongletMedecin === 'depistages' ? 'on' : ''}">Maladies à dépister</button>
         <button data-o="referentiel" class="${ongletMedecin === 'referentiel' ? 'on' : ''}">Référentiel documentaire</button>
         <button data-o="decision" class="${ongletMedecin === 'decision' ? 'on' : ''}">Décision médicale</button>
       </div>
@@ -564,6 +565,7 @@ function vueMedecin(id) {
         : ongletMedecin === 'biologie' ? blocBiologie(dossier)
         : ongletMedecin === 'domaines' ? blocDomaines(dossier)
         : ongletMedecin === 'scores' ? blocScores(dossier)
+        : ongletMedecin === 'depistages' ? blocDepistages()
         : ongletMedecin === 'referentiel' ? blocReferentiel()
         : blocDecision(dossier)
       }</div>
@@ -1211,6 +1213,73 @@ function brancherScores(dossier) {
       vueMedecin(dossier.id);
     };
   });
+}
+
+/* RÉFÉRENTIEL DES MALADIES À DÉPISTER, côté médecin.
+
+   Affiché intégralement, y compris la liste de ce que le parcours refuse
+   de faire. Ce n'est pas de la documentation décorative : c'est ce que le
+   médecin peut opposer à un patient qui demande un « bilan complet », et
+   ce que la direction peut opposer à un commercial qui voudrait ajouter
+   un test au catalogue.
+
+   Aucun rapprochement avec le dossier ouvert. La fonction ne reçoit pas
+   le dossier — même signature vide que côté patient, pour la même raison :
+   afficher « ce patient de 52 ans relève du programme colorectal » serait
+   produire une indication, donc un avis médical, donc autre chose que ce
+   logiciel. */
+function blocDepistages() {
+  const carte = d => {
+    const n = DEPISTAGES.niveau(d.niveau);
+    return `
+    <article class="dep dep-${esc(d.niveau)}">
+      <div class="dep-h">
+        <b>${esc(d.maladie)}</b>
+        <span class="dep-n">${esc(n ? n.l : d.niveau)}</span>
+      </div>
+      <dl class="dep-l">
+        <dt>Test</dt><dd>${esc(d.test)}</dd>
+        <dt>Population</dt><dd>${esc(d.population)}</dd>
+        <dt>Rythme</dt><dd>${esc(d.rythme)}</dd>
+      </dl>
+      <p class="dep-p"><b>Pourquoi.</b> ${esc(d.pourquoi)}</p>
+      <p class="dep-p dep-lim"><b>Limites.</b> ${esc(d.limites)}</p>
+      <p class="dep-p"><b>Ce que fait le parcours.</b> ${esc(d.role)}</p>
+      <p class="dep-s">${esc(d.source)}</p>
+    </article>`;
+  };
+  const ordre = ['organise', 'pilote', 'individuel'];
+  return `
+    <div class="avis">
+      Référentiel documentaire, identique pour tous les dossiers, revu le
+      ${esc(formaterDate(DEPISTAGES.dateRevue))}. Le logiciel ne rapproche aucune de ces
+      lignes de l’âge ou des réponses du patient : les tranches d’âge sont des paramètres de
+      programme, pas des règles d’éligibilité. L’indication reste votre décision.
+    </div>
+    ${ordre.map(niv => {
+      const g = DEPISTAGES.liste.filter(d => d.niveau === niv);
+      if (!g.length) return '';
+      const n = DEPISTAGES.niveau(niv);
+      return `<section class="bloc">
+        <h2>${esc(n.l)}</h2>
+        <p class="aide">${esc(n.d)}</p>
+        <div class="dep-g">${g.map(carte).join('')}</div>
+      </section>`;
+    }).join('')}
+    <section class="bloc">
+      <h2>Ce que le parcours ne fait pas</h2>
+      <p class="aide">Sept examens écartés, avec la raison de chaque refus. Ce sont
+      précisément ceux que proposent les offres de bilan premium : la liste sert à répondre
+      à la demande d’un patient comme à celle d’un partenaire.</p>
+      <div class="dep-g">
+        ${DEPISTAGES.ecartes.map(e => `
+          <article class="dep dep-ecarte">
+            <div class="dep-h"><b>${esc(e.quoi)}</b>
+              <span class="dep-n">Écarté</span></div>
+            <p class="dep-p">${esc(e.raison)}</p>
+          </article>`).join('')}
+      </div>
+    </section>`;
 }
 
 function blocReferentiel() {
