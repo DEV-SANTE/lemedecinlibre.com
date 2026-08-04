@@ -305,7 +305,14 @@ function blocMaladies() {
   return `
     <div class="mal-bloc">
       ${V.etat === 'en-attente' ? `<div class="mal-att">
-        <b>Ce périmètre n’est pas encore validé.</b> ${esc(V.detail)}</div>` : ''}
+        <b>Ce périmètre n’est pas encore validé.</b> ${esc(V.detail)}</div>`
+      : `<div class="mal-vis">
+        <b>Ce périmètre a été relu par un médecin.</b> ${esc(V.detail)}
+        ${V.medecin ? `Relu et visé par ${esc(V.medecin)}${V.qualite ? ', ' + esc(V.qualite) : ''},
+                    le ${esc(jolieDate(V.date))}${V.rpps ? ` (RPPS ${esc(V.rpps)}, vérifiable
+                    sur l’annuaire santé)` : ''}.`
+                    : 'Le nom du médecin responsable reste à enregistrer.'}
+        ${V.porteeDuVisa ? `<span class="mal-por">${esc(V.porteeDuVisa)}</span>` : ''}</div>`}
       <h3 class="mal-titre">Les maladies que ce parcours cherche</h3>
       <p class="mal-intro">Le périmètre complet, groupé par spécialité. Pour chaque maladie :
       les examens mobilisés, qui est concerné, à quel rythme, et ce que le plateau des centres
@@ -326,8 +333,9 @@ function blocMaladies() {
             <p class="mal-p">${esc(e.raison)}</p>
           </div>`).join('')}
       </div>
-      <p class="mal-rev">Référentiel revu le ${esc(jolieDate(DEPISTAGES.dateRevue))}. À relire
-      par un médecin référent avant mise en service.</p>
+      <p class="mal-rev">Référentiel revu le ${esc(jolieDate(DEPISTAGES.dateRevue))}. Les vingt
+      et une lignes d’arbitrage sont visées ; les explications détaillées des lignes qui n’en
+      portent pas encore restent à écrire.</p>
     </div>`;
 }
 

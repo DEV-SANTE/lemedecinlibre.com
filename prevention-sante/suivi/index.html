@@ -898,6 +898,13 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
   border-radius:var(--r);padding:14px 16px;font-size:13px;line-height:1.62;margin-bottom:20px;
   max-width:var(--mesure)}
 .mal-att b{color:#5a3c06}
+/* Le vert du visa est de la couleur évaluative : il n'est permis que parce
+   qu'un médecin a signé, et le bloc affiche son nom et la date. */
+.mal-vis{background:var(--fait-l);border:1px solid var(--fait-ln);color:#146c33;
+  border-radius:var(--r);padding:14px 16px;font-size:13px;line-height:1.62;margin-bottom:20px;
+  max-width:var(--mesure)}
+.mal-vis b{color:#0f5828}
+.mal-por{display:block;margin-top:8px;font-size:12.2px;color:var(--ink-3);line-height:1.6}
 .mal-nr{font-size:12.4px;color:var(--ink-4);line-height:1.6;margin-top:9px;
   padding-left:11px;border-left:2px solid var(--line);max-width:62ch}
 .mal-complet{border-left-color:var(--pri)}
@@ -1167,18 +1174,18 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=27"></script>
-<script src="../commun/visuels.js?v=27"></script>
+<script src="../plateforme/biologie.js?v=28"></script>
+<script src="../commun/visuels.js?v=28"></script>
 <!-- Tout le contenu inventé vit dans ce seul fichier : le jour du
      passage sur l'hébergement certifié, on supprime le fichier et
      cette ligne. -->
-<script src="../commun/demonstration.js?v=27"></script>
-<script src="../commun/domaines.js?v=27"></script>
-<script src="../commun/avis.js?v=27"></script>
-<script src="../commun/depistages.js?v=27"></script>
-<script src="../commun/themes.js?v=27"></script>
-<script src="../commun/lexique.js?v=27"></script>
-<script src="suivi.js?v=27"></script>
+<script src="../commun/demonstration.js?v=28"></script>
+<script src="../commun/domaines.js?v=28"></script>
+<script src="../commun/avis.js?v=28"></script>
+<script src="../commun/depistages.js?v=28"></script>
+<script src="../commun/themes.js?v=28"></script>
+<script src="../commun/lexique.js?v=28"></script>
+<script src="suivi.js?v=28"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>
