@@ -9,20 +9,26 @@
    de cadrage adressée au médecin responsable de protocole. Les deux
    documents sont datés de juillet 2026.
 
-   CE QUI EST VALIDÉ : RIEN, POUR L'INSTANT.
-   La note de cadrage est explicite : le référentiel « a été pré-rempli à
-   partir des recommandations françaises et européennes en vigueur. Il
-   constitue une base de travail et non une proposition validée. » Vingt
-   et une lignes attendent l'arbitrage écrit d'un médecin responsable, et
-   l'ordre importe : elles conditionnent la composition du socle, qui
-   conditionne le modèle économique.
+   CE QUI EST VALIDÉ, ET CE QUI NE L'EST PAS.
+   Les vingt et une lignes soumises à l'arbitrage sont visées. Le médecin
+   responsable de protocole les a validées telles quelles, sans modifier
+   de restriction ni de périodicité. Ces vingt et une restrictions ne
+   sont donc plus des propositions : elles sont opposables. Un examen qui
+   sort de sa restriction n'est plus une préférence discutable, c'est un
+   écart au protocole.
+
+   Le visa porte sur ces vingt et une lignes, et sur rien d'autre. Il ne
+   vaut pas validation des soixante-deux pathologies, ni des quarante-
+   sept explications cliniques encore non rédigées, ni des cotations, ni
+   des items de questionnaire à créer pour les actes dont l'indication
+   n'est pas tracée. Laisser un visa sur vingt et une lignes se lire
+   comme « le référentiel est validé » serait exactement le faux que ce
+   champ existe pour empêcher — d'où la distinction écrite dans le champ
+   « validation », affichée à l'écran des deux côtés, et contrôlée.
 
    Cet état n'est donc pas une note de bas de page : c'est une propriété
-   du référentiel, portée par le champ « validation », affichée à l'écran
-   des deux côtés, et contrôlée. Une liste de soixante-et-une maladies
-   présentée comme acquise alors qu'aucune ligne n'est visée serait le
-   plus grand risque de ce fichier — bien avant une erreur de
-   périodicité.
+   du référentiel. Elle a changé le 4 août 2026 ; elle est datée et porte
+   un nom, parce qu'une validation anonyme ne vaut rien.
 
    POURQUOI CERTAINES ENTRÉES SONT PLUS COURTES QUE D'AUTRES
    Quatorze entrées portent un texte rédigé : pourquoi on cherche cette
@@ -56,20 +62,36 @@ var DEPISTAGES = {
   /* ==================================================================
      ÉTAT DE VALIDATION MÉDICALE
 
-     À mettre à jour quand le médecin responsable rend son arbitrage. Le
-     champ « visa » reste vide tant que rien n'est signé, et c'est cette
-     absence que l'écran affiche.
+     Les vingt et une lignes sont visées. « medecin », « rpps » et « date »
+     portent le visa : ce sont eux que l'écran affiche, et le vérificateur
+     refuse l'état « valide » s'ils sont vides — une validation sans nom ni
+     date ne serait pas une validation.
+
+     Le RPPS est écrit parce qu'un visa doit pouvoir être vérifié par un
+     tiers sans nous le demander : le répertoire de l'annuaire santé est
+     public, et un homonyme ne suffirait pas à identifier un signataire.
+
+     « porteeDuVisa » dit ce que le visa ne couvre pas. Ce champ est là
+     pour empêcher la lecture extensive : vingt et une lignes visées ne
+     font pas soixante-deux pathologies validées.
      ================================================================== */
   validation: {
-    etat: 'en-attente',
-    libelle: 'Référentiel non validé — arbitrage médical en cours',
-    detail: 'Ce périmètre est une base de travail. Vingt et une lignes sont soumises à ' +
-            'l’arbitrage écrit d’un médecin responsable de protocole, et aucune n’est ' +
-            'encore visée. Rien de ce référentiel ne doit être présenté comme une offre ' +
-            'arrêtée, ni opposé à un patient, avant ce visa.',
-    medecin: '',
-    date: '',
-    lignesAArbitrer: 21
+    etat: 'valide',
+    libelle: 'Vingt et une lignes visées par le médecin responsable de protocole',
+    detail: 'Les vingt et une lignes soumises à l’arbitrage ont été validées telles ' +
+            'quelles, sans modification des restrictions ni des périodicités. Ces ' +
+            'restrictions sont désormais opposables : un examen prescrit hors de sa ' +
+            'restriction est un écart au protocole, pas une préférence.',
+    porteeDuVisa: 'Le visa porte sur les vingt et une lignes d’arbitrage. Il ne vaut pas ' +
+            'validation des soixante-deux pathologies du périmètre, ni des quarante-sept ' +
+            'explications cliniques encore non rédigées, ni des cotations, ni des items de ' +
+            'questionnaire restant à créer pour les actes dont l’indication n’est pas tracée.',
+    medecin: 'Dr Nassreddine Knani',
+    qualite: 'médecin généraliste',
+    rpps: '10110958559',
+    date: '2026-08-04',
+    lignesArbitrees: 21,
+    sansModification: true
   },
 
   niveaux: [
@@ -1229,8 +1251,10 @@ var DEPISTAGES = {
     return out;
   },
 
-  /* Les entrées dont un examen attend un arbitrage. */
-  aArbitrer: function () {
+  /* Les entrées dont un examen a fait l'objet de l'arbitrage du 4 août
+     2026. Le champ « arbitrage » listait ce qui était en attente ; il
+     liste maintenant ce qui est visé, d'où le renommage du helper. */
+  arbitres: function () {
     var out = [];
     for (var i = 0; i < this.liste.length; i++) {
       if ((this.liste[i].arbitrage || []).length) out.push(this.liste[i]);
