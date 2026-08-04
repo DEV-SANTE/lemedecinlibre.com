@@ -1245,7 +1245,8 @@ function blocDepistages() {
         <dt>Prise en charge</dt><dd>${esc(d.pecTexte)}</dd>
       </dl>
       ${(d.arbitrage || []).length ? `<p class="dep-arb">
-        <b>En attente de votre arbitrage :</b> ${esc(d.arbitrage.join(' · '))}</p>` : ''}
+        <b>Arbitré et visé :</b> ${esc(d.arbitrage.join(' · '))} — la restriction validée
+        s’applique, elle n’est plus indicative.</p>` : ''}
       ${d.redige ? `<p class="dep-p"><b>Pourquoi.</b> ${esc(d.pourquoi)}</p>
         <p class="dep-p dep-lim"><b>Limites.</b> ${esc(d.limites)}</p>
         <p class="dep-p"><b>Ce que fait le parcours.</b> ${esc(d.role)}</p>
@@ -1256,10 +1257,15 @@ function blocDepistages() {
     </article>`;
 
   return `
-    <div class="avis avis-alerte">
+    <div class="avis ${V.etat === 'valide' ? 'avis-vise' : 'avis-alerte'}">
       <b>${esc(V.libelle)}.</b> ${esc(V.detail)}
-      ${V.medecin ? `<br>Visé par ${esc(V.medecin)} le ${esc(formaterDate(V.date))}.`
-                  : '<br>Aucun visa enregistré à ce jour.'}
+      ${V.medecin ? `<br>Visé par ${esc(V.medecin)}${V.qualite ? ', ' + esc(V.qualite) : ''}${
+                      V.rpps ? ', RPPS ' + esc(V.rpps) : ''}, le ${esc(formaterDate(V.date))}.`
+                  : '<br><b>Visa incomplet :</b> le nom du médecin responsable n’est pas ' +
+                    'encore enregistré. Tant qu’il manque, ce référentiel ne doit pas être ' +
+                    'présenté comme validé.'}
+      ${V.porteeDuVisa ? `<br><span class="avis-portee"><b>Ce que le visa ne couvre pas.</b>
+        ${esc(V.porteeDuVisa)}</span>` : ''}
     </div>
 
     <section class="bloc">

@@ -366,13 +366,24 @@ tr.marque-medecin th{box-shadow:inset 3px 0 0 var(--mq)}
 .dep-orientation{border-left-color:var(--pri-2)}
 .dep-ajout{border-left-color:var(--amber)}
 .dep-partiel{border-left-color:var(--ink-4)}
-.dep-arb{font-size:12.4px;color:var(--amber);background:var(--amber-bg);
-  border:1px solid var(--amber-line);border-radius:9px;padding:9px 12px;margin-top:10px}
-.dep-arb b{color:var(--amber)}
+/* Le vert d'un examen visé est de la couleur évaluative, et il n'est donc
+   permis que parce qu'un médecin l'a choisie : le visa porte un nom et une
+   date, affichés juste au-dessus. Avant l'arbitrage, ce même bloc était
+   ambre. */
+.dep-arb{font-size:12.4px;color:#146c33;background:var(--fait-l);
+  border:1px solid var(--fait-ln);border-radius:9px;padding:9px 12px;margin-top:10px}
+.dep-arb b{color:#0f5828}
 .dep-nr{font-size:12.4px;color:var(--ink-4);line-height:1.6;margin-top:9px;
   padding-left:11px;border-left:2px solid var(--line);max-width:70ch}
 .avis-alerte{background:var(--amber-bg);border-color:var(--amber-line);color:#6b4708}
 .avis-alerte b{color:#5a3c06}
+.avis-vise{background:var(--fait-l);border-color:var(--fait-ln);color:#146c33}
+.avis-vise b{color:#0f5828}
+/* La portée du visa se lit moins fort que le visa lui-même, mais elle se
+   lit : c'est elle qui empêche de conclure que tout est validé. */
+.avis-portee{display:block;margin-top:8px;font-size:12.2px;color:var(--ink-3);
+  line-height:1.6;max-width:74ch}
+.avis-portee b{color:var(--ink-2)}
 .kv-rev td{vertical-align:top}
 .rev-r{display:block;font-size:11.6px;color:var(--ink-3);line-height:1.55;margin-top:5px;
   max-width:70ch}

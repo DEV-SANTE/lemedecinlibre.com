@@ -1737,7 +1737,7 @@ section('13. Images locales — déclarées, présentes, légères');
    maladie, des limites écrites pour chacune, et une date de revue — un
    référentiel de dépistage sans date ne dit pas s'il est périmé.
    ================================================================== */
-section('19. Référentiel des dépistages — 61 pathologies, validation en attente');
+section('19. Référentiel des dépistages — 61 pathologies, 21 lignes visées');
 
 (function () {
   const F = 'commun/depistages.js';
@@ -1750,29 +1750,61 @@ section('19. Référentiel des dépistages — 61 pathologies, validation en att
 
   /* --- 19.1 L'ÉTAT DE VALIDATION EST LE CONTRÔLE LE PLUS IMPORTANT.
 
-         La note de cadrage est explicite : ce référentiel est une base de
-         travail, vingt et une lignes attendent l'arbitrage écrit d'un
-         médecin responsable, aucune n'est visée. Une liste de soixante-et-
-         une maladies affichée comme acquise serait un faux plus grave
-         qu'une erreur de périodicité — d'où ces contrôles avant tout le
-         reste, et d'où l'exigence que l'état soit AFFICHÉ et non
-         seulement écrit dans le fichier. --- */
+         Les vingt et une lignes ont été visées le 4 août 2026. Le risque
+         a donc changé de sens : il n'est plus d'afficher comme acquis ce
+         qui ne l'est pas, il est de laisser un visa sur vingt et une
+         lignes se lire comme la validation des soixante-deux pathologies.
+         Ces contrôles gardent les deux bouts — un visa doit porter un nom
+         et une date, et sa portée doit être écrite et affichée. --- */
   const V = DEP.validation || {};
   verifier('depistages.js — l’état de validation médicale est déclaré',
     !!V.etat && !!V.libelle && !!V.detail);
-  verifier('depistages.js — tant qu’aucun visa n’existe, l’état reste « en attente »',
-    (V.medecin && V.date) ? V.etat !== 'en-attente' : V.etat === 'en-attente',
-    'Un référentiel visé doit changer d’état ; un référentiel non visé doit le dire.');
-  verifier('depistages.js — le décompte des lignes à arbitrer est cohérent (' +
-    V.lignesAArbitrer + ' / ' + (DEP.revue || []).length + ')',
-    V.lignesAArbitrer === (DEP.revue || []).length);
+  verifier('depistages.js — un visa anonyme est refusé',
+    (V.medecin && V.date) ? V.etat === 'valide' : V.etat === 'en-attente',
+    'L’état est « valide » mais le nom du médecin ou la date manque : ' +
+    'medecin=' + JSON.stringify(V.medecin || '') + ' date=' + JSON.stringify(V.date || '') +
+    '. Une validation sans auteur ni date n’est pas une validation, et rien ne doit être ' +
+    'publié dans cet état.');
+  /* Un visa se vérifie : nom, qualité, et RPPS au format du répertoire —
+     onze chiffres, commençant par 1 pour une personne physique. Le contrôle
+     porte sur le format, pas sur l'existence : je n'ai pas interrogé
+     l'annuaire santé pour compiler des données sur un tiers, et une
+     coquille de format est le défaut qu'on peut attraper sans cela. */
+  verifier('depistages.js — le signataire est identifié (nom, qualité, RPPS)',
+    /^Dr\s+\S/.test(V.medecin || '') && !!V.qualite && /^1\d{10}$/.test(V.rpps || ''),
+    'RPPS attendu : onze chiffres commençant par 1. Reçu : ' +
+    JSON.stringify(V.rpps || ''));
+  verifier('app.js et suivi.js — le RPPS du signataire est affiché',
+    /V\.rpps/.test(app) && /V\.rpps/.test(suivi),
+    'Un visa que le lecteur ne peut pas vérifier lui-même vaut moins.');
+  verifier('depistages.js — le décompte des lignes visées est cohérent (' +
+    V.lignesArbitrees + ' / ' + (DEP.revue || []).length + ')',
+    V.lignesArbitrees === (DEP.revue || []).length);
+  verifier('depistages.js — la portée du visa est écrite',
+    (V.porteeDuVisa || '').length > 120 &&
+    /ne vaut pas|ne couvre pas/i.test(V.porteeDuVisa || ''),
+    'Sans ce champ, vingt et une lignes visées se liraient comme soixante-deux validées.');
+  verifier('depistages.js — la portée nomme ce qui reste non validé',
+    ['pathologies', 'cotation', 'questionnaire'].every(
+      m => new RegExp(m, 'i').test(V.porteeDuVisa || '')));
   verifier('app.js — l’état de validation est affiché au médecin',
-    /DEPISTAGES\.validation/.test(app) && /avis-alerte/.test(app));
+    /DEPISTAGES\.validation/.test(app) && /avis-vise/.test(app) && /avis-alerte/.test(app),
+    'Les deux états doivent rester affichables : le visa peut être retiré.');
+  verifier('app.js — la portée du visa est affichée, pas seulement le visa',
+    /porteeDuVisa/.test(app) && /avis-portee/.test(app));
   verifier('suivi.js — l’état de validation est affiché au patient',
-    /DEPISTAGES\.validation/.test(suivi),
-    'Le patient a le droit de savoir que ce périmètre n’est pas encore validé.');
-  verifier('depistages.js — la nature « base de travail » est écrite',
-    /base de travail/i.test(src) && /arbitrage/i.test(src));
+    /DEPISTAGES\.validation/.test(suivi) && /mal-vis/.test(suivi),
+    'Le patient a le droit de savoir qui a relu ce périmètre, et jusqu’où.');
+  verifier('suivi.js — la portée du visa est affichée au patient aussi',
+    /porteeDuVisa/.test(suivi));
+  verifier('depistages.js — le visa se dit « sans modification » et l’écrit',
+    V.sansModification === true && /telles\s+quelles/i.test(src),
+    'Validées telles quelles : si une restriction avait été réécrite, il faudrait la ' +
+    'reporter ligne à ligne au lieu de basculer l’état.');
+  verifier('les 47 explications non rédigées restent annoncées comme telles',
+    /non rédigé|en cours de rédaction|restent à écrire/i.test(suivi) &&
+    /non encore rédigés/i.test(app),
+    'Le visa ne les couvre pas : les écrans doivent continuer à le dire.');
 
   /* --- 19.2 Daté, et récemment. --- */
   verifier('depistages.js — la date de revue est écrite (' + DEP.dateRevue + ')',
@@ -1838,22 +1870,27 @@ section('19. Référentiel des dépistages — 61 pathologies, validation en att
     orphelines.length === 0,
     orphelines.length ? 'Domaines inconnus : ' + orphelines.map(d => d.id).join(', ') : null);
 
-  /* --- 19.5 Les vingt et une lignes à arbitrer, avec leur restriction :
-         sans elle, le médecin arbitrerait à l'aveugle. --- */
-  verifier('depistages.js — les ' + (DEP.revue || []).length + ' lignes à arbitrer sont là',
+  /* --- 19.5 Les vingt et une lignes visées, avec leur restriction. Elles
+         étaient la question posée au médecin ; elles sont maintenant la
+         règle. C'est la même donnée, mais elle est devenue opposable, donc
+         elle doit rester affichée mot pour mot. --- */
+  verifier('depistages.js — les ' + (DEP.revue || []).length + ' lignes visées sont là',
     (DEP.revue || []).length === 21);
   const sansRestriction = (DEP.revue || []).filter(r => !r.examen || !r.base ||
     (r.restriction || '').length < 40);
-  verifier('depistages.js — chaque ligne à arbitrer porte sa restriction',
+  verifier('depistages.js — chaque ligne visée porte sa restriction',
     sansRestriction.length === 0,
     sansRestriction.length ? 'Sans restriction : ' +
       sansRestriction.map(r => r.examen).join(', ') : null);
-  verifier('app.js — les lignes à arbitrer sont affichées avec leur restriction',
+  verifier('app.js — les lignes visées sont affichées avec leur restriction',
     /DEPISTAGES\.revue/.test(app) && /rev-r/.test(app));
-  verifier('depistages.js — les pathologies concernées signalent l’arbitrage attendu (' +
-    DEP.aArbitrer().length + ')', DEP.aArbitrer().length >= 10);
-  verifier('app.js — l’arbitrage attendu est visible sur la pathologie',
+  verifier('depistages.js — les pathologies concernées signalent l’arbitrage rendu (' +
+    DEP.arbitres().length + ')', DEP.arbitres().length >= 10);
+  verifier('app.js — l’arbitrage rendu est visible sur la pathologie',
     /dep-arb/.test(app));
+  verifier('app.js — l’écran ne parle plus d’un arbitrage en attente',
+    !/En attente de votre arbitrage/.test(app),
+    'Les vingt et une lignes sont visées : ce libellé serait devenu faux.');
 
   /* --- 19.6 Refus, et leurs motifs. --- */
   verifier('depistages.js — la liste des examens écartés existe (' +
