@@ -359,3 +359,21 @@ tr.marque-medecin th{box-shadow:inset 3px 0 0 var(--mq)}
 .dep-lim{color:var(--ink-2)}
 .dep-s{font-family:var(--mono);font-size:10.6px;color:var(--ink-4);margin-top:10px;
   line-height:1.5}
+
+/* Statut du plateau : quatre teintes, et aucune n'est une teinte d'avis
+   médical — ce qui est qualifié est un ÉQUIPEMENT, pas une personne. */
+.dep-complet{border-left-color:var(--pri)}
+.dep-orientation{border-left-color:var(--pri-2)}
+.dep-ajout{border-left-color:var(--amber)}
+.dep-partiel{border-left-color:var(--ink-4)}
+.dep-arb{font-size:12.4px;color:var(--amber);background:var(--amber-bg);
+  border:1px solid var(--amber-line);border-radius:9px;padding:9px 12px;margin-top:10px}
+.dep-arb b{color:var(--amber)}
+.dep-nr{font-size:12.4px;color:var(--ink-4);line-height:1.6;margin-top:9px;
+  padding-left:11px;border-left:2px solid var(--line);max-width:70ch}
+.avis-alerte{background:var(--amber-bg);border-color:var(--amber-line);color:#6b4708}
+.avis-alerte b{color:#5a3c06}
+.kv-rev td{vertical-align:top}
+.rev-r{display:block;font-size:11.6px;color:var(--ink-3);line-height:1.55;margin-top:5px;
+  max-width:70ch}
+.rev-c{font-size:12.2px;color:var(--ink-2)}

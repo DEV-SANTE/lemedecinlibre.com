@@ -1229,53 +1229,80 @@ function brancherScores(dossier) {
    produire une indication, donc un avis médical, donc autre chose que ce
    logiciel. */
 function blocDepistages() {
-  const carte = d => {
-    const n = DEPISTAGES.niveau(d.niveau);
-    return `
-    <article class="dep dep-${esc(d.niveau)}">
+  const V = DEPISTAGES.validation;
+  const carte = d => `
+    <article class="dep dep-${esc(d.plateau)}">
       <div class="dep-h">
         <b>${esc(d.maladie)}</b>
-        <span class="dep-n">${esc(n ? n.l : d.niveau)}</span>
+        <span class="dep-n">${esc(DEPISTAGES.plateauLib(d.plateau))}</span>
       </div>
       <dl class="dep-l">
-        <dt>Test</dt><dd>${esc(d.test)}</dd>
+        <dt>Examens</dt><dd>${esc(d.examens)}</dd>
+        <dt>Plateau</dt><dd>${esc(d.equipement)}</dd>
         <dt>Population</dt><dd>${esc(d.population)}</dd>
         <dt>Rythme</dt><dd>${esc(d.rythme)}</dd>
+        <dt>Preuve</dt><dd>${esc(d.preuve)}</dd>
+        <dt>Prise en charge</dt><dd>${esc(d.pecTexte)}</dd>
       </dl>
-      <p class="dep-p"><b>Pourquoi.</b> ${esc(d.pourquoi)}</p>
-      <p class="dep-p dep-lim"><b>Limites.</b> ${esc(d.limites)}</p>
-      <p class="dep-p"><b>Ce que fait le parcours.</b> ${esc(d.role)}</p>
-      <p class="dep-s">${esc(d.source)}</p>
+      ${(d.arbitrage || []).length ? `<p class="dep-arb">
+        <b>En attente de votre arbitrage :</b> ${esc(d.arbitrage.join(' · '))}</p>` : ''}
+      ${d.redige ? `<p class="dep-p"><b>Pourquoi.</b> ${esc(d.pourquoi)}</p>
+        <p class="dep-p dep-lim"><b>Limites.</b> ${esc(d.limites)}</p>
+        <p class="dep-p"><b>Ce que fait le parcours.</b> ${esc(d.role)}</p>
+        <p class="dep-s">${esc(d.source)}</p>`
+      : `<p class="dep-nr">Texte d’explication et limites non encore rédigés pour cette
+         ligne. Rien n’a été inventé : une phrase écrite au hasard sur les limites d’un
+         dépistage a l’air d’une information.</p>`}
     </article>`;
-  };
-  const ordre = ['organise', 'pilote', 'individuel'];
+
   return `
-    <div class="avis">
-      Référentiel documentaire, identique pour tous les dossiers, revu le
-      ${esc(formaterDate(DEPISTAGES.dateRevue))}. Le logiciel ne rapproche aucune de ces
-      lignes de l’âge ou des réponses du patient : les tranches d’âge sont des paramètres de
-      programme, pas des règles d’éligibilité. L’indication reste votre décision.
+    <div class="avis avis-alerte">
+      <b>${esc(V.libelle)}.</b> ${esc(V.detail)}
+      ${V.medecin ? `<br>Visé par ${esc(V.medecin)} le ${esc(formaterDate(V.date))}.`
+                  : '<br>Aucun visa enregistré à ce jour.'}
     </div>
-    ${ordre.map(niv => {
-      const g = DEPISTAGES.liste.filter(d => d.niveau === niv);
-      if (!g.length) return '';
-      const n = DEPISTAGES.niveau(niv);
-      return `<section class="bloc">
-        <h2>${esc(n.l)}</h2>
-        <p class="aide">${esc(n.d)}</p>
-        <div class="dep-g">${g.map(carte).join('')}</div>
-      </section>`;
-    }).join('')}
+
+    <section class="bloc">
+      <h2>Les ${DEPISTAGES.revue.length} lignes soumises à votre arbitrage</h2>
+      <p class="aide">Lignes porteuses d’une restriction opposable de nomenclature ou d’un
+      risque de surdiagnostic documenté. Elles conditionnent la composition du socle, et le
+      socle conditionne le modèle économique : c’est par elles qu’il faut commencer.</p>
+      <table class="kv kv-rev">
+        <thead><tr><th>Examen</th><th>Palier</th><th>Base</th><th>Déclencheur retenu</th></tr></thead>
+        <tbody>
+          ${DEPISTAGES.revue.map(r => `<tr>
+            <td><b>${esc(r.examen)}</b>
+              <span class="rev-r">${esc(r.restriction)}</span></td>
+            <td class="rev-c">${esc(r.palier)}</td>
+            <td class="rev-c">${esc(r.base)}</td>
+            <td class="rev-c">${esc(r.declencheur)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="bloc">
+      <h2>Périmètre : ${DEPISTAGES.liste.length} pathologies</h2>
+      <p class="aide">Reprises de la matrice de prévention. ${DEPISTAGES.liste.filter(d => d.redige).length}
+      portent un texte rédigé et sourcé ;
+      ${DEPISTAGES.liste.filter(d => !d.redige).length} attendent le leur. Le statut du plateau
+      dit ce qui est faisable dans les centres, ce qui demande un achat et ce qui est adressé.</p>
+    </section>
+
+    ${DEPISTAGES.parAxe().map(g => `
+      <section class="bloc">
+        <h2>${esc(g.axe)} — ${g.liste.length}</h2>
+        <div class="dep-g">${g.liste.map(carte).join('')}</div>
+      </section>`).join('')}
+
     <section class="bloc">
       <h2>Ce que le parcours ne fait pas</h2>
-      <p class="aide">Sept examens écartés, avec la raison de chaque refus. Ce sont
-      précisément ceux que proposent les offres de bilan premium : la liste sert à répondre
-      à la demande d’un patient comme à celle d’un partenaire.</p>
+      <p class="aide">Examens écartés, avec la raison de chaque refus. Ce sont ceux que
+      proposent les offres de bilan premium : la liste sert à répondre à la demande d’un
+      patient comme à celle d’un partenaire.</p>
       <div class="dep-g">
         ${DEPISTAGES.ecartes.map(e => `
           <article class="dep dep-ecarte">
-            <div class="dep-h"><b>${esc(e.quoi)}</b>
-              <span class="dep-n">Écarté</span></div>
+            <div class="dep-h"><b>${esc(e.quoi)}</b><span class="dep-n">Écarté</span></div>
             <p class="dep-p">${esc(e.raison)}</p>
           </article>`).join('')}
       </div>
