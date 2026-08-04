@@ -888,6 +888,34 @@ html[data-theme="clinique"] .m-rouge {--mq:#d1495b;--mqbg:#fdf0f2;--mqln:#f1ccd2
    ce qui donnait deux blocs colorés côte à côte et beaucoup de bruit. La
    couleur de l'avis subsiste là où elle sert : la pastille et le liseré
    de gauche. */
+/* ---------------------------------------------------------------------
+   MALADIES À DÉPISTER, CÔTÉ PATIENT
+   Même contenu que côté médecin, écrit pour être lu par la personne :
+   ce qu'on cherche, à quel rythme, ce que le dépistage ne fait pas, et
+   la liste de ce qu'on refuse de proposer.
+   ------------------------------------------------------------------ */
+.mal-bloc{margin-top:26px;padding-top:24px;border-top:1px solid var(--line)}
+.mal-titre{font-size:15px;font-weight:600;letter-spacing:-.02em;color:var(--ink);margin:0}
+.mal-intro{font-size:13.2px;color:var(--ink-3);line-height:1.6;margin-top:7px;
+  max-width:var(--mesure)}
+.mal-k{font-size:10.6px;font-weight:620;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--pri);margin:20px 0 10px}
+.mal-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:13px}
+.mal{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 16px;border-left:3px solid var(--pri)}
+.mal-non{background:var(--surf);border-left-color:var(--ink-5)}
+.mal-h{display:flex;align-items:flex-start;gap:11px}
+.mal-h b{flex:1;font-size:13.4px;font-weight:600;letter-spacing:-.015em;color:var(--ink)}
+.mal-n{flex:0 0 auto;font-size:10.2px;font-weight:520;padding:3px 9px;border-radius:999px;
+  background:var(--pri-l);color:var(--pri-d);white-space:nowrap}
+.mal-non .mal-n{background:var(--line-2);color:var(--ink-4)}
+.mal-t{font-size:12.4px;color:var(--ink-2);margin-top:8px;line-height:1.55}
+.mal-q{font-size:11.6px;color:var(--ink-4);margin-top:6px;line-height:1.55}
+.mal-q b{color:var(--ink-3);font-weight:560}
+.mal-p{font-size:12.8px;color:var(--ink-2);line-height:1.62;margin-top:9px;max-width:64ch}
+.mal-p b{color:var(--ink);font-weight:560}
+.mal-rev{font-family:var(--mono);font-size:10.8px;color:var(--ink-4);margin-top:18px}
+
 .points{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
 .pt{padding:15px 17px;border-radius:var(--r);background:var(--card);
   border:1px solid var(--line);border-left:3px solid var(--mq)}
@@ -1129,17 +1157,18 @@ html[data-dispo="domaines"] .shell{display:grid;grid-template-columns:274px minm
      GitHub Pages sert les scripts en cache pendant plusieurs minutes et
      l'on croit relire une correction qu'on ne voit pas encore. À
      incrémenter à chaque publication, à retirer à la mise en service. -->
-<script src="../plateforme/biologie.js?v=25"></script>
-<script src="../commun/visuels.js?v=25"></script>
+<script src="../plateforme/biologie.js?v=26"></script>
+<script src="../commun/visuels.js?v=26"></script>
 <!-- Tout le contenu inventé vit dans ce seul fichier : le jour du
      passage sur l'hébergement certifié, on supprime le fichier et
      cette ligne. -->
-<script src="../commun/demonstration.js?v=25"></script>
-<script src="../commun/domaines.js?v=25"></script>
-<script src="../commun/avis.js?v=25"></script>
-<script src="../commun/themes.js?v=25"></script>
-<script src="../commun/lexique.js?v=25"></script>
-<script src="suivi.js?v=25"></script>
+<script src="../commun/demonstration.js?v=26"></script>
+<script src="../commun/domaines.js?v=26"></script>
+<script src="../commun/avis.js?v=26"></script>
+<script src="../commun/depistages.js?v=26"></script>
+<script src="../commun/themes.js?v=26"></script>
+<script src="../commun/lexique.js?v=26"></script>
+<script src="suivi.js?v=26"></script>
 <script src="../commun/navigation.js"></script>
 </body>
 </html>

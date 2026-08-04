@@ -270,6 +270,64 @@ function blocActe(type) {
 }
 
 /* Volet dépliable, sur chaque ligne de vaccinations et dépistages. */
+/* LES MALADIES QUE CE PARCOURS CHERCHE — ET CELLES QU'IL NE CHERCHE PAS.
+
+   Le second bloc est le plus utile des deux. Une personne qui lit qu'on
+   ne lui proposera ni test multi-cancers, ni marqueurs tumoraux, ni
+   échographie thyroïdienne de dépistage, avec la raison de chaque refus,
+   apprend quelque chose que les offres concurrentes ne disent pas.
+
+   La fonction ne reçoit rien : ni dossier, ni âge, ni réponse. Les
+   tranches d'âge affichées sont des paramètres de programme public, pas
+   une éligibilité calculée pour la personne qui lit. C'est la même règle
+   que partout ailleurs, et c'est ici qu'elle serait le plus tentante à
+   enfreindre — « vous avez 52 ans, faites ce test » est exactement la
+   phrase que ce logiciel ne prononcera pas. */
+function blocMaladies() {
+  if (typeof DEPISTAGES === 'undefined') return '';
+  const ordre = ['organise', 'pilote', 'individuel'];
+  const ligne = d => `
+    <div class="mal">
+      <div class="mal-h">
+        <b>${esc(d.maladie)}</b>
+        <span class="mal-n">${esc((DEPISTAGES.niveau(d.niveau) || {}).l || '')}</span>
+      </div>
+      <p class="mal-t">${esc(d.test)}</p>
+      <p class="mal-q"><b>Qui</b> ${esc(d.population)} · <b>Rythme</b> ${esc(d.rythme)}</p>
+      <p class="mal-p">${esc(d.pourquoi)}</p>
+      <p class="mal-p mal-lim"><b>Ce que ce dépistage ne fait pas.</b> ${esc(d.limites)}</p>
+    </div>`;
+
+  return `
+    <div class="mal-bloc">
+      <h3 class="mal-titre">Les maladies que ce parcours cherche</h3>
+      <p class="mal-intro">Quinze maladies, et trois situations différentes qu’il ne faut pas
+      confondre : les programmes nationaux, auxquels vous êtes invité par l’Assurance maladie ;
+      un programme pilote, encore en évaluation ; et les dépistages qui se décident au cas par
+      cas avec un médecin. Les âges indiqués sont ceux des programmes, pas une consigne qui
+      vous serait adressée.</p>
+      ${ordre.map(niv => {
+        const g = DEPISTAGES.liste.filter(d => d.niveau === niv);
+        if (!g.length) return '';
+        return `<p class="mal-k">${esc((DEPISTAGES.niveau(niv) || {}).l || '')}</p>
+                <div class="mal-g">${g.map(ligne).join('')}</div>`;
+      }).join('')}
+
+      <h3 class="mal-titre" style="margin-top:30px">Ce que ce parcours ne cherche pas</h3>
+      <p class="mal-intro">Ces examens existent et se vendent. Ils ne sont pas proposés ici, et
+      voici pourquoi — vous avez le droit de savoir ce qu’on refuse de vous vendre.</p>
+      <div class="mal-g">
+        ${DEPISTAGES.ecartes.map(e => `
+          <div class="mal mal-non">
+            <div class="mal-h"><b>${esc(e.quoi)}</b><span class="mal-n">Écarté</span></div>
+            <p class="mal-p">${esc(e.raison)}</p>
+          </div>`).join('')}
+      </div>
+      <p class="mal-rev">Référentiel revu le ${esc(jolieDate(DEPISTAGES.dateRevue))}. À relire
+      par un médecin référent avant mise en service.</p>
+    </div>`;
+}
+
 function blocDepistage(libelle) {
   const d = LEX.depistages[libelle];
   if (!d) return '';
@@ -1570,6 +1628,7 @@ function rendre() {
             <td class="cv-r">${esc(c.reference)}</td></tr>`).join('')}
         </tbody>
       </table>
+      ${blocMaladies()}
       <div class="avis" style="margin-top:22px">
         ${ic('i-info')}
         <span><b>Un rapprochement de dates, pas un rappel.</b> Le tableau met côte à côte
