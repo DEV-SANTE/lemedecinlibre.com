@@ -27,7 +27,7 @@
    « validation », affichée à l'écran des deux côtés, et contrôlée.
 
    Cet état n'est donc pas une note de bas de page : c'est une propriété
-   du référentiel. Elle a changé le 4 août 2026 ; elle est datée et porte
+   du référentiel. Elle a changé le 5 août 2026 ; elle est datée et porte
    un nom, parce qu'une validation anonyme ne vaut rien.
 
    POURQUOI CERTAINES ENTRÉES SONT PLUS COURTES QUE D'AUTRES
@@ -89,7 +89,7 @@ var DEPISTAGES = {
     medecin: 'Dr Nassreddine Knani',
     qualite: 'médecin généraliste',
     rpps: '10110958559',
-    date: '2026-08-04',
+    date: '2026-08-05',
     lignesArbitrees: 21,
     sansModification: true
   },
