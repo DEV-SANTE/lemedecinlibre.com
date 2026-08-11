@@ -1,0 +1,30 @@
+{
+  "name": "prevention-sante-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "API de la plateforme de prévention — comptes, dossiers, avis, journal d'acces",
+  "main": "src/serveur.js",
+  "scripts": {
+    "start": "node src/serveur.js",
+    "test": "node test/test.js",
+    "parcours": "node test/parcours.js",
+    "demo": "node src/demo.js",
+    "verifier": "npm test && npm run parcours && npm run pages && npm run enchainement && npm run rls",
+    "pages": "node test/pages.js",
+    "enchainement": "node test/enchainement.js",
+    "rls": "node test/rls.js",
+    "migrer": "node -e \"const db=require('./src/db'),m=require('./src/migration');(async()=>{await db.ouvrir({url:process.env.DATABASE_URL});await m.migrer();const v=await m.version();console.log('version',v?v.numero:0);await db.fermer();})()\"",
+    "cle": "node -e \"console.log(require('./src/chiffre').genererCle())\""
+  },
+  "dependencies": {
+    "jsdom": "^30.0.1",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.0",
+    "jsdom": "^26.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

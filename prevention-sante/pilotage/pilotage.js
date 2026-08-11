@@ -399,4 +399,88 @@ function rendre() {
     </div>`;
 }
 
-window.addEventListener('DOMContentLoaded', rendre);
+/* =====================================================================
+   COMPTAGES RÉELS DU CENTRE
+   ---------------------------------------------------------------------
+   La cohorte fictive ci-dessus reste : elle montre à quoi ressemblera le
+   tableau de bord quand il y aura de la matière, et elle sert de
+   démonstration hors connexion.
+
+   Si un soignant est connecté, un bandeau affiche EN PLUS les comptages
+   réels de son centre — nombre de dossiers, où ils en sont, délai moyen
+   de relecture, état de l'entretien des données. Aucun nominatif, et
+   aucun indicateur portant sur une personne : cette page regarde la
+   population pour vérifier que le dispositif tient, jamais un individu
+   pour l'orienter. C'est la règle posée en tête de ce fichier, et elle
+   vaut aussi pour les chiffres qui viennent du serveur.
+   ===================================================================== */
+async function ajouterComptagesReels() {
+  if (typeof API === 'undefined') return;
+  let compte = null;
+  try { compte = await API.moi(); } catch (e) { return; }
+  if (!compte || !['medecin', 'secretaire'].includes(compte.role)) return;
+
+  let p;
+  try { p = await API.pilotage(); } catch (e) { return; }
+
+  const d = p.dossiers || {};
+  const s = p.securite || {};
+  const ent = p.dernierEntretien;
+  const lignes = [
+    ['Dossiers', d.total, 'dont ' + (d.brouillons || 0) + ' en cours, '
+      + (d.transmis || 0) + ' transmis, ' + (d.relus || 0) + ' relus'],
+    ['Patients rattachés', (p.patients || {}).rattaches,
+      (p.enAttenteDeRattachement || 0) + ' en attente de rattachement'],
+    ['Avis signés', p.avisSignes,
+      p.delaiMoyenRelectureHeures !== null
+        ? 'délai moyen de relecture : ' + p.delaiMoyenRelectureHeures + ' h'
+        : 'aucun délai mesurable'],
+    ['Double vérification', (s.avec_totp || 0) + ' / ' + (s.soignants || 0),
+      'comptes soignants protégés'],
+    ['Accès refusés (30 j)', p.refusTrentejours,
+      'tentatives repoussées et journalisées'],
+    ['Entretien des données', ent ? 'actif' : 'jamais passé',
+      ent ? 'dernier passage : ' + new Date(ent.quand).toLocaleString('fr-FR')
+          : 'ATTENTION : la purge ne tourne pas'],
+  ];
+
+  const zone = document.getElementById('app') || document.body;
+  const bloc = document.createElement('div');
+  bloc.style.cssText = 'background:#eaf2fb;border:1px solid #c3d9f0;border-radius:12px;'
+    + 'padding:17px 20px;margin-bottom:22px;color:#1a5695';
+  bloc.innerHTML = '<p style="margin:0 0 12px;font-size:13.5px"><b>Votre centre — comptages '
+    + 'réels.</b> ' + esc(p.note) + '</p>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    + lignes.map(function (l) {
+        return '<tr><td style="padding:5px 0;width:38%">' + esc(l[0])
+          + '</td><td style="padding:5px 0;font-weight:700;width:14%">' + esc(l[1])
+          + '</td><td style="padding:5px 0;color:#3c5f86">' + esc(l[2]) + '</td></tr>';
+      }).join('') + '</table>'
+    + '<p style="margin:12px 0 0;font-size:12.5px;color:#3c5f86">Référentiel : '
+    + esc(p.referentiel.lignesVisees) + ' lignes visées par '
+    + esc(p.referentiel.medecin) + '.</p>';
+  zone.insertBefore(bloc, zone.firstChild);
+}
+
+window.addEventListener('DOMContentLoaded', async function () {
+  /* Même séparation que sur la page entreprise : un soignant connecté ne
+     voit que les comptages réels de son centre. La cohorte fictive reste
+     la démonstration des visiteurs sans compte, annoncée comme telle. */
+  if (typeof API !== 'undefined') {
+    let compte = null;
+    try { compte = await API.moi(); } catch (e) {}
+    if (compte && ['medecin', 'secretaire'].includes(compte.role)) {
+      const app = document.getElementById('app') || document.body;
+      app.innerHTML = '';
+      await ajouterComptagesReels();
+      const rappel = document.createElement('p');
+      rappel.style.cssText = 'font-size:12.5px;color:var(--ink-4);max-width:76ch;margin-top:18px';
+      rappel.textContent = 'Comptages de fonctionnement du centre. Aucun indicateur ne porte '
+        + 'sur une personne : cette page regarde la population pour vérifier que le '
+        + 'dispositif tient, jamais un individu pour l’orienter.';
+      app.appendChild(rappel);
+      return;
+    }
+  }
+  rendre();   /* démonstration : cohorte fictive, annoncée comme telle */
+});

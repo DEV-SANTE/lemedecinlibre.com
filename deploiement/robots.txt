@@ -1,0 +1,5 @@
+# Maquette interne, non destinée au public et non indexable.
+# Cette maquette n'est pas le service : elle sert aux démonstrations et aux
+# relectures internes. L'accès est par ailleurs protégé par mot de passe.
+User-agent: *
+Disallow: /

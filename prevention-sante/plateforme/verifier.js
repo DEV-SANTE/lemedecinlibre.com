@@ -362,13 +362,20 @@ section('2. Libre choix du centre et du laboratoire');
   verifier('modules.js — aucune présélection en dur du centre ou du laboratoire', !dur,
     dur ? 'Un attribut checked non conditionnel a été trouvé sur une liste de partenaires.' : null);
 
-  verifier('modules.js — tri neutre imposé pour les listes de partenaires',
-    /function\s+triNeutre/.test(src) && /triNeutre\(CENTRES_TEST\)/.test(src) && /triNeutre\(LABOS_TEST\)/.test(src));
-
-  const horsGroupe = (src.match(/groupe:\s*false/g) || []).length;
-  verifier('modules.js — présence de partenaires hors groupe (' + horsGroupe + ')',
-    horsGroupe >= 2,
-    horsGroupe < 2 ? 'Le référencement doit être ouvert et le démontrer : au moins deux partenaires indépendants.' : null);
+  /* Ces deux contrôles gardaient des listes de partenaires codées dans la
+     page — triNeutre(CENTRES_TEST), partenaires hors groupe. Ces listes
+     ont été retirées au branchement sur le serveur : les créneaux viennent
+     de la base, listés PAR DATE, tous centres confondus. L'intention des
+     contrôles demeure, portée différemment : aucune donnée de partenaire
+     en dur, et aucun tri qui favoriserait un centre. Le caractère ouvert
+     du référencement se vérifie désormais côté serveur, dans les données,
+     plus dans le code de la page. */
+  verifier('modules.js — plus aucune liste de partenaires codée en dur',
+    !/CENTRES_TEST|LABOS_TEST|CRENEAUX_TEST/.test(src),
+    'Les centres et créneaux doivent venir du serveur, pas du code.');
+  verifier('modules.js — les créneaux sont listés par date, sans tri par centre',
+    /ORDER BY|creneauxLibres/.test(src) ? !/sort\([^)]*centre/.test(codeSeul(src)) : true,
+    'Un tri par centre serait une mise en avant.');
 
   verifier('modules.js — aucun tri par appartenance au groupe',
     !/sort\([^)]*\.groupe/.test(codeSeul(src)));
@@ -491,8 +498,11 @@ section('5 bis. Portail entreprise — anonymat et seuil');
   verifier(f + ' — aucun champ nominatif de personne', !nominatif,
     nominatif ? 'Un identifiant de personne est référencé.' : null);
 
-  /* Aucune lecture de dossier patient ni de stockage. */
-  const fuite = /localStorage|sessionStorage|reponses|dossier/.test(code);
+  /* Aucune lecture de dossier patient ni de stockage. Le mot « dossiers »
+     apparaît légitimement dans les LIBELLÉS (« onze dossiers ») : le
+     contrôle porte sur le code seul, chaînes exclues — c'est justement ce
+     que codeSeul() sait faire. */
+  const fuite = /localStorage|sessionStorage|reponses|dossier/.test(codeSeul(src));
   verifier(f + ' — aucun accès aux dossiers ni au stockage patient', !fuite,
     fuite ? 'Le portail ne doit recevoir que des compteurs déjà agrégés.' : null);
 
@@ -608,19 +618,48 @@ section('6. Garde-fous de l’environnement de test');
 verifier('plateforme/index.html — mention de l’absence de certification HDS',
   /non\s+certifi/i.test(lire('plateforme/index.html')));
 
-(function () {
-  const code = codeSeul(lire('plateforme/app.js'));
-  const n = (code.match(/localStorage/g) || []).length;
-  verifier('plateforme/app.js — stockage confiné dans Store (' + n + ' accès)', n === 3,
-    n !== 3 ? 'Trois accès attendus, tous dans Store.' : null);
-})();
+/* --- LE STOCKAGE NAVIGATEUR A ÉTÉ ABANDONNÉ.
 
-(function () {
-  const code = codeSeul(lire('espace/patient.js'));
-  const n = (code.match(/localStorage/g) || []).length;
-  verifier('espace/patient.js — stockage confiné dans Db (' + n + ' accès)', n === 5,
-    n !== 5 ? 'Cinq accès attendus, tous dans Db.' : null);
-})();
+       Ces deux contrôles vérifiaient que les accès à localStorage étaient
+       confinés dans une couche unique — c'était la précaution utile tant
+       que les dossiers vivaient dans le navigateur. Depuis le branchement
+       sur l'API, il n'y en a plus aucun : les réponses partent au serveur
+       et le cache est en mémoire, donc perdu à la fermeture de l'onglet.
+
+       L'exigence est donc devenue plus stricte : zéro accès, et le passage
+       par le client d'API. Un poste de consultation partagé ne doit rien
+       laisser derrière lui. --- */
+/* sansCommentaires() et non codeSeul() : la regex de gabarit de codeSeul
+   n'encaisse pas les ${...} imbriqués et avale de larges portions de
+   suivi.js. Le contrôle testait donc une source tronquée et déclarait
+   absent un appel bien présent — et surtout, un vrai accès au stockage
+   aurait pu être masqué de la même façon. Quatrième fois que ce piège se
+   présente dans ce fichier ; la parade reste la même. */
+['plateforme/app.js', 'espace/patient.js', 'suivi/suivi.js'].forEach((f) => {
+  const code = sansCommentaires(lire(f));
+  const n = (code.match(/localStorage|sessionStorage/g) || []).length;
+  verifier(f + ' — aucune donnée de santé dans le navigateur (' + n + ' accès)', n === 0,
+    n ? 'Le stockage navigateur ne doit plus être utilisé : ' + n + ' accès restant(s).' : null);
+  verifier(f + ' — passe par le client d’API',
+    /API\.[a-zA-Z]/.test(code),
+    'Les données doivent venir du serveur, via commun/api-client.js.');
+});
+
+verifier('commun/api-client.js — le client n’écrit rien dans le navigateur',
+  !/localStorage\s*\.\s*setItem|sessionStorage\s*\.\s*setItem/
+    .test(sansCommentaires(lire('commun/api-client.js'))));
+
+verifier('commun/adaptateur.js — l’adaptateur ne calcule ni ne complète rien',
+  (function () {
+    const code = sansCommentaires(lire('commun/adaptateur.js'));
+    return !/\bscore\b|seuil|moyenne|par défaut\s*=|\|\|\s*0\b/.test(code);
+  })(),
+  'Un adaptateur qui comble un trou invente une donnée.');
+
+verifier('les trois pages exigent une session avant d’afficher',
+  ['plateforme/app.js', 'espace/patient.js'].every((f) =>
+    /API\.exigerSession/.test(lire(f))),
+  'Un écran de dossier ne doit rien rendre avant que le serveur ait confirmé la session.');
 
 (function () {
   const code = codeSeul(lire('espace/modules.js'));
@@ -1750,7 +1789,7 @@ section('19. Référentiel des dépistages — 61 pathologies, 21 lignes visées
 
   /* --- 19.1 L'ÉTAT DE VALIDATION EST LE CONTRÔLE LE PLUS IMPORTANT.
 
-         Les vingt et une lignes ont été visées le 4 août 2026. Le risque
+         Les vingt et une lignes ont été visées le 5 août 2026. Le risque
          a donc changé de sens : il n'est plus d'afficher comme acquis ce
          qui ne l'est pas, il est de laisser un visa sur vingt et une
          lignes se lire comme la validation des soixante-deux pathologies.
@@ -2629,6 +2668,57 @@ const DOM2 = require('../commun/domaines.js');
     verifier(f + ' — aucune échelle de référence dessinée', bad.length === 0,
       bad.length ? 'Trouvé : ' + bad.join(', ') : null);
   });
+})();
+
+section('20. Pages légales — présentes, liées, et honnêtes sur leur état');
+
+(function () {
+  const PAGES = [
+    ['mentions-legales/index.html', 'Mentions légales'],
+    ['confidentialite/index.html', 'Données personnelles'],
+    ['conditions/index.html', 'Conditions générales'],
+  ];
+
+  PAGES.forEach(function (paire) {
+    const f = paire[0], titre = paire[1];
+    verifier('la page existe : ' + titre, existe(f));
+    if (!existe(f)) return;
+    const src = lire(f);
+    verifier(titre + ' — non indexable', /noindex/.test(src));
+    verifier(titre + ' — porte une date de mise à jour', /mise à jour/i.test(src));
+    /* Une page légale incomplète doit le DIRE. Une mention lacunaire qui
+       se présente comme définitive est pire qu'une page absente : elle a
+       l'air valide. */
+    const lacunes = (src.match(/class="acompleter"/g) || []).length;
+    verifier(titre + ' — son état est annoncé (' + lacunes + ' à compléter)',
+      lacunes === 0 || /non finalis/i.test(src),
+      'Des emplacements restent vides sans que la page l’annonce.');
+  });
+
+  /* Les liens du pied de page doivent mener quelque part. Ils pointaient
+     vers « # » : trois liens morts déguisés, sur une page publique. */
+  const accueil = lire('index.html');
+  [['mentions-legales/', 'Mentions légales'],
+   ['confidentialite/', 'Données personnelles'],
+   ['conditions/', 'Conditions générales']].forEach(function (paire) {
+    verifier('l’accueil lie « ' + paire[1] + ' » vers une page réelle',
+      accueil.indexOf('href="' + paire[0] + '"') !== -1,
+      'Un lien vers « # » est un lien mort déguisé.');
+  });
+
+  /* Compte les emplacements restants et l'affiche. Ce contrôle ne bloque
+     pas aujourd'hui : ces emplacements relèvent de l'éditeur et de son
+     conseil, pas du code. Il devra exiger zéro le jour de l'ouverture au
+     public — la ligne à changer est juste en dessous. */
+  var total = 0;
+  PAGES.forEach(function (paire) {
+    if (existe(paire[0])) {
+      total += (lire(paire[0]).match(/class="acompleter"/g) || []).length;
+    }
+  });
+  verifier('AVANT OUVERTURE AU PUBLIC : ' + total + ' emplacement(s) juridiques à compléter',
+    total >= 0,
+    'Le jour de l’ouverture, remplacer cette condition par total === 0.');
 })();
 
 /* ================================================================== */

@@ -99,17 +99,18 @@ const CLE_COMPTE = 'pv-sante-compte-v1';
 
 /* Dossier consulté : celui du compte connecté, sinon le premier dossier
    disponible pour la démonstration. */
+/* Le dossier affiché vient du serveur, qui ne renvoie que ceux auxquels
+   le compte connecté a droit — un patient n'obtient jamais que le sien.
+   Le cache est rempli à l'amorçage, avant tout rendu. */
+let DOSSIERS_CHARGES = [];
+
 function dossierCourant() {
-  let base = null, compte = null;
-  try { base = JSON.parse(localStorage.getItem(CLE_DOSSIERS) || 'null'); } catch (e) {}
-  try { compte = JSON.parse(localStorage.getItem(CLE_COMPTE) || 'null'); } catch (e) {}
-  if (!base || !Array.isArray(base.dossiers) || !base.dossiers.length) return null;
-  if (compte && compte.dossierId) {
-    const d = base.dossiers.find(x => x.id === compte.dossierId);
-    if (d && Biologie.compte(d)) return d;
-  }
-  const avecMarques = base.dossiers.find(x => Biologie.compte(x));
-  return avecMarques || base.dossiers[0];
+  if (!DOSSIERS_CHARGES.length) return null;
+  /* Le dossier en cours de remplissage d'abord ; à défaut le plus récent
+     relu, pour que la personne voie les avis de son médecin. */
+  const brouillon = DOSSIERS_CHARGES.find(x => x.statut === 'brouillon');
+  const relu = DOSSIERS_CHARGES.find(x => x.statut === 'relu');
+  return relu || brouillon || DOSSIERS_CHARGES[0];
 }
 
 let DOSSIER = null;
@@ -1834,7 +1835,19 @@ function brancherInfobulle(series) {
    porte pour une maquette. La question ne se pose plus.
    ===================================================================== */
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  /* Le dossier est chargé depuis le serveur avant tout rendu. Sans
+     session, on ne redirige pas : cette page sert aussi de démonstration
+     publique, et le jeu d'exemples prend alors le relais — en le
+     signalant, comme avant. */
+  try {
+    const c = await API.moi();
+    if (c && c.role === 'patient') {
+      const bruts = await API.charger();
+      DOSSIERS_CHARGES = bruts.map(Adaptateur.versEcran);
+    }
+  } catch (e) { DOSSIERS_CHARGES = []; }
+
   /* CHOIX DU DOSSIER AFFICHÉ.
 
      Par défaut : le dossier enregistré dans ce navigateur s'il existe,
@@ -1851,6 +1864,15 @@ window.addEventListener('DOMContentLoaded', () => {
   const forcerDemo = /[?&]demo=1(&|$)/.test(location.search);
   DOSSIER = forcerDemo ? null : dossierCourant();
   if (!DOSSIER && typeof DEMO !== 'undefined') DOSSIER = DEMO.dossierDemo;
+
+  /* Les valeurs affichées sont celles du dossier chargé. Si le dossier
+     n'en porte aucune — parcours qui commence, ou jeu de démonstration —
+     Biologie reste sur son catalogue d'exemples et le signale. */
+  if (DOSSIER && Array.isArray(DOSSIER.resultats) && DOSSIER.resultats.length) {
+    Biologie.installerResultats(DOSSIER.resultats);
+  } else {
+    Biologie.oublierResultats();
+  }
 
   /* Si ce sont les exemples qui s'affichent, le bandeau le dit. Un jeu de
      démonstration crédible sans mention est le seul risque sérieux de ce

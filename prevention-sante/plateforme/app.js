@@ -38,36 +38,40 @@ const STORAGE_KEY = 'pv-sante-test-v1';
    chiffrement au repos, et suppression de tout stockage navigateur.
    ===================================================================== */
 const Store = {
-  lire() {
-    try {
-      const brut = window.localStorage.getItem(STORAGE_KEY);
-      return brut ? JSON.parse(brut) : null;
-    } catch (e) {
-      console.warn('Lecture impossible', e);
-      return null;
-    }
-  },
-  ecrire(donnees) {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(donnees));
-      return true;
-    } catch (e) {
-      console.warn('Écriture impossible', e);
-      return false;
-    }
-  },
-  vider() {
-    try { window.localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-  },
-  exporter() {
-    return JSON.stringify(Etat, null, 2);
-  }
-};
+  /* Cache alimenté par le serveur. Rien n'est écrit dans le navigateur :
+     un poste de consultation partagé ne doit rien conserver après la
+     fermeture de l'onglet. */
+  _dossiers: [],
 
-/* =====================================================================
-   ÉTAT
-   ===================================================================== */
-let Etat = { version: '0.1', mode: MODE, dossiers: [] };
+  lire() {
+    return { version: '0.2', mode: 'SERVEUR', dossiers: this._dossiers };
+  },
+
+  /* Côté médecin, les écritures ne sont pas génériques : un avis part par
+     API.signerAvis, une marque par API.poserMarque, au moment précis où le
+     médecin les valide. Cette fonction ne fait donc que tenir le cache à
+     jour pour le rendu qui suit immédiatement. */
+  ecrire(donnees) {
+    this._dossiers = (donnees && donnees.dossiers) || [];
+  },
+
+  vider() { this._dossiers = []; },
+
+  exporter() {
+    /* Export de relecture. Il porte la mention de sa provenance : un
+       fichier de dossiers sans indication d'origine circule mal. */
+    return JSON.stringify({ exporte_le: new Date().toISOString(),
+                            origine: 'plateforme de prévention',
+                            dossiers: this._dossiers }, null, 2);
+  },
+
+  async rafraichir() {
+    const dossiers = await API.charger();
+    Store._dossiers = dossiers.map(Adaptateur.versEcran);
+    Etat.dossiers = Store._dossiers;
+    return Store._dossiers;
+  },
+};
 
 function sauver() { Store.ecrire(Etat); }
 
@@ -102,171 +106,33 @@ function nomDossier(d) {
   return (n.toUpperCase() + ' ' + p).trim();
 }
 
-/* =====================================================================
-   PATIENTS FICTIFS
-   Noms manifestement inventés. Les trois profils du dossier de reprise.
-   ===================================================================== */
-function patientsFictifs() {
-  return [
-    {
-      id: nouvelId(), cree: horodatage(), modifie: horodatage(),
-      statut: 'transmis', fictif: true,
-      validation: null,
-      /* Marques de démonstration, posées comme le ferait un médecin :
-         dans le stockage, sur une valeur datée, signées et horodatées.
-         Elles ne sont pas écrites en dur dans l'affichage — le suivi
-         patient les lit ici, ce qui rend la chaîne réelle. */
-      marquesBio: {
-        'ferr|2026-07-20': { parametre: 'ferr', dateValeur: '2026-07-20', couleur: 'orange',
-          commentaire: 'Baisse régulière depuis 2022. Bilan martial complémentaire prescrit, nous en reparlons.',
-          medecin: 'Dr DÉMO (fictif)', date: '2026-07-20T11:40:00.000Z' },
-        'gly|2026-07-20': { parametre: 'gly', dateValeur: '2026-07-20', couleur: 'orange',
-          commentaire: 'À surveiller. Nous avons parlé d’activité physique et d’alimentation.',
-          medecin: 'Dr DÉMO (fictif)', date: '2026-07-20T11:42:00.000Z' },
-        'hb|2026-07-20': { parametre: 'hb', dateValeur: '2026-07-20', couleur: 'vert',
-          commentaire: 'Stable, sans particularité.',
-          medecin: 'Dr DÉMO (fictif)', date: '2026-07-20T11:43:00.000Z' },
-        'creat|2026-07-20': { parametre: 'creat', dateValeur: '2026-07-20', couleur: 'vert',
-          commentaire: 'Fonction rénale stable.',
-          medecin: 'Dr DÉMO (fictif)', date: '2026-07-20T11:44:00.000Z' }
-      },
-      reponses: {
-        nom: 'DÉMO', prenom: 'Profil-Un', annee_naissance: 1970, sexe: 'M',
-        profession: 'Conducteur routier (fictif)',
-        taille: 176, poids: 96, ta_syst: 152, ta_diast: 94,
-        tabac_statut: 'actuel', tabac_cig_jour: 20, tabac_annees: 30,
-        auditc_1: '3', auditc_2: '2', auditc_3: '2',
-        activite_min: 40, sedentarite: 'plus8',
-        atcd_perso: ['hta'], atcd_fam: ['idm_precoce', 'diabete'],
-        traitements: 'Amlodipine 5 mg (fictif)',
-        expo_pro: ['poussieres', 'bruit', 'nuit'],
-        expo_pro_precisions: 'Chantiers puis transport routier (fictif)',
-        vaccins: ['dtp'], carnet_vaccinal: 'non',
-        resp_dyspnee: 'oui', resp_toux: 'oui', resp_expecto: 'oui',
-        resp_sifflements: 'oui', resp_infections: 'oui', mmrc: '2',
-        som_ronflement: 'oui', som_apnees_constatees: 'oui', som_fatigue_jour: 'oui',
-        som_tour_cou: 44, som_volant: 'oui', som_conducteur_pro: 'oui',
-        som_duree: 6,
-        ess_1: '2', ess_2: '3', ess_3: '2', ess_4: '3',
-        ess_5: '2', ess_6: '0', ess_7: '1', ess_8: '0',
-        cut_phototype: 'III', cut_expo_pro: 'oui', cut_nb_naevi: 'moins20',
-        cv_hta_connue: 'oui', cv_diabete: 'non',
-        cv_douleur_thoracique: 'non', cv_palpitations: 'oui',
-        cv_bilan_lipidique_date: 'mars 2024',
-        cv_bilan_lipidique_valeurs: 'Cholestérol total 6,2 — HDL 0,9 (valeurs fictives)',
-        vis_dernier_examen: 'plus5', vis_gene_loin: 'oui',
-        aud_expo_pro: 'oui', aud_acouphenes: 'oui', aud_repetition: 'oui', aud_volume: 'oui',
-        hhie_1: '2', hhie_2: '2', hhie_3: '1', hhie_4: '2', hhie_5: '2',
-        hhie_6: '1', hhie_7: '1', hhie_8: '0', hhie_9: '2', hhie_10: '1',
-        phq_1: '1', phq_2: '1', phq_3: '2', phq_4: '3', phq_5: '1',
-        phq_6: '1', phq_7: '1', phq_8: '0', phq_9: '0',
-        gad_1: '1', gad_2: '1', gad_3: '0', gad_4: '1', gad_5: '0', gad_6: '2', gad_7: '0',
-        dep_colorectal: 'jamais',
-        bio_dernier_bilan: '1a3', bio_jeune: 'oui', bio_apporter: 'non',
-        att_motif: 'Mon employeur me l’a proposé et je suis fatigué en permanence.',
-        att_inquietude: 'Mon père a fait un infarctus à 52 ans.',
-        att_declaration: 'oui'
-      }
-    },
-    {
-      id: nouvelId(), cree: horodatage(), modifie: horodatage(),
-      statut: 'transmis', fictif: true,
-      validation: null,
-      reponses: {
-        nom: 'ESSAI', prenom: 'Profil-Deux', annee_naissance: 1984, sexe: 'F',
-        profession: 'Cadre administratif (fictif)',
-        taille: 165, poids: 60, ta_syst: 118, ta_diast: 72,
-        tabac_statut: 'jamais',
-        auditc_1: '1', auditc_2: '0', auditc_3: '0',
-        activite_min: 120, sedentarite: '4a8',
-        atcd_perso: [], atcd_fam: [],
-        traitements: 'Aucun',
-        expo_pro: ['ecrans'],
-        vaccins: ['dtp', 'covid', 'hpv'], carnet_vaccinal: 'oui',
-        resp_dyspnee: 'non', resp_toux: 'non', resp_expecto: 'non',
-        resp_sifflements: 'non', resp_infections: 'non', mmrc: '0',
-        som_ronflement: 'non', som_apnees_constatees: 'non', som_fatigue_jour: 'oui',
-        som_volant: 'non', som_conducteur_pro: 'non', som_duree: 7,
-        som_endormissement: 'oui',
-        ess_1: '1', ess_2: '1', ess_3: '0', ess_4: '1',
-        ess_5: '1', ess_6: '0', ess_7: '1', ess_8: '0',
-        cut_phototype: 'III', cut_lesion_nouvelle: 'non', cut_nb_naevi: '20a50',
-        cv_hta_connue: 'non', cv_diabete: 'non',
-        cv_douleur_thoracique: 'non', cv_palpitations: 'non', cv_syncope: 'non',
-        vis_dernier_examen: '1a2', vis_correction: 'oui', vis_secheresse: 'oui',
-        aud_expo_pro: 'non', aud_acouphenes: 'non', aud_repetition: 'non',
-        hhie_1: '0', hhie_2: '0', hhie_3: '0', hhie_4: '0', hhie_5: '0',
-        hhie_6: '0', hhie_7: '0', hhie_8: '0', hhie_9: '0', hhie_10: '0',
-        phq_1: '1', phq_2: '1', phq_3: '2', phq_4: '3', phq_5: '1',
-        phq_6: '2', phq_7: '2', phq_8: '0', phq_9: '0',
-        gad_1: '2', gad_2: '2', gad_3: '1', gad_4: '2', gad_5: '1', gad_6: '1', gad_7: '1',
-        mental_travail: 'oui', mental_suivi: 'non',
-        dep_col_uterus: '3a5',
-        bio_dernier_bilan: 'plus3', bio_jeune: 'oui', bio_apporter: 'non',
-        bio_grossesse: 'non',
-        att_motif: 'Je suis fatiguée depuis plusieurs mois sans raison évidente.',
-        att_question: 'Est-ce que ça peut être la thyroïde ?',
-        att_declaration: 'oui'
-      }
-    },
-    {
-      id: nouvelId(), cree: horodatage(), modifie: horodatage(),
-      statut: 'transmis', fictif: true,
-      validation: null,
-      reponses: {
-        nom: 'FICTIF', prenom: 'Profil-Trois', annee_naissance: 1995, sexe: 'M',
-        profession: 'Développeur, moniteur de voile l’été (fictif)',
-        taille: 182, poids: 74, ta_syst: 122, ta_diast: 76,
-        tabac_statut: 'jamais',
-        auditc_1: '2', auditc_2: '1', auditc_3: '1',
-        activite_min: 420, sedentarite: '4a8',
-        atcd_perso: [], atcd_fam: ['melanome'],
-        traitements: 'Aucun',
-        expo_pro: ['soleil', 'ecrans'],
-        expo_pro_precisions: 'Encadrement nautique quatre mois par an (fictif)',
-        vaccins: ['dtp', 'covid'], carnet_vaccinal: 'oui',
-        resp_dyspnee: 'non', resp_toux: 'non', mmrc: '0',
-        som_ronflement: 'non', som_apnees_constatees: 'non', som_fatigue_jour: 'non',
-        som_duree: 8,
-        ess_1: '0', ess_2: '1', ess_3: '0', ess_4: '1',
-        ess_5: '1', ess_6: '0', ess_7: '0', ess_8: '0',
-        cut_lesion_nouvelle: 'oui',
-        cut_abcde: ['couleur', 'evolution', 'bords'],
-        cut_vilain_canard: 'oui',
-        cut_atcd_perso: 'non', cut_atcd_fam: 'oui',
-        cut_phototype: 'II', cut_coups_soleil: 'oui',
-        cut_nb_naevi: 'plus50', cut_naevi_atypiques: 'ne_sais_pas',
-        cut_immunodep: 'non', cut_uv: 'non', cut_expo_pro: 'oui',
-        cv_hta_connue: 'non', cv_diabete: 'non', cv_sport_intense: 'oui',
-        cv_douleur_thoracique: 'non', cv_palpitations: 'non',
-        vis_dernier_examen: '2a5',
-        aud_expo_loisir: 'oui', aud_acouphenes: 'non',
-        hhie_1: '0', hhie_2: '0', hhie_3: '0', hhie_4: '0', hhie_5: '0',
-        hhie_6: '0', hhie_7: '0', hhie_8: '0', hhie_9: '0', hhie_10: '0',
-        phq_1: '0', phq_2: '0', phq_3: '0', phq_4: '1', phq_5: '0',
-        phq_6: '0', phq_7: '0', phq_8: '0', phq_9: '0',
-        gad_1: '1', gad_2: '0', gad_3: '0', gad_4: '0', gad_5: '0', gad_6: '0', gad_7: '0',
-        dep_ist: 'oui',
-        bio_dernier_bilan: 'plus3', bio_jeune: 'oui',
-        att_motif: 'J’ai une tache dans le dos qui a changé de couleur cet été.',
-        att_inquietude: 'Ma mère a eu un mélanome.',
-        att_declaration: 'oui'
-      }
-    }
-  ];
-}
+/* Les patients fictifs qui vivaient ici (140 lignes) ont été retirés en
+   même temps que le bouton qui les injectait. La démonstration vit côté
+   serveur — npm run demo — dans une base en mémoire qui ne peut pas
+   recevoir de vraies données. */
+
 
 /* =====================================================================
    INITIALISATION
    ===================================================================== */
-function initialiser() {
-  const sauvegarde = Store.lire();
-  if (sauvegarde && Array.isArray(sauvegarde.dossiers) && sauvegarde.dossiers.length) {
-    Etat = sauvegarde;
-  } else {
-    Etat.dossiers = patientsFictifs();
-    sauver();
+/* Les dossiers viennent du serveur, filtrés par lui selon le centre du
+   compte connecté. Les patients fictifs de patientsFictifs() ne sont plus
+   chargés automatiquement : ils restent disponibles pour une démonstration
+   hors ligne, mais un écran de consultation ne doit pas mélanger des
+   dossiers réels et des exemples. */
+async function initialiser() {
+  await Store.rafraichir();
+}
+
+/* Les valeurs de biologie appartiennent au dossier ouvert : elles sont
+   installées avant chaque rendu, et retirées si le dossier n'en a pas —
+   sans quoi on afficherait les valeurs du patient précédent. */
+function installerBiologieDu(dossier) {
+  if (!dossier || !Array.isArray(dossier.resultats) || !dossier.resultats.length) {
+    Biologie.oublierResultats();
+    return 0;
   }
+  return Biologie.installerResultats(dossier.resultats);
 }
 
 /* =====================================================================
@@ -338,7 +204,6 @@ function vueListe() {
         <div class="page-actions">
           <button class="btn btn-p" id="b-nouveau">Nouveau questionnaire</button>
           <button class="btn btn-g" id="b-export">Exporter en JSON</button>
-          <button class="btn btn-d" id="b-reset">Réinitialiser les données</button>
         </div>
       </div>
 
@@ -387,12 +252,14 @@ function vueListe() {
     URL.revokeObjectURL(a.href);
   };
 
-  $('#b-reset').onclick = () => {
-    if (!confirm('Supprimer tous les dossiers de test et recharger les trois profils fictifs ?')) return;
-    Store.vider();
-    Etat = { version: '0.1', mode: MODE, dossiers: patientsFictifs() };
-    sauver(); router();
-  };
+  /* Le bouton « Réinitialiser les données » a été retiré, et ce n'est pas
+     un nettoyage cosmétique. Il rechargeait trois patients fictifs DANS
+     l'écran d'un médecin connecté : sur un poste avec de vrais dossiers,
+     trois dossiers inventés, d'apparence normale, se mélangeaient aux
+     vrais jusqu'au rafraîchissement suivant. Un écran de consultation ne
+     doit jamais pouvoir afficher un dossier qui n'existe pas en base. Les
+     profils de démonstration vivent côté serveur (npm run demo), dans une
+     base de développement, et nulle part ailleurs. */
 }
 
 /* =====================================================================
@@ -532,6 +399,7 @@ let ongletMedecin = 'reponses';
 function vueMedecin(id) {
   const dossier = Etat.dossiers.find(x => x.id === id);
   if (!dossier) { location.hash = '#/'; return; }
+  installerBiologieDu(dossier);
   const age = ageStructurel(dossier);
 
   app().innerHTML = `
@@ -1035,12 +903,26 @@ function brancherDomaines(dossier) {
     const med = ($('#med-dom').value || '').trim();
     medecinCourant = med;
     try {
+      /* Avis.poser valide la saisie (statut choisi, commentaire non vide,
+         nom du médecin) et lève une erreur explicite sinon. On ne l'envoie
+         au serveur qu'après ce contrôle. */
       Avis.poser(dossier, id, coche ? coche.value : '',
         f.querySelector('.mq-com').value, med);
-      dossier.modifie = horodatage();
-      sauver();
-      domaineOuvertMed = null;
-      vueMedecin(dossier.id);
+      enreg.disabled = true;
+      API.signerAvis(dossier.id, {
+        domaine: id,
+        statut: coche ? coche.value : '',
+        texte: f.querySelector('.mq-com').value,
+      }).then(async () => {
+        await Store.rafraichir();
+        domaineOuvertMed = null;
+        vueMedecin(dossier.id);
+      }).catch((e) => {
+        enreg.disabled = false;
+        err.textContent = 'Avis non enregistré : ' + (e.message || 'serveur injoignable')
+          + '. Il n’a pas été transmis, réessayez.';
+        err.style.display = 'block';
+      });
     } catch (e) {
       err.textContent = e.message;
       err.style.display = 'block';
@@ -1081,12 +963,26 @@ function brancherBiologie(dossier) {
     const med = ($('#med-bio').value || '').trim();
     medecinCourant = med;
     try {
+      /* Biologie.poser contrôle la saisie — couleur choisie, auteur
+         renseigné — et lève une erreur explicite sinon. Le serveur refera
+         ces contrôles de son côté : la contrainte est aussi en base. */
       Biologie.poser(dossier, parts[0], parts[1],
         choisi ? choisi.value : '', f.querySelector('.mq-com').value, med);
-      dossier.modifie = horodatage();
-      sauver();
-      bioOuverte = null;
-      vueMedecin(dossier.id);
+      enreg.disabled = true;
+      API.poserMarque(dossier.id, {
+        parametre: parts[0], dateValeur: parts[1],
+        couleur: choisi ? choisi.value : '',
+        commentaire: f.querySelector('.mq-com').value,
+      }).then(async () => {
+        await Store.rafraichir();
+        bioOuverte = null;
+        vueMedecin(dossier.id);
+      }).catch((e) => {
+        enreg.disabled = false;
+        err.textContent = 'Marque non enregistrée : ' + (e.message || 'serveur injoignable')
+          + '. Elle n’a pas été transmise, réessayez.';
+        err.style.display = 'block';
+      });
     } catch (e) {
       err.textContent = e.message;
       err.style.display = 'block';
@@ -1411,4 +1307,23 @@ function router() {
 }
 
 window.addEventListener('hashchange', router);
-window.addEventListener('DOMContentLoaded', () => { initialiser(); router(); });
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const c = await API.exigerSession(['medecin', 'secretaire']);
+    if (!c) return;                     // exigerSession a déjà redirigé
+    medecinCourant = c.nom || '';
+    await initialiser();
+    router();
+  } catch (e) {
+    /* Un écran de consultation qui reste blanc est pire qu'un message
+       d'erreur : le praticien ne sait pas s'il n'y a aucun dossier ou si
+       le serveur est tombé. */
+    document.body.innerHTML = '<div style="max-width:62ch;margin:60px auto;padding:0 20px;'
+      + 'font:15px/1.65 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#16324f">'
+      + '<h1 style="font-size:21px">Dossiers indisponibles</h1>'
+      + '<p>Les dossiers n’ont pas pu être chargés : ' + (e && e.message ? e.message : 'serveur injoignable')
+      + '.</p><p>Aucun dossier n’est affiché plutôt qu’une liste incomplète — '
+      + 'une liste partielle pourrait laisser croire qu’un patient n’a pas de dossier. '
+      + '<a href="/connexion/">Se reconnecter</a>.</p></div>';
+  }
+});

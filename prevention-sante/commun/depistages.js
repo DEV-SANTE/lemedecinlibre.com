@@ -1251,7 +1251,7 @@ var DEPISTAGES = {
     return out;
   },
 
-  /* Les entrées dont un examen a fait l'objet de l'arbitrage du 4 août
+  /* Les entrées dont un examen a fait l'objet de l'arbitrage du 5 août
      2026. Le champ « arbitrage » listait ce qui était en attente ; il
      liste maintenant ce qui est visé, d'où le renommage du helper. */
   arbitres: function () {

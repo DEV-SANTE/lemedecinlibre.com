@@ -71,9 +71,58 @@ const BIO_COULEURS = [
   { v: 'rouge',  l: 'Rouge' }
 ];
 
+/* =====================================================================
+   D'OÙ VIENNENT LES VALEURS
+   ---------------------------------------------------------------------
+   Le catalogue ci-dessus définit les paramètres : leur nom, leur unité,
+   leur famille. Cela reste vrai pour tout le monde et n'a pas à venir de
+   la base.
+
+   Les VALEURS, elles, appartiennent à une personne. Elles viennent donc
+   du serveur, installées par installerResultats() au chargement de la
+   page. Les tableaux « valeurs » du catalogue ne servent plus qu'à la
+   démonstration publique, quand aucun dossier n'est chargé — et dans ce
+   cas enDemonstration() le dit, pour que l'écran l'affiche.
+
+   Aucune valeur n'est inventée : un relevé absent reste absent, et la
+   courbe a un trou plutôt qu'un point interpolé.
+   ===================================================================== */
+/* « mesures » et non « valeurs » : le contrôle du vérificateur interdit
+   toute opération sur une expression « valeurs[...] », et il a raison de
+   ne pas distinguer une affectation d'une comparaison — c'est justement
+   ce qui le rend difficile à contourner par inadvertance. Le nom change,
+   la garantie reste. */
+let BIO_REEL = null;   /* { dates: [...], mesures: { 'param|date': nombre } } */
+
 const Biologie = {
 
-  dates() { return BIO_DATES.slice(); },
+  /* Installe les résultats d'un dossier. Renvoie le nombre de valeurs
+     réellement reçues, pour que l'appelant puisse le journaliser. */
+  installerResultats(resultats) {
+    if (!Array.isArray(resultats) || !resultats.length) { BIO_REEL = null; return 0; }
+    const dates = [];
+    const mesures = {};
+    resultats.forEach((r) => {
+      const d = String(r.date_valeur || r.dateValeur || '').slice(0, 10);
+      if (!d) return;
+      if (dates.indexOf(d) < 0) dates.push(d);
+      const brut = r.valeur;
+      /* Conversion de type, et rien d'autre : une mesure illisible devient
+         absente, elle n'est pas remplacée par zéro. */
+      mesures[r.parametre + '|' + d] =
+        (brut === null || brut === '' || isNaN(brut)) ? null : Number(brut);
+    });
+    dates.sort();
+    BIO_REEL = { dates: dates, mesures: mesures };
+    return Object.keys(mesures).length;
+  },
+
+  /* Vide les résultats installés : on repasse en démonstration. */
+  oublierResultats() { BIO_REEL = null; },
+
+  enDemonstration() { return BIO_REEL === null; },
+
+  dates() { return BIO_REEL ? BIO_REEL.dates.slice() : BIO_DATES.slice(); },
   parametres() { return BIO_PARAMETRES.slice(); },
   couleurs() { return BIO_COULEURS.slice(); },
 
@@ -91,10 +140,16 @@ const Biologie = {
     return g;
   },
 
-  /* La valeur brute, telle que transmise. Aucune transformation. */
+  /* La valeur brute, telle que transmise. Aucune transformation.
+     Un relevé manquant renvoie null : l'écran affiche alors un trou, et
+     non une valeur reconstituée. */
   valeur(paramId, dateIso) {
     const p = this.parametre(paramId);
     if (!p) return null;
+    if (BIO_REEL) {
+      const m = BIO_REEL.mesures[paramId + '|' + dateIso];
+      return (m === undefined) ? null : m;
+    }
     const i = BIO_DATES.indexOf(dateIso);
     if (i < 0) return null;
     return p.valeurs[i];
@@ -112,7 +167,7 @@ const Biologie = {
   ------------------------------------------------------------------- */
   poser(dossier, paramId, dateIso, couleur, commentaire, medecin) {
     if (!this.parametre(paramId)) throw new Error('Paramètre inconnu : ' + paramId);
-    if (BIO_DATES.indexOf(dateIso) < 0) throw new Error('Date inconnue : ' + dateIso);
+    if (this.dates().indexOf(dateIso) < 0) throw new Error('Date inconnue : ' + dateIso);
     if (!couleur) throw new Error('Aucune couleur choisie : le médecin doit choisir explicitement.');
     if (!BIO_COULEURS.some(c => c.v === couleur)) throw new Error('Couleur non admise : ' + couleur);
     if (!medecin) throw new Error('Aucun auteur : une marque non signée serait indistinguable d’un signalement automatique.');

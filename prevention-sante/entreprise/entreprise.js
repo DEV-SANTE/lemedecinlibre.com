@@ -237,4 +237,92 @@ function rendre() {
   });
 }
 
-window.addEventListener('DOMContentLoaded', rendre);
+/* =====================================================================
+   BRANCHEMENT SUR LES COMPTAGES RÉELS
+   ---------------------------------------------------------------------
+   Cette page affichait deux entreprises fictives, pour montrer le seuil à
+   l'œuvre. Elles restent, comme démonstration accessible sans compte.
+
+   Mais si la personne est connectée avec un compte employeur, ce sont les
+   comptages de SON centre qui s'affichent, demandés au serveur. Le
+   serveur n'envoie rien sous le seuil de publication : la valeur ne
+   quitte pas la base, elle n'est pas seulement masquée à l'écran. C'est
+   la différence entre une protection et un habillage.
+
+   Le seuil de la base et SEUIL_PUBLICATION ci-dessus sont le même nombre,
+   et un contrôle croisé le vérifie : changer l'un sans l'autre fait
+   échouer la série de tests.
+   ===================================================================== */
+async function chargerComptagesReels() {
+  if (typeof API === 'undefined') return null;
+  let compte = null;
+  try { compte = await API.moi(); } catch (e) { return null; }
+  if (!compte || compte.role !== 'employeur') return null;
+
+  let r;
+  try { r = await API.statistiques(); } catch (e) { return null; }
+
+  /* Aucun comptage renvoyé : soit le centre n'a aucun dossier, soit
+     l'effectif est sous le seuil. Dans les deux cas on le dit, sans
+     inventer de chiffre et sans laisser croire que la démonstration est
+     la réalité. */
+  const c = r.comptages;
+  return {
+    id: 'reel',
+    nom: 'Votre centre (données réelles)',
+    accord: c
+      ? 'Comptages du serveur · ' + c.bilans_total + ' bilan(s) enregistré(s)'
+      : 'Aucun comptage disponible : effectif insuffisant pour une publication anonyme, '
+        + 'ou aucun bilan enregistré.',
+    effectif: c ? c.bilans_total : 0,
+    participants: c ? c.bilans_total : 0,
+    invites: c ? c.bilans_total : 0,
+    reel: true,
+    note: r.note || '',
+    detail: c ? [
+      { libelle: 'Bilans enregistrés', n: c.bilans_total },
+      { libelle: 'Transmis au médecin', n: c.bilans_transmis },
+      { libelle: 'Relus et visés', n: c.bilans_relus },
+    ] : [],
+  };
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const reel = await chargerComptagesReels();
+
+  /* SÉPARATION STRICTE. Un compte employeur connecté ne voit QUE les
+     comptages réels de son centre : la démonstration disparaît. Les deux
+     cohabitaient d'abord — bandeau réel au-dessus des entreprises
+     fictives — et c'était une erreur : des chiffres inventés à côté de
+     vrais chiffres finissent cités dans un compte-rendu. La démonstration
+     ne s'affiche plus qu'aux visiteurs sans compte, et se présente comme
+     telle. */
+  if (!reel) {
+    rendre();                        /* démonstration, pour les non-connectés */
+    return;
+  }
+
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="head"><div>
+      <h1>${esc(reel.nom)}</h1>
+      <p class="sub">${esc(reel.accord)}</p>
+    </div></div>
+    ${reel.detail.length ? `
+      <div class="grid" style="margin-top:22px">
+        ${reel.detail.map((d) => `
+          <div class="kpi">
+            <p class="kpi-n">${esc(d.n)}</p>
+            <p class="kpi-l">${esc(d.libelle)}</p>
+          </div>`).join('')}
+      </div>` : `
+      <div class="mask" style="margin-top:22px">
+        <p><b>Aucun chiffre publiable pour le moment.</b> Les comptages n’apparaissent
+        qu’au-delà de onze bilans enregistrés : en deçà, un comptage permettrait de
+        reconnaître quelqu’un. C’est une protection, pas une panne.</p>
+      </div>`}
+    <p class="hint" style="margin-top:20px">${esc(reel.note)}</p>
+    <p class="hint">Aucune donnée nominative ne vous est transmise — ni identité, ni
+    participation individuelle, ni résultat. Cette séparation est inscrite dans le
+    logiciel et vérifiée automatiquement.</p>`;
+});

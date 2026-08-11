@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Connexion — Prévention Santé</title>
+<link rel="stylesheet" href="../commun/charte.css?v=1">
+<style>
+/* ---------------------------------------------------------------------
+   Page de connexion. Elle ne charge aucune image distante et n'affiche
+   aucune donnée de santé : c'est la seule page qu'un visiteur non
+   identifié atteint.
+   --------------------------------------------------------------------- */
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:40px 20px}
+.boite{width:100%;max-width:440px}
+.tete{display:flex;align-items:center;gap:11px;margin-bottom:26px}
+.tete img{width:32px;height:32px;flex:0 0 32px;display:block}
+.tete b{font-size:16px;color:var(--ink);letter-spacing:-.01em}
+.tete span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)}
+.carte{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px 24px;
+  box-shadow:0 1px 2px rgba(22,50,79,.04)}
+h1{margin:0 0 6px;font-size:20px;letter-spacing:-.02em}
+.sous{margin:0 0 22px;font-size:13.5px;color:var(--ink-3);line-height:1.6}
+.onglets{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);padding:4px;border-radius:9px}
+.onglets button{flex:1;padding:8px 10px;font-size:13.5px;font-family:inherit;border:0;cursor:pointer;
+  background:transparent;color:var(--ink-3);border-radius:6px}
+.onglets button[aria-selected=true]{background:#fff;color:var(--pri);font-weight:600;
+  box-shadow:0 1px 2px rgba(22,50,79,.08)}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2);margin:14px 0 5px}
+input{width:100%;padding:10px 12px;font-size:14.5px;font-family:inherit;color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;background:#fff}
+input:focus{outline:2px solid var(--pri);outline-offset:-1px;border-color:var(--pri)}
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.aide{font-size:12px;color:var(--ink-4);margin-top:5px;line-height:1.5}
+button.principal{width:100%;margin-top:20px;padding:11px;font-size:15px;font-family:inherit;
+  font-weight:600;color:#fff;background:var(--pri);border:0;border-radius:9px;cursor:pointer}
+button.principal:hover{background:var(--pri-d,#1a5695)}
+button.principal:disabled{opacity:.6;cursor:progress}
+.msg{margin-top:16px;padding:11px 13px;border-radius:9px;font-size:13px;line-height:1.55;display:none}
+.msg.erreur{display:block;background:#fdf2f2;border:1px solid #f5c6c6;color:#8a2020}
+.msg.ok{display:block;background:var(--fait-l);border:1px solid var(--fait-ln);color:#0f5828}
+.pied{margin-top:18px;font-size:12px;color:var(--ink-4);line-height:1.6}
+.test{margin-top:20px;padding:12px 14px;background:var(--amber-bg);border:1px solid var(--amber-line);
+  border-radius:9px;font-size:12.5px;line-height:1.6;color:#6b4708}
+.test b{color:#5a3c06}
+.test code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;background:#fff;
+  padding:1px 5px;border-radius:4px;border:1px solid var(--amber-line)}
+.consent{margin:20px 0 4px;padding:15px 16px;background:var(--bg);border:1px solid var(--line);
+  border-radius:10px}
+.consent-t{margin:0 0 9px;font-size:12px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-4)}
+.consent-x{max-height:168px;overflow-y:auto;font-size:12.8px;line-height:1.62;
+  color:var(--ink-2);white-space:pre-line;background:#fff;border:1px solid var(--line);
+  border-radius:8px;padding:12px 13px}
+.consent-l{display:flex;align-items:flex-start;gap:9px;margin-top:13px;font-weight:400}
+.consent-l input{width:auto;margin-top:3px;flex:0 0 auto}
+.consent-l span{font-size:12.8px;line-height:1.55;color:var(--ink-2)}
+.codes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:16px 0 4px}
+.codes span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;
+  background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+  text-align:center;letter-spacing:.04em;color:var(--ink)}
+.codes span.utilise{opacity:.45;text-decoration:line-through}
+.secret{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;letter-spacing:.06em;
+  word-break:break-all;background:var(--bg);border:1px solid var(--line);border-radius:9px;
+  padding:13px 15px;margin:14px 0 4px;color:var(--ink)}
+.lien-oubli{display:block;margin-top:14px;font-size:12.5px;color:var(--pri);
+  background:none;border:0;padding:0;cursor:pointer;font-family:inherit;text-align:left}
+.lien-oubli:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="boite">
+
+  <div class="tete">
+    <img src="../commun/marque.svg" alt="">
+    <div><b>Prévention Santé</b><span>Espace sécurisé</span></div>
+  </div>
+
+  <div class="carte">
+    <div class="onglets" role="tablist">
+      <button role="tab" id="ong-connexion" aria-selected="true">Se connecter</button>
+      <button role="tab" id="ong-inscription" aria-selected="false">Créer un compte</button>
+    </div>
+
+    <!-- ================================================= connexion -->
+    <form id="f-connexion">
+      <h1>Se connecter</h1>
+      <p class="sous">Patient, médecin, secrétaire ou responsable d’entreprise : la même
+      adresse de connexion, et un espace différent selon votre rôle.</p>
+
+      <label for="c-courriel">Adresse électronique</label>
+      <input id="c-courriel" type="email" autocomplete="username" required>
+
+      <label for="c-mdp">Mot de passe</label>
+      <input id="c-mdp" type="password" autocomplete="current-password" required>
+
+      <button class="principal" type="submit">Se connecter</button>
+      <button type="button" class="lien-oubli" id="vers-oubli">J’ai oublié mon mot de passe</button>
+      <div class="msg" id="c-msg"></div>
+    </form>
+
+    <!-- =============================================== inscription -->
+    <form id="f-inscription" hidden>
+      <h1>Créer mon compte patient</h1>
+      <p class="sous">Votre compte vous appartient. Votre dossier ne devient visible d’un
+      médecin qu’une fois votre inscription confirmée par le centre.</p>
+
+      <div class="deux">
+        <div><label for="i-prenom">Prénom</label><input id="i-prenom" required autocomplete="given-name"></div>
+        <div><label for="i-nom">Nom</label><input id="i-nom" required autocomplete="family-name"></div>
+      </div>
+
+      <label for="i-courriel">Adresse électronique</label>
+      <input id="i-courriel" type="email" autocomplete="username" required>
+
+      <label for="i-naissance">Date de naissance</label>
+      <input id="i-naissance" type="date">
+
+      <label for="i-mdp">Mot de passe</label>
+      <input id="i-mdp" type="password" autocomplete="new-password" required minlength="12">
+      <p class="aide">Douze caractères au minimum. Une phrase dont vous vous souvenez protège
+      mieux qu’un mot court avec des symboles.</p>
+
+      <!-- Consentement explicite : article 9 du RGPD. Le texte vient du
+           serveur, pas de cette page, pour qu'il soit exactement celui qui
+           sera enregistré. -->
+      <div class="consent">
+        <p class="consent-t">Ce à quoi vous consentez</p>
+        <div class="consent-x" id="i-consent-texte">Chargement du texte…</div>
+        <label class="consent-l">
+          <input type="checkbox" id="i-consent" required>
+          <span>J’ai lu ce texte et j’y consens. Sans ce consentement, aucune donnée de
+          santé ne peut être enregistrée — et le compte ne peut pas être créé.</span>
+        </label>
+      </div>
+
+      <button class="principal" type="submit">Créer mon compte</button>
+      <div class="msg" id="i-msg"></div>
+    </form>
+
+    <!-- ============================================ second facteur -->
+    <form id="f-totp" hidden>
+      <h1>Code de vérification</h1>
+      <p class="sous">Votre compte donne accès aux dossiers de plusieurs personnes. Un mot de
+      passe seul ne suffit donc pas : saisissez le code à six chiffres de votre application
+      d’authentification.</p>
+
+      <label for="t-code">Code à six chiffres</label>
+      <input id="t-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}"
+             maxlength="6" required>
+      <p class="aide">Le code change toutes les trente secondes, et chaque code ne sert qu’une
+      fois. Si vous venez de l’utiliser, attendez le suivant.</p>
+
+      <button class="principal" type="submit">Valider</button>
+      <div class="msg" id="t-msg"></div>
+    </form>
+
+    <!-- ================================== configuration du second facteur -->
+    <form id="f-totp-config" hidden>
+      <h1>Activer la double vérification</h1>
+      <p class="sous">Votre rôle l’exige. Enregistrez la clé ci-dessous dans une application
+      d’authentification, puis confirmez avec le code qu’elle affiche.</p>
+
+      <div id="tc-secret" class="secret"></div>
+      <p class="aide">Cette clé ne sera plus affichée après cette étape. Toute application
+      compatible convient : elles suivent la même norme.</p>
+
+      <label for="tc-code">Code affiché par l’application</label>
+      <input id="tc-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}"
+             maxlength="6" required>
+
+      <button class="principal" type="submit">Activer</button>
+      <div class="msg" id="tc-msg"></div>
+    </form>
+
+    <!-- ======================================== codes de secours -->
+    <form id="f-secours" hidden>
+      <h1>Vos codes de secours</h1>
+      <p class="sous">Notez-les et rangez-les <b>ailleurs que sur votre téléphone</b>. Si vous
+      perdez votre application d’authentification, ils sont le seul moyen de vous reconnecter
+      sans intervention technique.</p>
+
+      <div id="s-liste" class="codes"></div>
+      <p class="aide">Chaque code ne sert qu’une fois. Ils ne seront plus jamais affichés :
+      si vous les perdez, il faudra en regénérer depuis votre espace.</p>
+
+      <label style="display:flex;align-items:flex-start;gap:9px;font-weight:400;margin-top:16px">
+        <input type="checkbox" id="s-vu" style="width:auto;margin-top:3px">
+        <span style="font-size:13.5px;color:var(--ink-2)">Je les ai notés et rangés en lieu sûr.</span>
+      </label>
+
+      <button class="principal" type="submit" id="s-continuer" disabled>Continuer</button>
+      <div class="msg" id="s-msg"></div>
+    </form>
+
+    <!-- ============================================ mot de passe oublié -->
+    <form id="f-oubli" hidden>
+      <h1>Mot de passe oublié</h1>
+      <p class="sous">Indiquez votre adresse. Si un compte existe, vous recevrez un lien valable
+      une heure, utilisable une seule fois.</p>
+
+      <label for="o-courriel">Adresse électronique</label>
+      <input id="o-courriel" type="email" autocomplete="username" required>
+
+      <button class="principal" type="submit">Envoyer le lien</button>
+      <div class="msg" id="o-msg"></div>
+    </form>
+
+    <!-- =========================================== nouveau mot de passe -->
+    <form id="f-reinit" hidden>
+      <h1>Choisir un nouveau mot de passe</h1>
+      <p class="sous">En validant, toutes les sessions ouvertes sur ce compte seront fermées,
+      y compris celles d’un éventuel tiers.</p>
+
+      <label for="r-mdp">Nouveau mot de passe</label>
+      <input id="r-mdp" type="password" autocomplete="new-password" required minlength="12">
+      <p class="aide">Douze caractères au minimum.</p>
+
+      <button class="principal" type="submit">Enregistrer</button>
+      <div class="msg" id="r-msg"></div>
+    </form>
+
+    <p class="pied">Vos réponses sont conservées sur un serveur agréé pour les données de santé.
+    Chaque consultation de votre dossier est enregistrée, et vous pouvez demander qui l’a ouvert.</p>
+  </div>
+
+  <div class="test">
+    <b>Environnement de test.</b> Aucune donnée réelle ne doit être saisie ici. La base est
+    temporaire et son contenu disparaît à l’arrêt du serveur.
+    <br>Comptes de démonstration : <code>medecin.a@test.fr</code> · <code>secretaire.a@test.fr</code>
+    · <code>drh.a@test.fr</code> — mot de passe <code>mot-de-passe-de-test</code>
+  </div>
+
+</div>
+
+<script src="../commun/api-client.js?v=1"></script>
+<script>
+/* ---------------------------------------------------------------------
+   Aucune logique métier ici : la page recueille, envoie, et affiche la
+   réponse du serveur. C'est le serveur qui décide, et lui seul.
+   --------------------------------------------------------------------- */
+(function () {
+  var fC = document.getElementById('f-connexion');
+  var fI = document.getElementById('f-inscription');
+  var oC = document.getElementById('ong-connexion');
+  var oI = document.getElementById('ong-inscription');
+
+  var fT = document.getElementById('f-totp');
+  var fTC = document.getElementById('f-totp-config');
+  var fS = document.getElementById('f-secours');
+  var fO = document.getElementById('f-oubli');
+  var fR = document.getElementById('f-reinit');
+  var onglets = document.querySelector('.onglets');
+  var TOUS = [fC, fI, fT, fTC, fS, fO, fR];
+
+  /* Un seul écran à la fois. Les onglets ne servent qu'aux deux premiers :
+     on ne propose pas de « créer un compte » à quelqu'un qui est en train
+     de valider un code. */
+  function montrer(form, avecOnglets) {
+    TOUS.forEach(function (f) { f.hidden = f !== form; });
+    onglets.hidden = !avecOnglets;
+    var premier = form.querySelector('input');
+    if (premier) premier.focus();
+  }
+  function onglet(versConnexion) {
+    montrer(versConnexion ? fC : fI, true);
+    oC.setAttribute('aria-selected', String(versConnexion));
+    oI.setAttribute('aria-selected', String(!versConnexion));
+  }
+  oC.onclick = function () { onglet(true); };
+  oI.onclick = function () { onglet(false); };
+  document.getElementById('vers-oubli').onclick = function () { montrer(fO, false); };
+
+  function afficher(id, texte, type) {
+    var e = document.getElementById(id);
+    e.textContent = texte;
+    e.className = 'msg ' + type;
+  }
+
+  /* Chaque rôle a son espace : on n'affiche pas au médecin l'écran du
+     patient, et réciproquement. */
+  var ACCUEIL = {
+    patient:    '/espace/',
+    medecin:    '/plateforme/',
+    secretaire: '/secretariat/',
+    employeur:  '/entreprise/',
+  };
+
+  function retour() {
+    return new URLSearchParams(location.search).get('retour');
+  }
+  function entrer(role) {
+    window.location.href = retour() || ACCUEIL[role] || '/';
+  }
+
+  /* --- second facteur : saisie du code ---------------------------------- */
+  fT.onsubmit = async function (e) {
+    e.preventDefault();
+    var b = fT.querySelector('button'); b.disabled = true;
+    afficher('t-msg', '', '');
+    try {
+      var r = await API.totpVerifier(document.getElementById('t-code').value.trim());
+      entrer(r.role);
+    } catch (err) {
+      afficher('t-msg', err.statut === 401
+        ? 'Code incorrect, ou déjà utilisé. Attendez le code suivant.'
+        : (err.message || 'Vérification impossible.'), 'erreur');
+      b.disabled = false;
+      document.getElementById('t-code').value = '';
+    }
+  };
+
+  /* --- second facteur : configuration ---------------------------------- */
+  async function preparerTotp() {
+    try {
+      var r = await API.totpPreparer();
+      document.getElementById('tc-secret').textContent = r.secret;
+      montrer(fTC, false);
+    } catch (err) {
+      /* Déjà configuré : c'est donc un code qu'il faut, pas une clé. */
+      if (err.statut === 409) { montrer(fT, false); return; }
+      afficher('c-msg', err.message || 'Préparation impossible.', 'erreur');
+    }
+  }
+
+  /* Après activation : on montre les codes de secours AVANT de laisser
+     entrer. C'est le seul moment où ils sont lisibles, et une personne qui
+     arrive directement sur son écran de travail ne les notera jamais. */
+  fTC.onsubmit = async function (e) {
+    e.preventDefault();
+    var b = fTC.querySelector('button'); b.disabled = true;
+    afficher('tc-msg', '', '');
+    try {
+      var res = await API.totpActiver(document.getElementById('tc-code').value.trim());
+      if (res.codesSecours && res.codesSecours.length) {
+        document.getElementById('s-liste').innerHTML =
+          res.codesSecours.map(function (c) { return '<span>' + c + '</span>'; }).join('');
+        montrer(fS, false);
+        return;
+      }
+      var moi = await API.moi();
+      entrer(moi ? moi.role : null);
+    } catch (err) {
+      afficher('tc-msg', err.statut === 401
+        ? 'Ce code ne correspond pas à la clé affichée. Vérifiez la saisie dans votre application.'
+        : (err.message || 'Activation impossible.'), 'erreur');
+      b.disabled = false;
+    }
+  };
+
+  /* --- codes de secours : on n'avance pas avant confirmation ------------ */
+  document.getElementById('s-vu').onchange = function () {
+    document.getElementById('s-continuer').disabled = !this.checked;
+  };
+  fS.onsubmit = async function (e) {
+    e.preventDefault();
+    var moi = await API.moi();
+    entrer(moi ? moi.role : null);
+  };
+
+  /* --- mot de passe oublié --------------------------------------------- */
+  fO.onsubmit = async function (e) {
+    e.preventDefault();
+    var b = fO.querySelector('button'); b.disabled = true;
+    try {
+      var r = await API.motDePasseOublie(document.getElementById('o-courriel').value.trim());
+      /* En développement, aucun courriel n'est envoyé : le lien est
+         affiché. En production il n'est pas renvoyé par le serveur. */
+      afficher('o-msg', r.note + (r.lienDeveloppement
+        ? ' — Environnement de test, aucun courriel n’est envoyé : ' + r.lienDeveloppement
+        : ''), 'ok');
+    } catch (err) {
+      afficher('o-msg', err.message || 'Demande impossible.', 'erreur');
+    }
+    b.disabled = false;
+  };
+
+  /* --- nouveau mot de passe -------------------------------------------- */
+  fR.onsubmit = async function (e) {
+    e.preventDefault();
+    var b = fR.querySelector('button'); b.disabled = true;
+    afficher('r-msg', '', '');
+    try {
+      var jeton = new URLSearchParams(location.search).get('reinit');
+      await API.reinitialiser(jeton, document.getElementById('r-mdp').value);
+      afficher('r-msg', 'Mot de passe enregistré. Vous pouvez vous connecter.', 'ok');
+      setTimeout(function () { window.location.href = '/connexion/'; }, 1800);
+    } catch (err) {
+      afficher('r-msg', err.message || 'Réinitialisation impossible.', 'erreur');
+      b.disabled = false;
+    }
+  };
+
+  fC.onsubmit = async function (e) {
+    e.preventDefault();
+    var bouton = fC.querySelector('button');
+    bouton.disabled = true;
+    afficher('c-msg', '', '');
+    try {
+      var r = await API.connexion(
+        document.getElementById('c-courriel').value.trim(),
+        document.getElementById('c-mdp').value);
+      if (r.secondFacteur === 'attendu') { montrer(fT, false); return; }
+      if (r.secondFacteur === 'a-configurer') { await preparerTotp(); return; }
+      entrer(r.role);
+    } catch (err) {
+      afficher('c-msg', err.statut === 401
+        ? 'Adresse ou mot de passe incorrect.'
+        : (err.message || 'Connexion impossible.'), 'erreur');
+      bouton.disabled = false;
+    }
+  };
+
+  fI.onsubmit = async function (e) {
+    e.preventDefault();
+    var bouton = fI.querySelector('button');
+    bouton.disabled = true;
+    afficher('i-msg', '', '');
+    try {
+      if (!document.getElementById('i-consent').checked) {
+        afficher('i-msg', 'Le consentement est nécessaire pour créer un compte.', 'erreur');
+        b.disabled = false;
+        return;
+      }
+      await API.inscription({
+        prenom: document.getElementById('i-prenom').value.trim(),
+        nom: document.getElementById('i-nom').value.trim(),
+        courriel: document.getElementById('i-courriel').value.trim(),
+        naissance: document.getElementById('i-naissance').value || null,
+        motDePasse: document.getElementById('i-mdp').value,
+        consentement: true,
+        versionConsentement: VERSION_CONSENTEMENT,
+      });
+      await API.connexion(document.getElementById('i-courriel').value.trim(),
+                          document.getElementById('i-mdp').value);
+      window.location.href = '/espace/';
+    } catch (err) {
+      afficher('i-msg', err.message || 'Création impossible.', 'erreur');
+      bouton.disabled = false;
+    }
+  };
+
+  /* Écran de départ : dicté par l'adresse, puis par l'état de la session.
+     Un lien de réinitialisation ouvre directement le choix du mot de
+     passe ; une session à demi authentifiée reprend là où elle en est. */
+  /* Le texte du consentement est chargé depuis le serveur : la page ne le
+     recopie pas, elle l'affiche. Impossible qu'ils divergent. */
+  var VERSION_CONSENTEMENT = null;
+  API.texteConsentement().then(function (r) {
+    VERSION_CONSENTEMENT = r.version;
+    document.getElementById('i-consent-texte').textContent = r.texte;
+  }).catch(function () {
+    document.getElementById('i-consent-texte').textContent =
+      'Le texte de consentement n’a pas pu être chargé. La création de compte est '
+      + 'impossible tant qu’il n’est pas lisible : on ne consent pas à un texte absent.';
+    document.getElementById('i-consent').disabled = true;
+  });
+
+  var p = new URLSearchParams(location.search);
+  if (p.get('reinit')) {
+    montrer(fR, false);
+  } else if (p.get('etape') === 'attendu') {
+    montrer(fT, false);
+  } else if (p.get('etape') === 'a-configurer') {
+    preparerTotp();
+  } else {
+    API.moi().then(function (c) {
+      if (!c) return;
+      if (c.secondFacteur === 'attendu') { montrer(fT, false); return; }
+      if (c.secondFacteur === 'a-configurer') { preparerTotp(); return; }
+      entrer(c.role);
+    }).catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>

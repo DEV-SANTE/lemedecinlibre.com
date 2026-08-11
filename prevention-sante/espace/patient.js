@@ -28,29 +28,113 @@ const CLE_COMPTE   = 'pv-sante-compte-v1';
 const PRIX_ANNUEL = 129;   /* provisoire — voir mention dans l'écran formule */
 
 /* =====================================================================
-   STOCKAGE — quatre points à remplacer à la migration HDS
+   STOCKAGE — BRANCHÉ SUR L'API
+   ---------------------------------------------------------------------
+   Ces fonctions avaient la même signature quand elles écrivaient dans le
+   navigateur. Elles servent maintenant un cache alimenté par le serveur.
+   Le reste de ce fichier n'a pas eu à changer : c'était l'intérêt de
+   n'avoir qu'un seul point d'accès aux données.
+
+   PLUS RIEN DE MÉDICAL N'EST ÉCRIT DANS LE NAVIGATEUR. Le cache vit en
+   mémoire, il disparaît en fermant l'onglet. Les écritures partent vers
+   le serveur, et le cache est ensuite rechargé depuis ce que le serveur
+   a réellement enregistré — jamais depuis ce qu'on croit avoir envoyé.
+
+   Les écritures sont lancées sans être attendues, parce que les écrans
+   appellent ces fonctions de façon synchrone. En cas d'échec, un bandeau
+   le dit : il ne faut pas qu'une personne croie ses réponses enregistrées
+   alors qu'elles ne le sont pas.
    ===================================================================== */
 const Db = {
-  lireCompte() {
-    try { const b = localStorage.getItem(CLE_COMPTE); return b ? JSON.parse(b) : null; }
-    catch (e) { return null; }
-  },
+  _compte: null,
+  _dossiers: [],
+
+  lireCompte() { return this._compte; },
+
   ecrireCompte(c) {
-    try { localStorage.setItem(CLE_COMPTE, JSON.stringify(c)); } catch (e) {}
+    /* L'identité vient du serveur. Ce qui est conservé ici est l'état de
+       navigation : quel dossier est ouvert, où en est le parcours. */
+    this._compte = c;
   },
+
   lireDossiers() {
-    try {
-      const b = localStorage.getItem(CLE_DOSSIERS);
-      return b ? JSON.parse(b) : { version: '0.1', mode: 'TEST', dossiers: [] };
-    } catch (e) { return { version: '0.1', mode: 'TEST', dossiers: [] }; }
+    return { version: '0.2', mode: 'SERVEUR', dossiers: this._dossiers };
   },
-  ecrireDossiers(d) {
-    try { localStorage.setItem(CLE_DOSSIERS, JSON.stringify(d)); } catch (e) {}
+
+  ecrireDossiers(base) {
+    this._dossiers = (base && base.dossiers) || [];
+    const courant = this._dossiers.find(
+      (x) => this._compte && x.id === this._compte.dossierId);
+    if (!courant) return;
+    const lignes = Adaptateur.reponsesVersAPI(courant.reponses);
+    if (!lignes.length) return;
+    API.enregistrerReponses(courant.id, lignes)
+      .then(() => Db.rafraichir())
+      .catch((e) => signalerEchec(e));
   },
+
   effacerCompte() {
-    try { localStorage.removeItem(CLE_COMPTE); } catch (e) {}
-  }
+    this._compte = null;
+    this._dossiers = [];
+    API.deconnexion().finally(() => { window.location.href = '/connexion/'; });
+  },
+
+  /* Écriture attendue, contrairement à ecrireDossiers() qui lance sans
+     attendre. Nécessaire avant de transmettre : on ne déclare pas un
+     dossier transmis si ses dernières réponses ne sont pas parties. */
+  async enregistrerMaintenant() {
+    const courant = this._dossiers.find(
+      (x) => this._compte && x.id === this._compte.dossierId);
+    if (!courant) throw new Error('aucun dossier ouvert');
+    const lignes = Adaptateur.reponsesVersAPI(courant.reponses);
+    if (lignes.length) await API.enregistrerReponses(courant.id, lignes);
+    await Db.rafraichir();
+    return lignes.length;
+  },
+
+  /* Transmission au médecin. C'est le SERVEUR qui change le statut : le
+     cache ne fait que le refléter ensuite. Auparavant ce code écrivait
+     « transmis » dans le cache local et affichait « vos réponses sont
+     transmises » — alors que le serveur n'en savait rien et que le
+     médecin ne pouvait donc pas rendre d'avis. */
+  async transmettre() {
+    const id = this._compte && this._compte.dossierId;
+    if (!id) throw new Error('aucun dossier ouvert');
+    await Db.enregistrerMaintenant();
+    await API.transmettre(id);
+    await Db.rafraichir();
+    const apres = this._dossiers.find((x) => x.id === id);
+    /* Vérification, et non confiance : on relit le statut renvoyé par le
+       serveur avant d'annoncer quoi que ce soit à la personne. */
+    if (!apres || apres.statut === 'brouillon') {
+      throw new Error('le serveur n’a pas confirmé la transmission');
+    }
+    return apres;
+  },
+
+  /* Recharge le cache depuis le serveur. */
+  async rafraichir() {
+    const dossiers = await API.charger();
+    Db._dossiers = dossiers.map(Adaptateur.versEcran);
+    return Db._dossiers;
+  },
 };
+
+/* Un échec d'enregistrement ne doit pas être silencieux. */
+function signalerEchec(e) {
+  let bandeau = document.getElementById('echec-reseau');
+  if (!bandeau) {
+    bandeau = document.createElement('div');
+    bandeau.id = 'echec-reseau';
+    bandeau.setAttribute('role', 'alert');
+    bandeau.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99;padding:12px 18px;'
+      + 'background:#fdf2f2;border-top:2px solid #d64545;color:#8a2020;font:14px/1.5 inherit';
+    document.body.appendChild(bandeau);
+  }
+  bandeau.textContent = 'Vos dernières réponses n’ont pas pu être enregistrées : '
+    + (e && e.message ? e.message : 'serveur injoignable')
+    + ' — ne fermez pas cette page, elles seront renvoyées au prochain enregistrement.';
+}
 
 /* ===================================================================== */
 let compte = null;
@@ -513,13 +597,45 @@ function vueQuestionnaire() {
     </div>`;
 
   $('#b-prec').onclick = () => { collecter(d); etapeQ--; vueQuestionnaire(); window.scrollTo(0, 0); };
-  $('#b-suiv').onclick = () => {
+  $('#b-suiv').onclick = async () => {
     collecter(d);
-    etapeQ++;
-    if (etapeQ >= mods.length) {
-      d.statut = 'transmis'; enregistrerDossier(d); vueFin();
-    } else { vueQuestionnaire(); }
-    window.scrollTo(0, 0);
+
+    /* Pas encore la fin : on avance simplement. */
+    if (etapeQ < mods.length - 1) {
+      etapeQ++;
+      vueQuestionnaire();
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    /* Dernière étape : la transmission est une action, pas un changement
+       d'affichage. On attend la confirmation du serveur avant de dire
+       quoi que ce soit — et si elle n'arrive pas, on le dit aussi. */
+    const bouton = $('#b-suiv');
+    const texteInitial = bouton.innerHTML;
+    bouton.disabled = true;
+    bouton.textContent = 'Transmission en cours…';
+    try {
+      await Db.transmettre();
+      etapeQ = mods.length;
+      vueFin();
+      window.scrollTo(0, 0);
+    } catch (e) {
+      bouton.disabled = false;
+      bouton.innerHTML = texteInitial;
+      let zone = document.getElementById('echec-transmission');
+      if (!zone) {
+        zone = document.createElement('div');
+        zone.id = 'echec-transmission';
+        zone.setAttribute('role', 'alert');
+        zone.style.cssText = 'margin-top:16px;padding:12px 14px;border-radius:9px;'
+          + 'background:#fdf2f2;border:1px solid #f5c6c6;color:#8a2020;font-size:13.5px;line-height:1.55';
+        bouton.parentNode.appendChild(zone);
+      }
+      zone.textContent = 'Vos réponses n’ont pas pu être transmises : '
+        + (e && e.message ? e.message : 'serveur injoignable')
+        + '. Elles sont conservées, rien n’est perdu. Réessayez dans un instant.';
+    }
   };
   $('#fq').addEventListener('change', () => {
     collecter(d);
@@ -600,14 +716,23 @@ function collecter(d) {
 
 function vueFin() {
   const d = dossierCourant();
+  /* Le titre reflète le statut que le serveur a renvoyé. Si la
+     transmission n'a pas abouti, cet écran ne doit pas prétendre le
+     contraire : c'est exactement ce qu'il faisait avant. */
+  const transmis = !!d && d.statut !== 'brouillon';
   app().innerHTML = `
     <div class="card">
       <div class="qbar"><i style="width:100%"></i></div>
-      <p class="eyebrow" style="margin-top:22px">Terminé</p>
-      <h1>Merci, vos réponses sont transmises.</h1>
+      <p class="eyebrow" style="margin-top:22px">${transmis ? 'Transmis' : 'Enregistré'}</p>
+      <h1>${transmis ? 'Merci, vos réponses sont transmises.'
+                     : 'Vos réponses sont enregistrées, mais pas encore transmises.'}</h1>
       <p class="lede">
-        Le médecin qui vous recevra en prendra connaissance avant votre visite. Il examinera
-        vos réponses, vous interrogera, et décidera avec vous de ce qui est utile.
+        ${transmis
+          ? 'Le médecin qui vous recevra en prendra connaissance avant votre visite. Il examinera '
+            + 'vos réponses, vous interrogera, et décidera avec vous de ce qui est utile.'
+          : 'Rien n’est perdu : tout ce que vous avez écrit est conservé. La transmission au '
+            + 'médecin n’a pas abouti — revenez sur la dernière étape du questionnaire pour '
+            + 'réessayer.'}
       </p>
 
       <div class="avis">
@@ -642,8 +767,229 @@ const ONGLETS_ESPACE = [
   { id: 'rendezvous', n: 'Mon rendez-vous', f: 'rendezvous' },
   { id: 'devis',      n: 'Mes devis',       f: 'devis' },
   { id: 'documents',  n: 'Mes documents',   f: 'documents' },
-  { id: 'factures',   n: 'Mes factures',    f: 'factures' }
+  { id: 'factures',   n: 'Mes factures',    f: 'factures' },
+  /* « Qui a vu mon dossier » n'est pas une fonctionnalité de confort :
+     c'est le droit d'accès aux traces, et il n'a de valeur que s'il est
+     visible sans avoir à le demander. */
+  { id: 'acces',      n: 'Qui a vu mon dossier', f: 'acces' },
+  { id: 'droits',     n: 'Mes données et mes droits', f: 'droits' }
 ];
+
+/* =====================================================================
+   MES DONNÉES ET MES DROITS
+   ---------------------------------------------------------------------
+   Trois choses au même endroit : l'état du consentement, la copie des
+   données, et l'effacement.
+
+   Elles sont réunies parce qu'elles se répondent. Retirer son
+   consentement et demander l'effacement sont deux gestes différents, et
+   les présenter séparément laisserait croire que le premier supprime —
+   ce qui ferait perdre ses données à quelqu'un qui voulait seulement
+   suspendre. L'écran le dit explicitement.
+
+   L'effacement est présenté avec sa vraie portée, y compris ce qu'il ne
+   peut pas faire : un dossier médical est soumis à des obligations de
+   conservation. Annoncer une suppression totale serait plus simple, et
+   faux.
+   ===================================================================== */
+async function vueDroits() {
+  app().innerHTML = `
+    <div class="card">
+      <p class="eyebrow">Vos droits</p>
+      <h1>Mes données et mes droits</h1>
+      <p class="lede">Vous pouvez à tout moment obtenir une copie de vos données, retirer
+      votre consentement, ou demander l’effacement de votre compte.</p>
+      <div id="d-consent"><p class="hint">Chargement…</p></div>
+
+      <h2 style="font-size:16px;margin-top:30px">Obtenir une copie de mes données</h2>
+      <p style="font-size:13.5px;color:var(--ink-3)">Un fichier contenant vos réponses, vos
+      résultats, les avis du médecin, l’historique de vos corrections et la liste des accès
+      à votre dossier. Aucune interprétation n’y est ajoutée.</p>
+      <div class="acts"><button class="btn b-p" id="b-export">Télécharger mes données</button></div>
+      <div id="d-export"></div>
+
+      <h2 style="font-size:16px;margin-top:30px">Effacer mon compte</h2>
+      <div class="avis" style="background:#fdf2f2;border-color:#f5c6c6">
+        <span><b>Ce que cela fait, et ce que cela ne fait pas.</b> Votre compte, votre mot de
+        passe et votre identité sont supprimés : vous ne pourrez plus vous connecter.
+        En revanche, vos données médicales sont conservées sous une forme dissociée de votre
+        identité, parce qu’un dossier médical est soumis à des obligations légales de
+        conservation. Pour aller plus loin, adressez-vous au centre.</span>
+      </div>
+      <div class="acts"><button class="btn b-d" id="b-effacer">Effacer mon compte</button></div>
+      <div id="d-effacer"></div>
+    </div>`;
+
+  /* --- consentement */
+  try {
+    const c = await API.monConsentement();
+    const zone = document.getElementById('d-consent');
+    if (c.donne && c.aJour) {
+      zone.innerHTML = '<div class="avis" style="background:var(--fait-l);border-color:var(--fait-ln)">'
+        + '<span><b>Consentement donné</b> le ' + esc(jolieDateHeure(c.donneLe))
+        + ' (version ' + esc(c.version) + ').</span></div>'
+        + '<div class="acts"><button class="btn b-g" id="b-retirer">Retirer mon consentement</button></div>'
+        + '<p class="hint">Retirer votre consentement arrête tout nouvel enregistrement. '
+        + 'Cela ne supprime pas vos données existantes : c’est l’effacement, plus bas, '
+        + 'qui s’en charge.</p><div id="d-retrait"></div>';
+      document.getElementById('b-retirer').onclick = async () => {
+        if (!window.confirm('Retirer votre consentement ? Vos données ne seront pas supprimées.')) return;
+        try {
+          const r = await API.retirerConsentement();
+          document.getElementById('d-retrait').innerHTML =
+            '<div class="avis"><span>' + esc(r.note) + '</span></div>';
+        } catch (e) {
+          document.getElementById('d-retrait').innerHTML =
+            '<p class="hint">Retrait impossible : ' + esc(e.message) + '</p>';
+        }
+      };
+    } else if (c.donne && !c.aJour) {
+      zone.innerHTML = '<div class="avis" style="background:var(--amber-bg);border-color:var(--amber-line)">'
+        + '<span><b>Le texte a changé depuis votre accord.</b> Vous avez consenti à la '
+        + 'version ' + esc(c.version) + ' ; la version en cours est '
+        + esc(c.versionEnCours) + '. Relisez-la et confirmez.</span></div>'
+        + (c.texte ? '<pre class="hint" style="white-space:pre-line;max-height:200px;'
+            + 'overflow:auto;background:var(--bg);padding:13px;border-radius:9px">'
+            + esc(c.texte) + '</pre>' : '')
+        + '<div class="acts"><button class="btn b-p" id="b-reconsentir">Je consens à cette version</button></div>';
+      document.getElementById('b-reconsentir').onclick = async () => {
+        /* Passe par le client d'API comme tout le reste : aucune page
+           n'appelle fetch() directement, sinon la règle ne vaut rien. */
+        try {
+          await API.donnerConsentement();
+          vueDroits();
+        } catch (e) {
+          document.getElementById('d-consent').insertAdjacentHTML('beforeend',
+            '<p class="hint">Enregistrement impossible : ' + esc(e.message) + '</p>');
+        }
+      };
+    } else {
+      zone.innerHTML = '<div class="avis" style="background:#fdf2f2;border-color:#f5c6c6">'
+        + '<span><b>Aucun consentement en cours'
+        + (c.retireLe ? ', retiré le ' + esc(jolieDateHeure(c.retireLe)) : '')
+        + '.</b> Aucune nouvelle donnée n’est enregistrée.</span></div>';
+    }
+  } catch (e) {
+    document.getElementById('d-consent').innerHTML =
+      '<p class="hint">État du consentement indisponible : ' + esc(e.message) + '</p>';
+  }
+
+  /* --- export : un fichier téléchargé, pas un affichage. Ces données ne
+         doivent pas rester à l'écran d'un poste partagé. */
+  document.getElementById('b-export').onclick = async () => {
+    const b = document.getElementById('b-export');
+    b.disabled = true;
+    try {
+      const d = await API.mesDonnees();
+      const blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mes-donnees-prevention-' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      document.getElementById('d-export').innerHTML =
+        '<p class="hint">Fichier téléchargé. Il contient des données de santé : '
+        + 'rangez-le comme tel.</p>';
+    } catch (e) {
+      document.getElementById('d-export').innerHTML =
+        '<p class="hint">Export impossible : ' + esc(e.message) + '</p>';
+    }
+    b.disabled = false;
+  };
+
+  /* --- effacement : double confirmation, dont une saisie explicite. */
+  document.getElementById('b-effacer').onclick = async () => {
+    if (!window.confirm('Effacer votre compte ? Vous ne pourrez plus vous connecter.')) return;
+    const saisi = window.prompt('Pour confirmer, écrivez EFFACER en majuscules :');
+    if (saisi !== 'EFFACER') {
+      document.getElementById('d-effacer').innerHTML =
+        '<p class="hint">Confirmation incorrecte, rien n’a été supprimé.</p>';
+      return;
+    }
+    try {
+      const r = await API.effacerMonCompte();
+      document.body.innerHTML = '<div style="max-width:62ch;margin:70px auto;padding:0 20px;'
+        + 'font:15px/1.65 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#16324f">'
+        + '<h1 style="font-size:21px">Votre compte est supprimé</h1><p>' + esc(r.portee)
+        + '.</p><p>' + esc(r.note) + '</p></div>';
+    } catch (e) {
+      document.getElementById('d-effacer').innerHTML =
+        '<p class="hint">Effacement impossible : ' + esc(e.message) + '</p>';
+    }
+  };
+}
+
+/* =====================================================================
+   QUI A CONSULTÉ MON DOSSIER
+   ---------------------------------------------------------------------
+   Le journal des accès, tel que le serveur le tient. Chaque ouverture du
+   dossier par un soignant y figure, avec la date et le nom.
+
+   Deux choix explicites. D'abord la liste n'est pas filtrée ni résumée :
+   on montre tout ce que le serveur renvoie, dans l'ordre, parce qu'un
+   journal trié par ce que le logiciel juge intéressant n'est plus un
+   journal. Ensuite aucune couleur, aucune alerte : un accès n'est ni
+   normal ni suspect, c'est un fait daté, et c'est à la personne d'en
+   juger — au besoin en le demandant à son médecin.
+   ===================================================================== */
+async function vueAcces() {
+  const d = dossierCourant();
+  app().innerHTML = `
+    <div class="card">
+      <p class="eyebrow">Vos droits</p>
+      <h1>Qui a consulté mon dossier</h1>
+      <p class="lede">Chaque fois qu’un soignant ouvre votre dossier, la plateforme
+      l’enregistre. Voici ces traces, telles qu’elles sont conservées. Vous pouvez demander
+      des explications sur n’importe laquelle d’entre elles.</p>
+      <div id="acces-liste"><p class="hint">Chargement…</p></div>
+    </div>`;
+
+  if (!d) {
+    document.getElementById('acces-liste').innerHTML =
+      '<p class="hint">Aucun dossier ouvert pour le moment.</p>';
+    return;
+  }
+  try {
+    const r = await API.journalDuDossier(d.id);
+    const zone = document.getElementById('acces-liste');
+    if (!r.acces.length) {
+      zone.innerHTML = '<p class="hint">Personne n’a encore ouvert votre dossier.</p>';
+      return;
+    }
+    const libelles = {
+      lecture_dossier: 'a ouvert votre dossier',
+      ecriture_avis: 'a écrit un avis',
+      pose_marque: 'a annoté une valeur',
+      saisie_resultats: 'a saisi des résultats de laboratoire',
+      ecriture_reponses: 'vous avez enregistré vos réponses',
+      transmission: 'vous avez transmis votre dossier',
+      creation_dossier: 'votre dossier a été ouvert',
+    };
+    const roles = { medecin: 'médecin', secretaire: 'secrétariat', patient: 'vous' };
+    zone.innerHTML = '<table class="cv" style="margin-top:18px">'
+      + '<thead><tr><th>Quand</th><th>Qui</th><th>Quoi</th></tr></thead><tbody>'
+      + r.acces.map((a) => `<tr>
+          <td class="cv-d">${esc(jolieDateHeure(a.quand))}</td>
+          <td>${esc(a.nom_affiche || 'vous')}${a.role
+              ? ' <span class="hint">(' + esc(roles[a.role] || a.role) + ')</span>' : ''}</td>
+          <td>${esc(libelles[a.action] || a.action)}</td>
+        </tr>`).join('') + '</tbody></table>'
+      + '<p class="hint" style="margin-top:14px">Ces traces sont conservées pour votre '
+      + 'protection : elles permettent de savoir qui a eu accès à quoi. Elles ne contiennent '
+      + 'aucune donnée de santé.</p>';
+  } catch (e) {
+    document.getElementById('acces-liste').innerHTML =
+      '<p class="hint">Journal indisponible : ' + esc(e.message || 'serveur injoignable') + '.</p>';
+  }
+}
+
+function jolieDateHeure(iso) {
+  if (!iso) return '—';
+  const x = new Date(iso);
+  return isNaN(x) ? '—' : x.toLocaleString('fr-FR',
+    { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
 
 /* Contexte transmis aux modules : ils ne touchent ni au stockage ni au
    routage directement, ce qui garde la migration HDS localisée. */
@@ -686,6 +1032,8 @@ function router() {
   rendreProgression();
   rendreEntete();
   const e = etapeCourante();
+  if (e === 'acces') return vueAcces();
+  if (e === 'droits') return vueDroits();
   if (ONGLETS_ESPACE.some(o => o.id === e)) return vueEspace(e);
   switch (e) {
     case 'inscription':   return vueInscription();
@@ -697,4 +1045,51 @@ function router() {
 }
 
 window.addEventListener('hashchange', () => { router(); window.scrollTo(0, 0); });
-window.addEventListener('DOMContentLoaded', router);
+
+/* =====================================================================
+   AMORÇAGE
+   ---------------------------------------------------------------------
+   Avant d'afficher quoi que ce soit : vérifier la session auprès du
+   serveur, puis charger les dossiers. Aucun écran n'est rendu avant,
+   pour ne pas montrer un espace vide à quelqu'un qui a bien un dossier,
+   ni un dossier à quelqu'un qui n'est plus connecté.
+   ===================================================================== */
+window.addEventListener('DOMContentLoaded', async () => {
+ try {
+  const c = await API.exigerSession(['patient']);
+  if (!c) return;                       // exigerSession a déjà redirigé
+
+  await Db.rafraichir();
+
+  /* Un patient a toujours un dossier ouvert : s'il n'en a pas encore, on
+     le crée. C'est le serveur qui décide de son identifiant. */
+  let ouvert = Db._dossiers.find((d) => d.statut === 'brouillon');
+  if (!ouvert) {
+    const id = await API.creerDossier();
+    await Db.rafraichir();
+    ouvert = Db._dossiers.find((d) => d.id === id) || Db._dossiers[0];
+  }
+
+  const identite = (ouvert && ouvert.identite) || {};
+  Db.ecrireCompte({
+    nom: identite.nom || '', prenom: identite.prenom || '',
+    courriel: c.courriel || '', role: c.role,
+    dossierId: ouvert ? ouvert.id : null,
+    /* Le parcours d'abonnement n'est pas encore branché : on entre
+       directement dans le questionnaire, ce que le serveur autorise. */
+    formule: 'pilote', paye: true,
+  });
+
+  router();
+ } catch (e) {
+  /* Si l'amorçage échoue, la page resterait blanche sans explication.
+     Mieux vaut une phrase compréhensible qu'un écran vide : la personne
+     doit savoir que rien n'a été perdu et qu'il faut réessayer. */
+  document.body.innerHTML = '<div style="max-width:60ch;margin:60px auto;padding:0 20px;'
+    + 'font:15px/1.65 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#16324f">'
+    + '<h1 style="font-size:21px">Espace momentanément indisponible</h1>'
+    + '<p>Votre espace n’a pas pu être chargé : ' + (e && e.message ? e.message : 'serveur injoignable')
+    + '.</p><p>Aucune de vos réponses n’a été perdue. Réessayez dans un instant, '
+    + 'ou <a href="/connexion/">reconnectez-vous</a>.</p></div>';
+ }
+});

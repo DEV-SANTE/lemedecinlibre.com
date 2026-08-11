@@ -30,58 +30,11 @@
 
 'use strict';
 
-/* =====================================================================
-   DONNÉES DE TEST — partenaires
-   Noms fictifs. En production, cette liste vient de la base de
-   référencement, avec les mêmes critères objectifs affichés.
-   ===================================================================== */
-const CENTRES_TEST = [
-  { id: 'C-A', nom: 'Centre de santé A (fictif)', ville: 'Paris 12e', gare: false,
-    horaires: '7h30 – 20h00, samedi matin', groupe: true,
-    plateau: ['Consultation', 'Prélèvements', 'Exploration respiratoire', 'Exploration cardiaque'],
-    delai: '48 h' },
-  { id: 'C-B', nom: 'Centre de santé B (fictif)', ville: 'Paris — quartier de gare', gare: true,
-    horaires: '6h45 – 21h00, samedi', groupe: true,
-    plateau: ['Consultation', 'Prélèvements', 'Exploration respiratoire', 'Exploration cardiaque', 'Dermatoscopie'],
-    delai: '24 h' },
-  { id: 'C-C', nom: 'Centre de santé C (fictif, hors groupe)', ville: 'Banlieue est', gare: false,
-    horaires: '8h30 – 18h30', groupe: false,
-    plateau: ['Consultation', 'Prélèvements'],
-    delai: '5 jours' },
-  { id: 'C-D', nom: 'Centre de santé D (fictif, hors groupe)', ville: 'Banlieue ouest', gare: false,
-    horaires: '8h00 – 19h00, samedi matin', groupe: false,
-    plateau: ['Consultation', 'Prélèvements', 'Exploration cardiaque'],
-    delai: '72 h' }
-];
 
-const LABOS_TEST = [
-  { id: 'L-1', nom: 'Laboratoire 1 (fictif)', groupe: true,
-    accreditation: 'Accréditation en cours de vérification',
-    coImplante: true, resultat: 'Le jour même pour le socle',
-    horaires: '7h00 – 19h00' },
-  { id: 'L-2', nom: 'Laboratoire 2 (fictif, hors groupe)', groupe: false,
-    accreditation: 'Accréditation en cours de vérification',
-    coImplante: false, resultat: 'Sous 24 à 48 h',
-    horaires: '7h30 – 18h00' },
-  { id: 'L-3', nom: 'Laboratoire 3 (fictif, hors groupe)', groupe: false,
-    accreditation: 'Accréditation en cours de vérification',
-    coImplante: false, resultat: 'Sous 24 h',
-    horaires: '7h00 – 20h00, samedi' }
-];
 
-/* Tri neutre, imposé : ordre alphabétique du libellé.
-   Aucun tri par appartenance au groupe, aucun tri par « pertinence ». */
-function triNeutre(liste) {
-  return liste.slice().sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
-}
 
-const CRENEAUX_TEST = [
-  'Lundi 8h15', 'Lundi 12h30', 'Lundi 18h45',
-  'Mardi 7h30', 'Mardi 13h00', 'Mardi 19h15',
-  'Mercredi 8h00', 'Mercredi 17h30',
-  'Jeudi 7h45', 'Jeudi 12h15', 'Jeudi 18h30',
-  'Vendredi 8h30', 'Vendredi 13h15'
-];
+
+
 
 /* =====================================================================
    M6 — Devis de test proposés par le médecin
@@ -110,16 +63,7 @@ function devisTest() {
    M4 — Documents de test
    Affichage brut : aucune annotation, aucune couleur, aucun signalement.
    ===================================================================== */
-function documentsTest() {
-  return [
-    { id: 'DOC-1', date: '2026-07-20T09:12:00.000Z', type: 'Compte rendu',
-      titre: 'Compte rendu de consultation de prévention', auteur: 'Médecin (fictif)', taille: '2 pages' },
-    { id: 'DOC-2', date: '2026-07-20T11:40:00.000Z', type: 'Résultats',
-      titre: 'Résultats d’analyses — socle', auteur: 'Laboratoire (fictif)', taille: '1 page' },
-    { id: 'DOC-3', date: '2025-06-14T10:05:00.000Z', type: 'Résultats',
-      titre: 'Résultats d’analyses — socle (année précédente)', auteur: 'Laboratoire (fictif)', taille: '1 page' }
-  ];
-}
+
 
 /* Historique d'un paramètre : valeurs brutes dans le temps.
    Aucune borne de normalité n'est affichée, aucune valeur n'est
@@ -201,98 +145,103 @@ const Modules = {};
 /* ---------------------------------------------------------------------
    M5 — RENDEZ-VOUS
 ------------------------------------------------------------------------ */
-Modules.rendezvous = function (ctx) {
-  const c = ctx.compte;
-  const rdv = c.rdv || {};
-  const centres = triNeutre(CENTRES_TEST);
-  const labos = triNeutre(LABOS_TEST);
+Modules.rendezvous = async function (ctx) {
+  /* ===================================================================
+     BRANCHÉ SUR LE SERVEUR — les créneaux affichés existent en base,
+     publiés par le secrétariat. Les centres et créneaux de test qui
+     vivaient ici ont été retirés : un écran qui propose des rendez-vous
+     imaginaires est pire qu'un écran vide, parce qu'on peut les choisir.
 
+     Ce que l'écran ne fait toujours pas : suggérer. Les créneaux sont
+     listés par date, tous les centres confondus, sans tri « adapté à
+     votre profil » — un tri déduit du dossier serait une orientation.
+     =================================================================== */
   ctx.render(`
     <div class="card">
       <p class="eyebrow">Mon parcours</p>
       <h1>Prendre rendez-vous</h1>
-      <p class="lede">Vous choisissez librement le centre où vous serez reçu et le
-      laboratoire qui réalisera vos analyses. Aucun n’est présélectionné.</p>
-
-      <div class="avis">
-        ${ctx.ic('i-info')}
-        <span>La liste est présentée par ordre alphabétique. Elle comprend des partenaires
-        qui n’appartiennent pas au même groupe que la plateforme, signalés comme tels. Vous
-        pouvez changer d’avis à tout moment avant votre visite.</span>
-      </div>
-
-      <h2 style="margin-top:34px">1. Le centre où vous serez reçu</h2>
-      <div class="pay" style="margin-top:16px">
-        ${centres.map(x => `
-          <label class="payopt">
-            <input type="radio" name="centre" value="${ctx.esc(x.id)}" ${rdv.centre === x.id ? 'checked' : ''}>
-            <span style="flex:1">
-              <b>${ctx.esc(x.nom)}</b>
-              <span>${ctx.esc(x.ville)}${x.gare ? ' · à proximité d’une gare' : ''}
-              ${x.groupe ? '' : ' · <em style="font-style:normal;color:var(--pri-d);font-weight:620">partenaire indépendant</em>'}</span>
-              <span style="display:block;margin-top:8px;font-size:13.4px;color:var(--ink-4)">
-                Horaires ${ctx.esc(x.horaires)} · restitution sous ${ctx.esc(x.delai)}<br>
-                Sur place : ${x.plateau.map(p => ctx.esc(p)).join(' · ')}
-              </span>
-            </span>
-          </label>`).join('')}
-      </div>
-
-      <h2 style="margin-top:34px">2. Le laboratoire qui réalisera vos analyses</h2>
-      <p class="hint" style="margin-bottom:16px;max-width:62ch">Ce choix vous appartient
-      entièrement et n’a aucune incidence sur le prix de votre abonnement ni sur votre prise
-      en charge.</p>
-      <div class="pay">
-        ${labos.map(x => `
-          <label class="payopt">
-            <input type="radio" name="labo" value="${ctx.esc(x.id)}" ${rdv.labo === x.id ? 'checked' : ''}>
-            <span style="flex:1">
-              <b>${ctx.esc(x.nom)}</b>
-              <span>${x.groupe ? '' : '<em style="font-style:normal;color:var(--pri-d);font-weight:620">partenaire indépendant</em> · '}${ctx.esc(x.resultat)}</span>
-              <span style="display:block;margin-top:8px;font-size:13.4px;color:var(--ink-4)">
-                ${x.coImplante ? 'Prélèvement possible dans le centre de consultation' : 'Prélèvement dans un site du laboratoire'}
-                · horaires ${ctx.esc(x.horaires)}<br>${ctx.esc(x.accreditation)}
-              </span>
-            </span>
-          </label>`).join('')}
-      </div>
-
-      <h2 style="margin-top:34px">3. Le créneau</h2>
-      <div class="pay" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));display:grid;gap:10px;margin-top:16px">
-        ${CRENEAUX_TEST.map(x => `
-          <label class="payopt" style="padding:13px 15px">
-            <input type="radio" name="creneau" value="${ctx.esc(x)}" ${rdv.creneau === x ? 'checked' : ''}>
-            <span><b style="font-size:14.6px">${ctx.esc(x)}</b></span>
-          </label>`).join('')}
-      </div>
-
-      <div class="avis" style="margin-top:30px">
-        ${ctx.ic('i-calendar')}
-        <span><b>Préparation.</b> Venez à jeun si le médecin l’a indiqué. Apportez votre
-        carte Vitale, votre attestation de complémentaire, votre carnet de vaccination et
-        vos derniers résultats d’analyses si vous les avez.</span>
-      </div>
-
-      <p class="err" id="err-rdv" style="display:none"></p>
-
-      <div class="acts">
-        <button class="btn b-p" id="b-rdv">Confirmer mon rendez-vous</button>
-        <span class="note" id="note-rdv">${rdv.creneau ? 'Rendez-vous enregistré : ' + ctx.esc(rdv.creneau) : ''}</span>
-      </div>
+      <p class="lede">Vous choisissez librement votre créneau et le centre où vous serez
+      reçu. Aucun n’est présélectionné, aucun ne vous est recommandé.</p>
+      <div id="rdv-miens"><p class="hint">Chargement…</p></div>
+      <h2 style="margin-top:30px">Créneaux disponibles</h2>
+      <div id="rdv-libres"><p class="hint">Chargement…</p></div>
     </div>`);
 
-  document.getElementById('b-rdv').onclick = () => {
-    const g = n => (document.querySelector('input[name="' + n + '"]:checked') || {}).value || null;
-    const e = document.getElementById('err-rdv');
-    const centre = g('centre'), labo = g('labo'), creneau = g('creneau');
-    if (!centre) { e.textContent = 'Choisissez le centre où vous souhaitez être reçu.'; e.style.display = 'block'; return; }
-    if (!labo) { e.textContent = 'Choisissez le laboratoire qui réalisera vos analyses.'; e.style.display = 'block'; return; }
-    if (!creneau) { e.textContent = 'Choisissez un créneau.'; e.style.display = 'block'; return; }
-    e.style.display = 'none';
-    c.rdv = { centre: centre, labo: labo, creneau: creneau, date: new Date().toISOString() };
-    ctx.sauverCompte();
-    Modules.rendezvous(ctx);
+  const jolie = (iso) => new Date(iso).toLocaleString('fr-FR',
+    { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+
+  const rafraichir = async () => {
+    /* Mes rendez-vous d'abord : c'est ce qu'on vient vérifier le plus. */
+    try {
+      const miens = await API.mesRendezvous();
+      const zone = document.getElementById('rdv-miens');
+      if (!miens.rendezvous.length) {
+        zone.innerHTML = '';
+      } else {
+        const libelles = { demande: 'demandé — en attente de confirmation du centre',
+                           confirme: 'confirmé', annule: 'annulé' };
+        zone.innerHTML = '<h2 style="margin-top:26px">Mes rendez-vous</h2>'
+          + miens.rendezvous.map((r) => `
+            <div class="avis" style="${r.statut === 'confirme'
+              ? 'background:var(--fait-l);border-color:var(--fait-ln)' : ''}">
+              <span><b>${ctx.esc(jolie(r.debut))}</b> · ${ctx.esc(r.centre)} ·
+              ${ctx.esc(libelles[r.statut] || r.statut)}
+              ${r.statut !== 'annule' ? `<button class="btn" data-annuler="${ctx.esc(r.id)}"
+                style="margin-left:12px;padding:4px 10px;font-size:12.5px">Annuler</button>` : ''}
+              </span>
+            </div>`).join('');
+        zone.querySelectorAll('[data-annuler]').forEach((b) => {
+          b.onclick = async () => {
+            if (!window.confirm('Annuler ce rendez-vous ?')) return;
+            try { await API.annulerRendezvous(b.dataset.annuler); rafraichir(); }
+            catch (e) { window.alert('Annulation impossible : ' + (e.message || '')); }
+          };
+        });
+      }
+    } catch (e) {
+      document.getElementById('rdv-miens').innerHTML =
+        '<p class="hint">Rendez-vous indisponibles : ' + ctx.esc(e.message || '') + '</p>';
+    }
+
+    /* Les créneaux libres, par date. */
+    try {
+      const libres = await API.creneauxLibres();
+      const zone = document.getElementById('rdv-libres');
+      if (!libres.creneaux.length) {
+        zone.innerHTML = '<p class="hint">Aucun créneau publié pour le moment. Le '
+          + 'secrétariat du centre les met en ligne au fil de l’eau — revenez un peu '
+          + 'plus tard, ou contactez le centre directement.</p>';
+        return;
+      }
+      zone.innerHTML = libres.creneaux.map((c) => `
+        <label class="payopt" style="margin-top:9px">
+          <input type="radio" name="creneau" value="${ctx.esc(c.id)}">
+          <span style="flex:1"><b>${ctx.esc(jolie(c.debut))}</b>
+            <span>${ctx.esc(c.centre)} · ${ctx.esc(c.duree_min)} minutes</span></span>
+        </label>`).join('')
+        + '<div class="acts" style="margin-top:18px">'
+        + '<button class="btn b-p" id="rdv-demander">Demander ce rendez-vous</button></div>'
+        + '<div id="rdv-msg"></div>';
+
+      document.getElementById('rdv-demander').onclick = async () => {
+        const choisi = zone.querySelector('input[name="creneau"]:checked');
+        const msg = document.getElementById('rdv-msg');
+        if (!choisi) { msg.innerHTML = '<p class="hint">Choisissez un créneau.</p>'; return; }
+        try {
+          const r = await API.demanderRendezvous(choisi.value);
+          msg.innerHTML = '<div class="avis"><span>' + ctx.esc(r.note) + '</span></div>';
+          rafraichir();
+        } catch (e) {
+          msg.innerHTML = '<p class="hint">' + ctx.esc(e.message || 'Demande impossible.') + '</p>';
+          if (e.statut === 409) rafraichir();   /* créneau pris entre-temps */
+        }
+      };
+    } catch (e) {
+      document.getElementById('rdv-libres').innerHTML =
+        '<p class="hint">Créneaux indisponibles : ' + ctx.esc(e.message || '') + '</p>';
+    }
   };
+  rafraichir();
 };
 
 /* ---------------------------------------------------------------------
@@ -413,83 +362,46 @@ function bloc_devis(ctx, d) {
    Affichage brut. Aucune borne de normalité, aucune couleur, aucune
    qualification d'une valeur.
 ------------------------------------------------------------------------ */
-Modules.documents = function (ctx) {
-  const docs = documentsTest();
-  const hist = historiqueTest();
-
+Modules.documents = async function (ctx) {
+  /* Branché sur le serveur : la liste vient de la table document, remplie
+     par le centre. Les documents de test ont été retirés. Le fichier
+     lui-même n'est pas encore téléchargeable — le stockage hors base
+     viendra avec le dépôt de fichiers ; en attendant l'écran liste ce qui
+     existe et le dit, plutôt que d'offrir un bouton qui ne fait rien. */
   ctx.render(`
     <div class="card">
-      <p class="eyebrow">Mes documents</p>
-      <h1>Mon historique</h1>
-      <p class="lede">Vos comptes rendus et résultats, conservés d’une année sur l’autre.
-      Vous seul y avez accès, avec le médecin qui vous suit.</p>
-
-      <div class="avis">
-        ${ctx.ic('i-info')}
-        <span>Les valeurs sont affichées telles qu’elles ont été transmises par le
-        laboratoire. Aucune n’est commentée, colorée ni signalée par la plateforme : les
-        bornes d’interprétation figurent sur le compte rendu du laboratoire et relèvent du
-        médecin.</span>
-      </div>
-
-      <h2 style="margin-top:34px">Documents</h2>
-      <table style="width:100%;border-collapse:collapse;margin-top:14px;font-size:15.2px">
-        ${docs.map(d => `<tr style="border-bottom:1px solid var(--line-2)">
-          <td style="padding:14px 0">
-            <b>${ctx.esc(d.titre)}</b>
-            <span style="display:block;font-size:13.4px;color:var(--ink-4);margin-top:3px">
-              ${ctx.esc(d.type)} · ${ctx.esc(d.auteur)} · ${ctx.esc(d.taille)}</span>
-          </td>
-          <td style="padding:14px 0;text-align:right;white-space:nowrap;color:var(--ink-3);font-size:13.6px">
-            ${ctx.esc(new Date(d.date).toLocaleDateString('fr-FR'))}
-          </td></tr>`).join('')}
-      </table>
-      <p class="hint" style="margin-top:14px">Le téléchargement des documents sera activé
-      sur l’hébergement certifié HDS.</p>
-
-      <h2 style="margin-top:38px">Évolution dans le temps</h2>
-      <p class="hint" style="margin-bottom:18px">Trois relevés de test. Les points sont
-      reliés pour montrer la chronologie, sans aucune zone de référence.</p>
-
-      ${hist.map(h => bloc_courbe(ctx, h)).join('')}
+      <p class="eyebrow">Mon parcours</p>
+      <h1>Mes documents</h1>
+      <p class="lede">Les documents que le centre vous a remis : comptes-rendus,
+      attestations, résultats.</p>
+      <div id="docs-liste"><p class="hint">Chargement…</p></div>
     </div>`);
+  try {
+    const r = await API.mesDocuments();
+    const zone = document.getElementById('docs-liste');
+    if (!r.documents.length) {
+      zone.innerHTML = '<p class="hint">Aucun document pour le moment. Ils apparaîtront '
+        + 'ici quand le centre en déposera.</p>';
+      return;
+    }
+    const natures = { 'compte-rendu': 'Compte-rendu', attestation: 'Attestation',
+                      resultat: 'Résultat', autre: 'Document' };
+    zone.innerHTML = '<table class="cv" style="margin-top:14px"><thead><tr>'
+      + '<th>Document</th><th>Nature</th><th>Déposé le</th><th>Par</th></tr></thead><tbody>'
+      + r.documents.map((d) => `<tr>
+          <td><b>${ctx.esc(d.titre)}</b></td>
+          <td>${ctx.esc(natures[d.nature] || d.nature)}</td>
+          <td class="cv-d">${ctx.esc(new Date(d.depose_le).toLocaleDateString('fr-FR'))}</td>
+          <td>${ctx.esc(d.depose_par || '—')}</td>
+        </tr>`).join('') + '</tbody></table>'
+      + '<p class="hint" style="margin-top:14px">Le téléchargement en ligne arrive dans une '
+      + 'prochaine version : pour l’instant, ces documents vous sont remis par le centre.</p>';
+  } catch (e) {
+    document.getElementById('docs-liste').innerHTML =
+      '<p class="hint">Documents indisponibles : ' + ctx.esc(e.message || '') + '</p>';
+  }
 };
 
-function bloc_courbe(ctx, h) {
-  const vals = h.valeurs;
-  const nums = vals.map(v => v.v);
-  /* Cadrage purement graphique : min et max servent à placer les points
-     dans le dessin. Aucune comparaison à une borne clinique. */
-  let mn = Math.min.apply(null, nums), mx = Math.max.apply(null, nums);
-  if (mn === mx) { mn = mn - 1; mx = mx + 1; }
-  const marge = (mx - mn) * 0.25;
-  mn -= marge; mx += marge;
-
-  const L = 520, H = 96, pad = 14;
-  const pts = vals.map((v, i) => {
-    const x = pad + (i * (L - 2 * pad)) / Math.max(1, vals.length - 1);
-    const y = H - pad - ((v.v - mn) / (mx - mn)) * (H - 2 * pad);
-    return { x: x, y: y, v: v };
-  });
-
-  return `<div style="border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:14px">
-    <b style="font-size:15.5px">${ctx.esc(h.parametre)}</b>
-    <svg viewBox="0 0 ${L} ${H}" style="width:100%;height:auto;display:block;margin-top:12px"
-         role="img" aria-label="Évolution chronologique de ${ctx.esc(h.parametre)}">
-      <polyline points="${pts.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ')}"
-                fill="none" stroke="#2069b0" stroke-width="2" stroke-linecap="round"/>
-      ${pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="#2069b0"/>`).join('')}
-    </svg>
-    <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--ink-3)">
-      ${vals.map(v => `<span>${ctx.esc(new Date(v.date).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }))}
-        · <b style="color:var(--ink)">${v.v}</b></span>`).join('')}
-    </div>
-  </div>`;
-}
-
-/* ---------------------------------------------------------------------
-   M7 — FACTURATION
------------------------------------------------------------------------- */
 Modules.factures = function (ctx) {
   const c = ctx.compte;
   const factures = [];

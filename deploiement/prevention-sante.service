@@ -1,0 +1,69 @@
+# =====================================================================
+#  Service systemd — plateforme de prévention
+#  À installer dans /etc/systemd/system/prevention-sante.service
+#
+#  Ce fichier ne contient AUCUN secret. Les identifiants de base, la clé
+#  de chiffrement et les accès SMTP vivent dans /etc/prevention-sante.env
+#  (chown root:prevention, chmod 640 : lisible par le seul groupe du service,
+#  jamais modifiable par lui). Un secret dans
+#  une unité systemd se retrouve dans « systemctl cat » et dans les
+#  journaux : c'est le premier endroit où on le trouverait.
+# =====================================================================
+[Unit]
+Description=Plateforme de prévention — API et site
+Documentation=file:/opt/prevention-sante/serveur/LISEZ-MOI.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=prevention
+Group=prevention
+WorkingDirectory=/opt/prevention-sante/serveur
+
+# Secrets et configuration. Le service refuse de démarrer si le fichier
+# est absent : mieux vaut ne pas démarrer que démarrer sans chiffrement.
+EnvironmentFile=/etc/prevention-sante.env
+
+ExecStart=/usr/bin/node src/serveur.js
+Restart=on-failure
+RestartSec=5s
+
+# Journaux : le serveur écrit du JSON par ligne sur la sortie standard,
+# journald les collecte. Aucune donnée de santé n'y figure — les champs
+# sensibles sont retirés par src/trace.js avant écriture.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=prevention-sante
+
+# ------------------------------------------------------ durcissement
+# Le service n'a besoin de presque rien : autant ne lui donner presque rien.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+# Le code est en lecture seule : une écriture dans /opt serait anormale.
+ReadOnlyPaths=/opt/prevention-sante
+# Réseau : IPv4 et IPv6 uniquement, pas de sockets exotiques.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+# Limites : un serveur de prévention n'a aucune raison d'ouvrir
+# des dizaines de milliers de fichiers.
+LimitNOFILE=4096
+TasksMax=256
+
+[Install]
+WantedBy=multi-user.target
