@@ -38,7 +38,7 @@ Les pages restent derrière un mot de passe nginx, et le site n'est pas indexabl
 
 ### Sortie réseau à connaître
 
-La seule page publique (`/index.html`, page employeurs) charge **7 photographies depuis `images.unsplash.com`**. C'est la seule requête sortante de tout le site. Toutes les autres images — 19 fichiers, illustrations de domaines et de modules — sont déjà hébergées localement dans `images/`. Nous prévoyons de rapatrier ces fichiers en hébergement propre ; la ligne correspondante de la politique de sécurité du contenu devra alors être retirée, et le site n'aura plus aucune sortie réseau. Si votre politique l'exige, nous pouvons faire ce rapatriement avant le déploiement — dites-le nous.
+La seule page à sortie réseau (`/employeurs/`, page destinée aux employeurs — la racine `/` est désormais un portail d'orientation sans aucune ressource distante) charge **7 photographies depuis `images.unsplash.com`**. C'est la seule requête sortante de tout le site. Toutes les autres images — 19 fichiers, illustrations de domaines et de modules — sont déjà hébergées localement dans `images/`. Nous prévoyons de rapatrier ces fichiers en hébergement propre ; la ligne correspondante de la politique de sécurité du contenu devra alors être retirée, et le site n'aura plus aucune sortie réseau. Si votre politique l'exige, nous pouvons faire ce rapatriement avant le déploiement — dites-le nous.
 
 ---
 

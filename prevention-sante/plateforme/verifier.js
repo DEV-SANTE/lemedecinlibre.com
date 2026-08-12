@@ -737,7 +737,7 @@ section('7. Ressources externes');
 const VISUELS = require('../commun/visuels.js');
 
 /* --- 7.1 Aucun script, style, police ou cadre distant, aucune page --- */
-['index.html', 'plateforme/index.html', 'plateforme/style.css',
+['index.html', 'employeurs/index.html', 'plateforme/index.html', 'plateforme/style.css',
  'espace/index.html', 'pilotage/index.html', 'entreprise/index.html',
  'contenus/index.html', 'suivi/index.html',
  'commun/navigation.js', 'commun/visuels.js', 'commun/lexique.js',
@@ -760,7 +760,7 @@ const VISUELS = require('../commun/visuels.js');
        donc un geste visible, qui la retire d'ici automatiquement — et
        oublier de le faire interdit l'image, ce qui est le bon sens de
        l'erreur. --- */
-['plateforme/index.html', 'plateforme/style.css', 'espace/index.html',
+['index.html', 'plateforme/index.html', 'plateforme/style.css', 'espace/index.html',
  'pilotage/index.html', 'entreprise/index.html', 'contenus/index.html',
  'suivi/index.html', 'commun/navigation.js', 'commun/lexique.js',
  'commun/themes.js']
@@ -2111,18 +2111,20 @@ section('18. Questionnaire — lisible, illustré, non individualisé');
 
   /* --- 18.5 LA MARQUE. Une seule, dans un seul fichier. --- */
   verifier('la marque partagée existe', existe('commun/marque.svg'));
-  const copies = ['index.html', 'espace/index.html', 'contenus/index.html',
+  const copies = ['index.html', 'employeurs/index.html', 'espace/index.html', 'contenus/index.html',
                   'entreprise/index.html', 'pilotage/index.html', 'suivi/index.html',
                   'commun/navigation.js']
     .filter(f => existe(f) && /M8\.5 20\.5h4\.6/.test(lire(f)));
   verifier('aucune copie du logo dans une page', copies.length === 0,
     copies.length ? 'Copies restantes : ' + copies.join(', ') +
       ' — celle de navigation.js était restée au bleu-vert de l’ancienne charte.' : null);
-  const emploient = ['index.html', 'espace/index.html', 'contenus/index.html',
+  const emploient = ['index.html', 'employeurs/index.html', 'espace/index.html', 'contenus/index.html',
                      'entreprise/index.html', 'pilotage/index.html', 'commun/navigation.js']
     .filter(f => existe(f) && /commun\/marque\.svg/.test(lire(f)));
-  verifier('la marque partagée est employée par les six pages (' + emploient.length + ')',
-    emploient.length === 6);
+  /* Sept depuis que la racine est un portail et que la page employeurs
+     vit sous employeurs/ : les deux portent la marque partagée. */
+  verifier('la marque partagée est employée par les sept pages (' + emploient.length + ')',
+    emploient.length === 7);
   verifier('charte.css — la taille de la marque vit avec elle',
     /\.marque,\.mark\{/.test(lire('commun/charte.css')));
   /* Le logo de l'interface médecin n'était pas une copie : c'était un

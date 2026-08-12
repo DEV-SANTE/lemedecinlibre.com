@@ -56,7 +56,7 @@ var VISUELS = {
      Toute autre page reste interdite aux images distantes, et le
      vérificateur le contrôle page par page. Ajouter une page à cette
      liste doit être un geste explicite, pas un oubli. */
-  pagesPubliques: ['index.html', 'contenus/index.html'],
+  pagesPubliques: ['employeurs/index.html', 'contenus/index.html'],
 
   /* ==================================================================
      IMAGES LOCALES — ET POURQUOI LA RÈGLE N'EST PAS LA MÊME
@@ -233,7 +233,7 @@ var VISUELS = {
       reference: 'illOl9R0AEY',
       sujet: 'Une salle d’attente lumineuse, sièges alignés le long d’une baie vitrée.',
       emploi: 'Bande photographique sous le hero.',
-      page: 'index.html',
+      page: 'employeurs/index.html',
       rang: 1,
       /* Seule image visible sans défiler : chargement immédiat, pas
          différé, sinon elle apparaît après le premier écran. */
@@ -246,7 +246,7 @@ var VISUELS = {
       reference: 'K7Qh7RFtUuo',
       sujet: 'Des instruments de diagnostic fixés au mur d’une salle de consultation.',
       emploi: 'Triptyque « Déroulement », premier volet : la consultation.',
-      page: 'index.html',
+      page: 'employeurs/index.html',
       rang: 2,
       differe: true
     },
@@ -257,7 +257,7 @@ var VISUELS = {
       reference: 'egT3xtDu9DQ',
       sujet: 'Des tubes de prélèvement en verre alignés sur un support.',
       emploi: 'Triptyque « Déroulement », deuxième volet : le prélèvement.',
-      page: 'index.html',
+      page: 'employeurs/index.html',
       rang: 3,
       differe: true
     },
@@ -268,7 +268,7 @@ var VISUELS = {
       reference: 'PRaSe_XWX38',
       sujet: 'Un automate d’analyse de laboratoire, façade blanche et écran de contrôle.',
       emploi: 'Triptyque « Déroulement », troisième volet : l’analyse.',
-      page: 'index.html',
+      page: 'employeurs/index.html',
       rang: 4,
       differe: true
     },
@@ -279,7 +279,7 @@ var VISUELS = {
       reference: 'PvNXRpRfbwo',
       sujet: 'Une salle de réunion vide, table longue et grandes fenêtres.',
       emploi: 'Section « Pour les employeurs », sous la carte du réseau.',
-      page: 'index.html',
+      page: 'employeurs/index.html',
       rang: 5,
       differe: true
     },
@@ -335,7 +335,7 @@ var VISUELS = {
       reference: 'njrDE70M2VI',
       sujet: 'Un stéthoscope et un thermomètre posés côte à côte sur un plan clair.',
       emploi: 'Bande avant « Dix domaines explorés », page d’accueil.',
-      page: 'index.html',
+      page: 'employeurs/index.html',
       rang: 9,
       differe: true
     },
@@ -346,7 +346,7 @@ var VISUELS = {
       reference: '_C0u-d857BY',
       sujet: 'Un bureau de bois clair contre un mur blanc, sans personne.',
       emploi: 'Bande avant « Parlons de votre effectif », page d’accueil.',
-      page: 'index.html',
+      page: 'employeurs/index.html',
       rang: 10,
       differe: true
     },

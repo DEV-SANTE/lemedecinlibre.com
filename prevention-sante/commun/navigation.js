@@ -50,8 +50,9 @@
     {
       titre: 'Public',
       liens: [
-        { id: 'accueil',  nom: 'Présentation', href: '',          desc: 'Page destinée aux employeurs' },
-        { id: 'contenus', nom: 'Repères',      href: 'contenus/', desc: 'Contenus de prévention' }
+        { id: 'accueil',    nom: 'Accueil',    href: '',            desc: 'Portail d’orientation' },
+        { id: 'employeurs', nom: 'Employeurs', href: 'employeurs/', desc: 'Page destinée aux employeurs' },
+        { id: 'contenus',   nom: 'Repères',    href: 'contenus/',   desc: 'Contenus de prévention' }
       ]
     },
     {
@@ -76,7 +77,7 @@
   /* Page courante, déduite du chemin. */
   function courante() {
     const p = location.pathname;
-    const seg = ['contenus', 'connexion', 'espace', 'suivi', 'plateforme', 'secretariat', 'entreprise', 'pilotage'];
+    const seg = ['contenus', 'employeurs', 'connexion', 'espace', 'suivi', 'plateforme', 'secretariat', 'entreprise', 'pilotage'];
     for (const s of seg) {
       if (p.indexOf('/' + s + '/') !== -1 || p.indexOf('/' + s) === p.length - s.length - 1) return s;
     }
