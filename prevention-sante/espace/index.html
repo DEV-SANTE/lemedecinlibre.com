@@ -151,6 +151,24 @@ input:focus,textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0
    ------------------------------------------------------------------ */
 .qphoto{width:100%;max-width:720px;height:150px;object-fit:cover;display:block;
   border-radius:var(--r);margin:0 0 20px;background:var(--surf)}
+
+/* ------------------------------------------------------------------
+   PORTE D'APPLICABILITÉ. La question qui décide si un bloc entier se
+   pose ou non : elle est présentée en carte, photographie locale en
+   bandeau quand le sujet s'y prête, l'explication avant les réponses.
+   Le patient voit qu'il franchit une porte, pas une question ordinaire.
+   ------------------------------------------------------------------ */
+.porte{margin-top:34px;border:1.5px solid var(--line);border-radius:var(--r-xl);
+  overflow:hidden;background:#fff;max-width:720px;
+  box-shadow:0 1px 2px rgba(16,24,40,.05),0 3px 10px rgba(16,24,40,.04)}
+.porte .pphoto{width:100%;height:132px;object-fit:cover;display:block;
+  background:var(--surf)}
+.porte .pcorps{padding:20px 22px 22px}
+.porte .lbl{font-size:15.8px;font-weight:640;letter-spacing:-.1px}
+.porte .aide{font-size:13.4px;line-height:1.62;color:var(--ink-2);
+  padding-left:12px;border-left:3px solid var(--pri);margin:12px 0 16px}
+.porte .opts{max-width:520px}
+@media (max-width:560px){.porte .pcorps{padding:16px 16px 18px}}
 .qpara{font-size:14.4px;color:var(--ink-2);line-height:1.66;margin-top:11px;
   max-width:var(--mesure)}
 .qpara:first-of-type{margin-top:14px}

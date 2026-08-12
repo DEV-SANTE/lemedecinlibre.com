@@ -105,20 +105,64 @@ CLINIQUE.forEach(f => {
 });
 
 (function () {
-  const code = codeSeul(lire('plateforme/questionnaire.js'));
-  const ADMISES = ['sexe', 'ageMin', 'ageMax'];
+  /* Deux familles de conditions sont admises, et RIEN d'autre.
+
+     STRUCTURELLES — sexe, ageMin, ageMax : le profil, pas les réponses.
+
+     PORTES D'APPLICABILITÉ — reponse + vaut (égalité, alternatives
+     séparées par |) ou reponse + contient (présence d'une valeur cochée).
+     Une porte fait disparaître des questions qui ne s'APPLIQUENT pas
+     (« jamais fumé » → pas de questions sur les cigarettes). Elle ne
+     produit aucune information : elle compare une réponse déclarée à une
+     constante, à l'égalité stricte.
+
+     RESTE INTERDIT, et le contrôle suivant le vérifie : tout seuil, toute
+     somme, toute comparaison numérique (>=, <, etc.). « showIf: { score:
+     '>= 11' } » est un calcul, pas une porte. */
+  const src = lire('plateforme/questionnaire.js');
+  const code = codeSeul(src);
+  const ADMISES = ['sexe', 'ageMin', 'ageMax', 'reponse', 'vaut', 'contient'];
   const re = /showIf:\s*\{([^}]*)\}/g;
-  let m, mauvaises = [], nb = 0;
+  let m, mauvaises = [], nb = 0, portes = 0;
   while ((m = re.exec(code)) !== null) {
     nb++;
+    if (/reponse/.test(m[1])) portes++;
     m[1].split(',').forEach(p => {
       const cle = p.split(':')[0].trim();
       if (cle && ADMISES.indexOf(cle) === -1) mauvaises.push(cle);
     });
   }
-  verifier('questionnaire.js — ' + nb + ' condition(s) showIf, toutes structurelles',
+  verifier('questionnaire.js — ' + nb + ' condition(s) showIf, toutes admises (' + portes + ' porte(s))',
     mauvaises.length === 0,
-    mauvaises.length ? 'Clés non structurelles : ' + [...new Set(mauvaises)].join(', ') : null);
+    mauvaises.length ? 'Clés non admises : ' + [...new Set(mauvaises)].join(', ') : null);
+
+  /* Une porte est une égalité, jamais un seuil : dans le code (chaînes
+     comprises — c'est là que vivent les valeurs des portes — mais hors
+     commentaires, où l'en-tête cite justement l'exemple interdit), aucun
+     showIf ne doit contenir de comparateur ni d'arithmétique. */
+  const srcSansComm = sansCommentaires(src);
+  const reSrc = /showIf:\s*\{([^}]*)\}/g;
+  let s, seuils = [];
+  while ((s = reSrc.exec(srcSansComm)) !== null) {
+    if (/(>=|<=|>|<|\+|\*|somme|score)/.test(s[1])) seuils.push(s[1].trim());
+  }
+  verifier('questionnaire.js — les portes sont des égalités, aucun seuil',
+    seuils.length === 0,
+    seuils.length ? 'Seuil ou calcul trouvé dans showIf : ' + seuils.join(' | ') : null);
+
+  /* Une porte ne s'appuie jamais sur un item d'instrument coté : le
+     statut déclaré (fumeur, douleur, enceinte) est une donnée de fait,
+     la réponse à un item d'échelle est une mesure. Brancher sur une
+     mesure serait la première marche de l'interprétation. */
+  const ITEMS_COTES = /^(ess_|isi_[1-7]|phq_[1-9]|gad_[1-7]|epds_(?:[1-9]|10)|hhie_|burn_[1-5]|sarcf_|fager_|cast_(?!conso)|audit_|scoff_|ricci_|ipss_|iief_|dn4_|bpco5_)/;
+  const rePorte = /showIf:\s*\{[^}]*reponse:\s*'([^']+)'/g;
+  let p2, surMesure = [];
+  while ((p2 = rePorte.exec(src)) !== null) {
+    if (ITEMS_COTES.test(p2[1])) surMesure.push(p2[1]);
+  }
+  verifier('questionnaire.js — aucune porte sur un item d’instrument coté',
+    surMesure.length === 0,
+    surMesure.length ? 'Porte sur : ' + [...new Set(surMesure)].join(', ') : null);
 })();
 
 (function () {
@@ -2046,8 +2090,17 @@ section('18. Questionnaire — lisible, illustré, non individualisé');
     const rel = 'images/' + m.photo.dossier + '/' + m.photo.id + '.jpg';
     if (!existe(rel)) manquantes.push(rel);
   });
-  verifier('questionnaire.js — les photographies de section existent (' +
-    mods.filter(m => m.photo).length + ')', manquantes.length === 0,
+  /* Les portes d'applicabilité aussi portent des photographies : même
+     exigence, une photo visée doit exister — et être locale. */
+  let nbPortesPhoto = 0;
+  mods.forEach(m => (m.questions || []).forEach(q => {
+    if (!q.photo) return;
+    nbPortesPhoto++;
+    const rel = 'images/' + q.photo.dossier + '/' + q.photo.id + '.jpg';
+    if (!existe(rel)) manquantes.push(rel);
+  }));
+  verifier('questionnaire.js — les photographies de section et de porte existent (' +
+    (mods.filter(m => m.photo).length + nbPortesPhoto) + ')', manquantes.length === 0,
     manquantes.length ? 'Fichiers absents : ' + manquantes.join(', ') : null);
   verifier('patient.js — aucune image distante dans l’espace patient',
     !/https?:\/\/[a-z0-9.-]*(unsplash|googleapis|cloudflare)/i.test(pat));

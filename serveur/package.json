@@ -17,12 +17,11 @@
     "cle": "node -e \"console.log(require('./src/chiffre').genererCle())\""
   },
   "dependencies": {
-    "jsdom": "^30.0.1",
     "pg": "^8.13.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.0",
-    "jsdom": "^26.0.0"
+    "jsdom": "^30.0.1"
   },
   "engines": {
     "node": ">=20"

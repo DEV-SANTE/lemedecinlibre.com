@@ -139,6 +139,10 @@ function signalerEchec(e) {
 /* ===================================================================== */
 let compte = null;
 let etapeQ = 0;
+/* Reprise : ce drapeau repart à false à chaque chargement de page, la
+   position de reprise est donc recalculée depuis les réponses enregistrées.
+   Rien n'est stocké dans le navigateur. */
+let repriseFaite = false;
 
 const $ = s => document.querySelector(s);
 const app = () => $('#app');
@@ -562,7 +566,69 @@ function visible(q, d) {
   const age = ageStructurel(d);
   if (c.ageMin != null && (age == null || age < c.ageMin)) return false;
   if (c.ageMax != null && (age == null || age > c.ageMax)) return false;
+
+  /* PORTE D'APPLICABILITÉ — égalité stricte avec un statut déclaré,
+     jamais de seuil ni de somme (règle du 11 août 2026, en tête de
+     questionnaire.js ; le vérificateur l'impose). « vaut » compare à des
+     alternatives séparées par | ; « contient » cherche une valeur cochée.
+     Tant que la question-porte n'a pas de réponse, le bloc reste fermé :
+     il s'ouvre quand le statut est déclaré, pas avant. */
+  if (c.reponse) {
+    const v = d.reponses[c.reponse];
+    if (c.vaut != null) {
+      if (v == null) return false;
+      if (String(c.vaut).split('|').indexOf(String(v)) === -1) return false;
+    }
+    if (c.contient != null) {
+      if (!Array.isArray(v) || v.indexOf(c.contient) === -1) return false;
+    }
+  }
   return true;
+}
+
+/* Une section entière peut ne concerner qu'un sexe ou une tranche d'âge :
+   même logique STRUCTURELLE que visible(), appliquée au module. */
+function moduleVisible(m, d) {
+  return moduleVisible._ok(m.showIf, d);
+}
+moduleVisible._ok = (showIf, d) => showIf ? visible({ showIf }, d) : true;
+
+/* Les sections réellement présentées à ce dossier : on retire celles qui
+   ne le concernent pas (sexe, âge) ET celles dont aucune question n'est
+   visible, pour ne jamais afficher une section vide. Filtre STRUCTUREL :
+   il ne dépend que du sexe et de l'âge, jamais d'une réponse de santé. */
+function modulesVisibles(d) {
+  return QUESTIONNAIRE.modules.filter(
+    m => moduleVisible(m, d) && m.questions.some(q => visible(q, d)));
+}
+
+/* A-t-on déjà répondu à cette question ? Sert UNIQUEMENT à retrouver où
+   reprendre — aucune valeur n'est lue ni interprétée. */
+function aRepondu(d, q) {
+  const v = d.reponses[q.id];
+  if (v == null) return false;
+  if (Array.isArray(v)) return v.length > 0;
+  return String(v).trim() !== '';
+}
+
+/* Section de reprise : la dernière section touchée, c'est-à-dire la plus
+   avancée qui a déjà reçu au moins une réponse (0 si le dossier est neuf).
+   On y ramène la personne — « voici où vous en étiez » — plutôt que de la
+   renvoyer au début. Déduite des données enregistrées, sans rien stocker
+   ni comparer aucune valeur de santé.
+
+   On repart sur la DERNIÈRE touchée, et non la première incomplète : un
+   dossier neuf porte déjà le nom et le prénom du compte, et beaucoup de
+   questions sont facultatives — « première incomplète » sauterait la
+   saisie de l'identité, ou renverrait sans cesse vers un champ laissé
+   volontairement vide. */
+function sectionDeReprise(mods, d) {
+  let derniere = 0;
+  for (let i = 0; i < mods.length; i++) {
+    const qs = mods[i].questions.filter(q => q.type !== 'separateur' && visible(q, d));
+    if (qs.some(q => aRepondu(d, q))) derniere = i;
+  }
+  return derniere;
 }
 
 function vueQuestionnaire() {
@@ -570,7 +636,17 @@ function vueQuestionnaire() {
   const d = dossierCourant();
   if (!d) { location.hash = '#/paiement'; return; }
 
-  const mods = QUESTIONNAIRE.modules;
+  const mods = modulesVisibles(d);
+
+  /* REPRISE — au premier affichage de cette session, on rouvre à la
+     première section non encore remplie, déduite des réponses déjà
+     enregistrées. Aucun curseur n'est stocké : ce calcul survit à toute
+     fermeture d'onglet parce que les réponses, elles, sont conservées. */
+  if (!repriseFaite) {
+    repriseFaite = true;
+    etapeQ = sectionDeReprise(mods, d);
+  }
+
   if (etapeQ >= mods.length) return vueFin();
   const m = mods[etapeQ];
   const qs = m.questions.filter(q => visible(q, d));
@@ -639,6 +715,17 @@ function vueQuestionnaire() {
   };
   $('#fq').addEventListener('change', () => {
     collecter(d);
+    /* Une réponse peut ouvrir ou fermer une porte d'applicabilité (« vous
+       fumez ? » → les questions sur les cigarettes apparaissent). Si la
+       liste des questions visibles a changé, la section est redessinée,
+       à la même position de lecture. */
+    const apres = m.questions.filter(q => visible(q, d)).map(q => q.id).join(' ');
+    if (apres !== qs.map(q => q.id).join(' ')) {
+      const y = window.scrollY;
+      vueQuestionnaire();
+      window.scrollTo(0, y);
+      return;
+    }
     const n = $('#note'); n.textContent = 'Enregistré';
     setTimeout(() => { n.textContent = ''; }, 1400);
   });
@@ -686,6 +773,24 @@ function champ(q, d) {
        <span>${esc(o.l)}</span></label>`).join('') + '</div>';
   }
 
+  /* PORTE D'APPLICABILITÉ — la question qui ouvre ou ferme un bloc mérite
+     d'être vue et comprise : une carte, une photographie locale quand le
+     sujet s'y prête, et l'explication AVANT les choix de réponse. La
+     photographie vient du même catalogue local que les bandeaux de
+     section — jamais d'image distante dans l'espace patient. Deux portes
+     n'en ont volontairement pas : le ressenti au travail (on n'illustre
+     pas la sphère psychique) et le canal carpien (aucune image du
+     catalogue ne le montre honnêtement). */
+  if (q.porte) {
+    const photo = q.photo
+      ? `<img class="pphoto" src="../images/${q.photo.dossier}/${q.photo.id}.jpg"
+           width="720" height="132" loading="lazy" decoding="async" alt="">`
+      : '';
+    return `<div class="champ porte">${photo}<div class="pcorps">
+      <label class="lbl" for="q-${esc(q.id)}">${esc(q.label)}${q.required ? ' <em>*</em>' : ''}${inst}</label>
+      ${aide}${lic}${ctrl}</div></div>`;
+  }
+
   return `<div class="champ">
     <label class="lbl" for="q-${esc(q.id)}">${esc(q.label)}${q.required ? ' <em>*</em>' : ''}${inst}</label>
     ${aide}${lic}${ctrl}</div>`;
@@ -693,7 +798,10 @@ function champ(q, d) {
 
 function collecter(d) {
   const f = $('#fq'); if (!f) return;
-  QUESTIONNAIRE.modules[Math.min(etapeQ, QUESTIONNAIRE.modules.length - 1)].questions.forEach(q => {
+  /* Même liste filtrée que l'affichage : collecter le mauvais module
+     décalerait les réponses d'une section. */
+  const mods = modulesVisibles(d);
+  mods[Math.min(etapeQ, mods.length - 1)].questions.forEach(q => {
     if (q.type === 'separateur') return;
     if (q.type === 'checkbox') {
       const b = f.querySelectorAll('input[name="' + q.id + '"]:checked');

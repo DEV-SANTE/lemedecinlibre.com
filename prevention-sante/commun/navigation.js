@@ -21,13 +21,23 @@
 
   const RACINE = 'prevention-sante';
 
-  /* Préfixe relatif vers la racine du site, quelle que soit la page. */
+  /* Racine du site, déduite de l'adresse de CE fichier : navigation.js
+     vit dans commun/, la racine est donc un cran au-dessus de son URL.
+     Cette méthode est indifférente au point de montage — domaine nu
+     (serveur AZNETWORK, serveur local), sous-dossier (GitHub Pages),
+     n'importe quel préfixe. L'ancienne heuristique cherchait le segment
+     « prevention-sante » dans l'URL de la PAGE : servie à la racine d'un
+     domaine, elle ne le trouvait pas, renvoyait « ./ », et tous les
+     liens de cette barre étaient faux dès qu'on quittait l'accueil. */
   function base() {
+    const s = document.currentScript;
+    if (s && s.src) return new URL('..', s.src).pathname;
+    /* Secours si currentScript est indisponible : heuristique par
+       segments, corrigée — sans le segment racine dans l'URL, le site
+       est monté à la racine et la profondeur est le nombre de dossiers. */
     const parts = location.pathname.split('/').filter(Boolean);
     const i = parts.lastIndexOf(RACINE);
-    if (i === -1) return './';
-    /* Nombre de segments après la racine, en ignorant un fichier final. */
-    let apres = parts.length - 1 - i;
+    let apres = (i === -1) ? parts.length : parts.length - 1 - i;
     const dernier = parts[parts.length - 1] || '';
     if (dernier.indexOf('.') !== -1) apres -= 1;   /* le dernier est un fichier */
     if (apres <= 0) return './';
@@ -47,6 +57,7 @@
     {
       titre: 'Espace patient',
       liens: [
+        { id: 'connexion', nom: 'Se connecter', href: 'connexion/', desc: 'Connexion et création de compte' },
         { id: 'espace', nom: 'Mon espace', href: 'espace/', desc: 'Inscription, formule, questionnaire' },
         { id: 'suivi',  nom: 'Mon suivi',  href: 'suivi/',  desc: 'Résultats et parcours' }
       ]
@@ -55,6 +66,7 @@
       titre: 'Professionnel',
       liens: [
         { id: 'plateforme', nom: 'Vue médecin', href: 'plateforme/', desc: 'Dossiers, biologie, décision' },
+        { id: 'secretariat', nom: 'Secrétariat', href: 'secretariat/', desc: 'Accueil et gestion des dossiers' },
         { id: 'entreprise', nom: 'Entreprise',  href: 'entreprise/', desc: 'Restitution agrégée' },
         { id: 'pilotage',   nom: 'Pilotage',    href: 'pilotage/',   desc: 'Contrôle interne' }
       ]
@@ -64,7 +76,7 @@
   /* Page courante, déduite du chemin. */
   function courante() {
     const p = location.pathname;
-    const seg = ['contenus', 'espace', 'suivi', 'plateforme', 'entreprise', 'pilotage'];
+    const seg = ['contenus', 'connexion', 'espace', 'suivi', 'plateforme', 'secretariat', 'entreprise', 'pilotage'];
     for (const s of seg) {
       if (p.indexOf('/' + s + '/') !== -1 || p.indexOf('/' + s) === p.length - s.length - 1) return s;
     }
