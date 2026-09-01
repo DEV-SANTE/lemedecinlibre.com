@@ -165,7 +165,6 @@ section{padding:72px 0}
 .poll-bar{position:relative;background:var(--paper-deep);border-radius:9px;height:44px;overflow:hidden;border:1px solid var(--line);transition:.2s}
 .poll-opt:hover .poll-bar{border-color:var(--green)}
 .poll-fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--green-soft);transition:width .8s cubic-bezier(.2,.8,.2,1)}
-.poll-opt.top .poll-fill{background:#CFE7DE}
 .poll-txt{position:relative;display:flex;justify-content:space-between;align-items:center;height:100%;padding:0 16px;font-size:14px;font-weight:600}
 .poll-pct{font-family:'Fraunces',serif;font-weight:700;color:var(--green)}
 .poll-total{font-size:12px;color:var(--ink-mute);margin-top:14px}
@@ -233,7 +232,7 @@ footer a:hover{color:#fff}
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="wrap">
-    <div class="left"><span>Dimanche 26 juillet 2026</span> &nbsp;·&nbsp; <b>Le média des médecins qui veulent soigner, pas gérer</b></div>
+    <div class="left"><span>Mardi 1er septembre 2026</span> &nbsp;·&nbsp; <b>Le média des médecins qui veulent soigner, pas gérer</b></div>
     <a href="#newsletter">Recevoir la newsletter hebdo →</a>
   </div>
 </div>
@@ -309,13 +308,13 @@ footer a:hover{color:#fff}
 <!-- DERNIER ARTICLE -->
 <div style="background:#fff;border-bottom:1px solid var(--line)">
   <div class="wrap" style="padding-top:28px;padding-bottom:28px">
-    <a href="article-evaluer-centre-sante-8-signaux.html" class="card" style="display:grid;grid-template-columns:300px 1fr;align-items:center;overflow:hidden">
-      <div class="card-visual" style="height:100%;min-height:170px"><img src="https://images.unsplash.com/photo-1762625570087-6d98fca29531?q=80&w=800&auto=format&fit=crop" alt="Salle d'attente moderne d'un centre de santé" loading="lazy"></div>
+    <a href="article-loi-garot-installation-medecins.html" class="card" style="display:grid;grid-template-columns:300px 1fr;align-items:center;overflow:hidden">
+      <div class="card-visual" style="height:100%;min-height:170px"><img src="https://images.unsplash.com/photo-1755189118414-14c8dacdb082?q=80&w=800&auto=format&fit=crop" alt="Professionnels de santé dans un couloir" loading="lazy"></div>
       <div class="card-body" style="padding:24px 30px">
-        <span class="kicker" style="color:var(--coral)">🆕 Dernier article · Exercer Autrement</span>
-        <h3 style="font-size:23px">Comment évaluer un centre de santé avant d'y aller : 8 signaux d'alerte</h3>
-        <p style="font-size:14.5px">Tous les centres ne se valent pas, et la brochure ne vous le dira pas. Les questions à poser, les documents à exiger — et les réponses qui doivent vous faire refermer le dossier.</p>
-        <div class="cmeta"><span class="tag">Publié</span> 6 min de lecture · <b style="color:var(--green)">Lire l'article →</b></div>
+        <span class="kicker" style="color:var(--coral)">🆕 Dernier article · Actu du métier</span>
+        <h3 style="font-size:23px">Loi Garot : où en est vraiment la régulation de l'installation des médecins ?</h3>
+        <p style="font-size:14.5px">Adoptée à l'Assemblée en 2025, remaniée au Sénat en juin 2026 : le texte est toujours en discussion. Ce qui change — et surtout ce qui ne change pas encore — pour votre liberté d'installation.</p>
+        <div class="cmeta"><span class="tag">Publié</span> 8 min de lecture · <b style="color:var(--green)">Lire l'article →</b></div>
       </div>
     </a>
   </div>
@@ -325,9 +324,17 @@ footer a:hover{color:#fff}
 <section id="nouveaux" style="padding:56px 0;background:var(--paper)">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">Cette semaine</span><h2>10 nouveaux articles</h2></div>
+      <div><span class="kicker">Cette semaine</span><h2>11 nouveaux articles</h2></div>
     </div>
     <div class="grid3" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
+      <article class="card reveal">
+        <div class="card-visual" style="height:130px"><img src="https://images.unsplash.com/photo-1755189118414-14c8dacdb082?q=80&w=600&auto=format&fit=crop" alt="" loading="lazy"></div>
+        <div class="card-body" style="padding:16px 18px 18px">
+          <span class="kicker">Actu du métier · Réglementation</span>
+          <h3 style="font-size:16.5px"><a href="article-loi-garot-installation-medecins.html">Loi Garot : où en est vraiment la régulation de l'installation des médecins ?</a></h3>
+          <div class="cmeta"><span class="tag">Publié</span> 8 min</div>
+        </div>
+      </article>
       <article class="card reveal">
         <div class="card-visual" style="height:130px"><img src="https://images.unsplash.com/photo-1652787542567-f86c0b4c0269?q=80&w=600&auto=format&fit=crop" alt="" loading="lazy"></div>
         <div class="card-body" style="padding:16px 18px 18px">
@@ -532,6 +539,11 @@ footer a:hover{color:#fff}
       <a class="more" href="#">Toute l'actu →</a>
     </div>
     <div class="actu-list reveal">
+      <a class="actu" href="article-loi-garot-installation-medecins.html">
+        <span class="date">Mar. 1er sept.</span>
+        <h4>Loi Garot : où en est vraiment la régulation de l'installation des médecins ?</h4>
+        <span class="cat">Réglementation</span>
+      </a>
       <a class="actu" href="article-ccam-v83-juillet-2026.html">
         <span class="date">Dim. 26 juil.</span>
         <h4>CCAM v83 : baisses sur les échographies et l'imagerie interventionnelle — le tableau des 32 actes</h4>
